@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Calculadora ICE{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-calculator"></i> Calculadora ICE</h2>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Datos del Producto</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('ice.calcular') }}" id="formIce">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Precio Ex-Fabrica ($)</label>
+                            <input type="number" class="form-control" name="precio" value="4.50" step="0.01" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Volumen (cc)</label>
+                            <input type="number" class="form-control" name="volumen" value="750" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Grado Alcoholico (%)</label>
+                            <input type="number" class="form-control" name="grado" value="35" step="0.1" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Cantidad</label>
+                            <input type="number" class="form-control" name="cantidad" value="1" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Producto</label>
+                        <select class="form-select" name="tipo" id="tipoProducto">
+                            <option value="Licor">Ron/Vino/Licor</option>
+                            <option value="Cerveza Industrial">Cerveza Industrial</option>
+                            <option value="Cerveza Artesanal">Cerveza Artesanal</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Rango de produccion (solo para Cerveza Industrial) -->
+                    <div class="mb-3" id="divRango" style="display:none;">
+                        <label class="form-label">Rango de Produccion (hl)</label>
+                        <select class="form-select" name="escala">
+                            <option value="Rango 1: Hasta 730.000 hl">Rango 1: Hasta 730.000 hl</option>
+                            <option value="Rango 2: >730k a 1.4M hl">Rango 2: >730k a 1.4M hl</option>
+                            <option value="Rango 3: >1.4M hl" selected>Rango 3: >1.4M hl</option>
+                        </select>
+                        <small class="text-muted">Aplica solo para ano 2021. Desde 2022 tarifa unica.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Anios a Calcular</label>
+                        <div class="row">
+                            <div class="col-6 col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="anios" value="2021" id="a2021">
+                                    <label class="form-check-label" for="a2021">2021</label>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="anios" value="2022" id="a2022">
+                                    <label class="form-check-label" for="a2022">2022</label>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="anios" value="2023" id="a2023">
+                                    <label class="form-check-label" for="a2023">2023</label>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="anios" value="2024" id="a2024" onchange="mostrarIVA2024()">
+                                    <label class="form-check-label" for="a2024">2024</label>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="anios" value="2025" id="a2025">
+                                    <label class="form-check-label" for="a2025">2025</label>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="anios" value="2026" id="a2026" checked>
+                                    <label class="form-check-label" for="a2026">2026</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- IVA para 2024 -->
+                    <div class="mb-3" id="divIVA2024" style="display:none;">
+                        <label class="form-label">Periodo IVA 2024</label>
+                        <select class="form-select" name="iva_2024">
+                            <option value="12">Enero - Marzo (IVA 12%)</option>
+                            <option value="15" selected>Abril - Diciembre (IVA 15%)</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-calculator-fill"></i> Calcular ICE
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-5">
+        <div class="card shadow mb-3">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Formulas</h5>
+            </div>
+            <div class="card-body">
+                <h6>ICE Especifico:</h6>
+                <p class="text-muted small">Tarifa x (%Alcohol / 100) x (Volumen / 1000)</p>
+                <h6>ICE Ad-Valorem:</h6>
+                <p class="text-muted small">((Precio/Litro) - Umbral) x 75% x (Volumen/1000)</p>
+                <small class="text-muted">Aplica si Precio/Litro > Umbral</small>
+            </div>
+        </div>
+        
+        <div class="card shadow">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">Notas 2024</h5>
+            </div>
+            <div class="card-body small">
+                <p>El ano 2024 tiene IVA diferenciado:</p>
+                <ul>
+                    <li><strong>12%</strong> Enero a Marzo</li>
+                    <li><strong>15%</strong> Abril a Diciembre</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('tipoProducto').addEventListener('change', function() {
+    var divRango = document.getElementById('divRango');
+    if (this.value === 'Cerveza Industrial') {
+        divRango.style.display = 'block';
+    } else {
+        divRango.style.display = 'none';
+    }
+});
+
+function mostrarIVA2024() {
+    var check2024 = document.getElementById('a2024');
+    var divIVA = document.getElementById('divIVA2024');
+    if (check2024.checked) {
+        divIVA.style.display = 'block';
+    } else {
+        divIVA.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

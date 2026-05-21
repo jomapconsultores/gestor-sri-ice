@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Tabla de Tarifas ICE{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-table"></i> Tabla de Tarifas Tributarias 2021-2026</h2>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Fuente: Resoluciones NAC-DGERCGC y Decretos Ejecutivos del SRI Ecuador
+</div>
+
+<div class="row">
+    {% for anio, info in tax_db.items() %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">{{ anio }}</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr><td>Especifica</td><td class="text-end fw-bold">{{ info.esp }}</td></tr>
+                    <tr><td>Artesanal</td><td class="text-end">{{ info.art }}</td></tr>
+                    <tr><td>Industrial</td><td class="text-end">
+                        {% if info.ind is mapping %}
+                            {% for r, v in info.ind.items() %}{{ v }}<br>{% endfor %}
+                        {% else %}{{ info.ind }}{% endif %}
+                    </td></tr>
+                    <tr><td>Umbral AdV</td><td class="text-end">${{ info.umb }}</td></tr>
+                    <tr><td>IVA</td><td class="text-end">{{ info.iva if info.iva == 'MIXTO' else (info.iva * 100)|int|string + '%' }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<a href="{{ url_for('ice.calculadora') }}" class="btn btn-primary">
+    <i class="bi bi-calculator"></i> Ir a Calculadora
+</a>
+{% endblock %}

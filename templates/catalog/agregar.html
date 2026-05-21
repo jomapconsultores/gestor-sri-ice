@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Agregar Producto{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-plus-circle"></i> Agregar Producto al Catalogo</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Nombre del Producto *</label>
+                            <input type="text" class="form-control" name="nombre" required placeholder="Ej: LICOR ORO 15V 750 ML (12U)">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Cod. Marca</label>
+                            <input type="text" class="form-control" name="cod_marca" value="000008" maxlength="6">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Cod. Impuesto</label>
+                            <input type="text" class="form-control" name="cod_impuesto" value="3031">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Cod. Clasificacion</label>
+                            <input type="text" class="form-control" name="cod_clasificacion" value="057">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Presentacion</label>
+                            <input type="text" class="form-control" name="presentacion" value="013">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Capacidad</label>
+                            <input type="text" class="form-control" name="capacidad" value="000750">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Unidad</label>
+                            <input type="text" class="form-control" name="unidad" value="66">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Grado Alcoholico</label>
+                            <input type="text" class="form-control" name="grado_alcoholico" value="000015">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Cod. Pais</label>
+                            <input type="text" class="form-control" name="cod_pais" value="593">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Unidades por Caja</label>
+                            <input type="number" class="form-control" name="unidades_por_caja" value="12">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="es_pack" id="esPack">
+                            <label class="form-check-label" for="esPack">Es Pack (2 unidades)</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar Producto</button>
+                    <a href="{{ url_for('catalog.ver_catalogo') }}" class="btn btn-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Resultado ICE{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-calculator-fill"></i> Resultado del Calculo</h2>
+
+<div class="card shadow mb-4">
+    <div class="card-header bg-light">
+        <strong>Datos ingresados:</strong> 
+        Precio: ${{ datos.precio }} | 
+        Volumen: {{ datos.volumen }}cc | 
+        Grado: {{ datos.grado }}% | 
+        Cantidad: {{ datos.cantidad }}
+    </div>
+</div>
+
+<div class="row">
+    {% for anio, res in resultados.items() %}
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Anio {{ anio }}</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-bordered">
+                    <tr><td class="fw-bold">Tarifa Especifica</td><td class="text-end">{{ res.tarifa_especifica }}</td></tr>
+                    <tr><td class="fw-bold">Umbral Ad-Valorem</td><td class="text-end">${{ res.umbral_advalorem }}</td></tr>
+                    <tr><td class="fw-bold">IVA</td><td class="text-end">{{ (res.iva_tasa * 100)|int }}%</td></tr>
+                    <tr><td class="fw-bold">ICE Especifico Unitario</td><td class="text-end">${{ '%.4f'|format(res.ice_especifico_unitario) }}</td></tr>
+                    <tr><td class="fw-bold">ICE Ad-Valorem Unitario</td><td class="text-end">${{ '%.4f'|format(res.ice_advalorem_unitario) }}</td></tr>
+                    <tr class="table-success"><td class="fw-bold">ICE Total Unitario</td><td class="text-end fw-bold">${{ '%.4f'|format(res.ice_total_unitario) }}</td></tr>
+                    <tr><td class="fw-bold">ICE Especifico Total</td><td class="text-end">${{ '%.2f'|format(res.ice_especifico_total) }}</td></tr>
+                    <tr><td class="fw-bold">ICE Ad-Valorem Total</td><td class="text-end">${{ '%.2f'|format(res.ice_advalorem_total) }}</td></tr>
+                    <tr class="table-success"><td class="fw-bold">ICE Total</td><td class="text-end fw-bold fs-5">${{ '%.2f'|format(res.ice_total) }}</td></tr>
+                    <tr><td class="fw-bold">Base IVA</td><td class="text-end">${{ '%.2f'|format(res.base_iva) }}</td></tr>
+                    <tr><td class="fw-bold">IVA Total</td><td class="text-end">${{ '%.2f'|format(res.iva_total) }}</td></tr>
+                    <tr class="table-primary"><td class="fw-bold">PVP Final</td><td class="text-end fw-bold fs-5">${{ '%.2f'|format(res.pvp) }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<a href="{{ url_for('ice.calculadora') }}" class="btn btn-primary">
+    <i class="bi bi-arrow-left"></i> Nuevo Calculo
+</a>
+{% endblock %}

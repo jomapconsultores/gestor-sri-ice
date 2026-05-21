@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Producto{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-pencil"></i> Editar Producto</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Nombre del Producto *</label>
+                            <input type="text" class="form-control" name="nombre" value="{{ producto.nombre }}" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Cod. Marca</label>
+                            <input type="text" class="form-control" name="cod_marca" value="{{ producto.cod_marca }}" maxlength="6">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Cod. Impuesto</label>
+                            <input type="text" class="form-control" name="cod_impuesto" value="{{ producto.cod_impuesto }}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Cod. Clasificacion</label>
+                            <input type="text" class="form-control" name="cod_clasificacion" value="{{ producto.cod_clasificacion }}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Presentacion</label>
+                            <input type="text" class="form-control" name="presentacion" value="{{ producto.presentacion }}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Capacidad</label>
+                            <input type="text" class="form-control" name="capacidad" value="{{ producto.capacidad }}">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Unidad</label>
+                            <input type="text" class="form-control" name="unidad" value="{{ producto.unidad }}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Grado Alcoholico</label>
+                            <input type="text" class="form-control" name="grado_alcoholico" value="{{ producto.grado_alcoholico }}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Cod. Pais</label>
+                            <input type="text" class="form-control" name="cod_pais" value="{{ producto.cod_pais }}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Unidades por Caja</label>
+                            <input type="number" class="form-control" name="unidades_por_caja" value="{{ producto.unidades_por_caja }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="es_pack" id="esPack" {{ 'checked' if producto.es_pack else '' }}>
+                            <label class="form-check-label" for="esPack">Es Pack (2 unidades)</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Actualizar Producto</button>
+                    <a href="{{ url_for('catalog.ver_catalogo') }}" class="btn btn-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

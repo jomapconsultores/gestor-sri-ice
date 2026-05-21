@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Bienvenido - Gestor SRI + ICE{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <h1 class="display-4 mb-4">Gestor SRI + ICE</h1>
+        <p class="lead">Sistema completo de gestión tributaria ecuatoriana</p>
+        
+        <div class="row mt-5">
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <i class="bi bi-download text-primary" style="font-size: 2rem;"></i>
+                        <h5>Descarga Facturas</h5>
+                        <p class="text-muted">Del portal SRI directamente</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <i class="bi bi-calculator text-success" style="font-size: 2rem;"></i>
+                        <h5>Cálculo ICE</h5>
+                        <p class="text-muted">Automático y preciso</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <i class="bi bi-file-earmark-xml text-danger" style="font-size: 2rem;"></i>
+                        <h5>Anexos SRI</h5>
+                        <p class="text-muted">Formato oficial XML</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-2">Registrarse</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg">Iniciar Sesión</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Calculadora Mezcla Total{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-diagram-3"></i> Calculadora Mezcla Total</h2>
+
+<p class="text-muted">Combina varios productos diferentes para calcular el ICE total de la mezcla.</p>
+
+<div class="card shadow mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">Agregar Productos a la Mezcla</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('ice.calcular_mezcla') }}" id="formMezcla">
+            
+            <div id="productosContainer">
+                <!-- Producto 1 -->
+                <div class="producto-item border rounded p-3 mb-3 bg-light">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label small">Nombre del Producto</label>
+                            <input type="text" class="form-control form-control-sm" name="nombre_1" value="Licor Oro 750ml" placeholder="Ej: Licor Oro">
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="form-label small">Precio Fabrica ($)</label>
+                            <input type="number" class="form-control form-control-sm" name="precio_1" value="4.50" step="0.01" required>
+                        </div>
+                        <div class="col-md-1 mb-2">
+                            <label class="form-label small">Vol. (cc)</label>
+                            <input type="number" class="form-control form-control-sm" name="volumen_1" value="750" required>
+                        </div>
+                        <div class="col-md-1 mb-2">
+                            <label class="form-label small">Grado (%)</label>
+                            <input type="number" class="form-control form-control-sm" name="grado_1" value="35" step="0.1" required>
+                        </div>
+                        <div class="col-md-1 mb-2">
+                            <label class="form-label small">Cantidad</label>
+                            <input type="number" class="form-control form-control-sm" name="cantidad_1" value="10" required>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="form-label small">Tipo Producto</label>
+                            <select class="form-select form-select-sm" name="tipo_1">
+                                <option value="Licor">Licor</option>
+                                <option value="Cerveza Industrial">Cerveza Industrial</option>
+                                <option value="Cerveza Artesanal">Cerveza Artesanal</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="eliminarProducto(this)" style="display:none;">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <button type="button" class="btn btn-outline-warning" onclick="agregarProducto()">
+                    <i class="bi bi-plus-circle"></i> Agregar Otro Producto
+                </button>
+                <small class="text-muted ms-2">Agrega todos los productos que quieras combinar</small>
+            </div>
+            
+            <hr>
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold">Selecciona los Anos Fiscales</label>
+                <div class="row">
+                    {% for anio in tax_db.keys() %}
+                    <div class="col-4 col-md-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="anios" value="{{ anio }}" id="mx{{ anio }}" {{ 'checked' if anio == '2026' else '' }}>
+                            <label class="form-check-label" for="mx{{ anio }}">{{ anio }}</label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <small class="text-muted">Para 2024 se calculara ambos periodos (12% y 15%)</small>
+            </div>
+            
+            <button type="submit" class="btn btn-warning btn-lg w-100">
+                <i class="bi bi-calculator-fill"></i> Calcular Mezcla Total
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">Informacion</h5>
+    </div>
+    <div class="card-body">
+        <p>La <strong>Calculadora de Mezcla</strong> te permite combinar diferentes productos con distintas cantidades para obtener el ICE total combinado.</p>
+        <p><strong>Ejemplo:</strong> 10 botellas de Licor Oro 750ml + 5 botellas de Vodka 750ml + 20 botellas de Cerveza Artesanal</p>
+        <ul>
+            <li>Cada producto se calcula por separado</li>
+            <li>Se suman todos los ICE, IVA y PVP</li>
+            <li>Util para calcular el impuesto total de una orden o factura con multiples productos</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+let contador = 1;
+
+function agregarProducto() {
+    contador++;
+    const container = document.getElementById('productosContainer');
+    const div = document.createElement('div');
+    div.className = 'producto-item border rounded p-3 mb-3 bg-light';
+    div.innerHTML = `
+        <div class="row">
+            <div class="col-md-3 mb-2">
+                <label class="form-label small">Nombre del Producto</label>
+                <input type="text" class="form-control form-control-sm" name="nombre_${contador}" value="Producto ${contador}" placeholder="Nombre">
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="form-label small">Precio Fabrica ($)</label>
+                <input type="number" class="form-control form-control-sm" name="precio_${contador}" value="4.50" step="0.01" required>
+            </div>
+            <div class="col-md-1 mb-2">
+                <label class="form-label small">Vol. (cc)</label>
+                <input type="number" class="form-control form-control-sm" name="volumen_${contador}" value="750" required>
+            </div>
+            <div class="col-md-1 mb-2">
+                <label class="form-label small">Grado (%)</label>
+                <input type="number" class="form-control form-control-sm" name="grado_${contador}" value="35" step="0.1" required>
+            </div>
+            <div class="col-md-1 mb-2">
+                <label class="form-label small">Cantidad</label>
+                <input type="number" class="form-control form-control-sm" name="cantidad_${contador}" value="1" required>
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="form-label small">Tipo Producto</label>
+                <select class="form-select form-select-sm" name="tipo_${contador}">
+                    <option value="Licor">Licor</option>
+                    <option value="Cerveza Industrial">Cerveza Industrial</option>
+                    <option value="Cerveza Artesanal">Cerveza Artesanal</option>
+                </select>
+            </div>
+            <div class="col-md-2 mb-2 d-flex align-items-end">
+                <button type="button" class="btn btn-danger btn-sm" onclick="eliminarProducto(this)">
+                    <i class="bi bi-trash"></i> Quitar
+                </button>
+            </div>
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+function eliminarProducto(boton) {
+    const item = boton.closest('.producto-item');
+    if (document.querySelectorAll('.producto-item').length > 1) {
+        item.remove();
+    } else {
+        alert('Debe haber al menos un producto.');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Codigo SRI{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-upc-scan"></i> Codigo Compuesto SRI</h2>
+
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">{{ producto.nombre }}</h5>
+    </div>
+    <div class="card-body text-center">
+        <p class="text-muted">Codigo para Anexo ICE/PVP:</p>
+        <h3 class="font-monospace bg-light p-3 rounded">{{ codigo }}</h3>
+        <p class="text-muted mt-3">Formato: IMPUESTO-CLASIFICACION-MARCA-PRESENTACION-CAPACIDAD-UNIDAD-PAIS-GRADO</p>
+    </div>
+</div>
+
+<a href="{{ url_for('catalog.ver_catalogo') }}" class="btn btn-primary mt-3">Volver al Catalogo</a>
+{% endblock %}

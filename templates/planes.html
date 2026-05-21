@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Planes y Precios{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">Elige tu Plan</h2>
+<p class="text-center text-muted mb-5">Pago seguro con PayPhone · Cancela cuando quieras</p>
+
+<div class="row justify-content-center">
+    {% for id, plan in planes.items() %}
+    <div class="col-md-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-{{ plan.color }} text-white text-center">
+                <h4 class="mb-0">{{ plan.nombre }}</h4>
+            </div>
+            <div class="card-body text-center d-flex flex-column">
+                <h2 class="display-4 mb-3">{{ plan.precio }}<small class="fs-6">/mes</small></h2>
+                <ul class="list-unstyled flex-grow-1">
+                    <li class="mb-2">✅ Facturas: {{ plan.limite_facturas }}</li>
+                    <li class="mb-2">✅ Cálculo ICE</li>
+                    <li class="mb-2">✅ Anexos SRI</li>
+                    <li class="mb-2">✅ Catálogo de productos</li>
+                    {% if plan.incluye_auditoria %}
+                    <li class="mb-2">✅ Auditoría multi-año</li>
+                    <li class="mb-2">✅ Reportes avanzados</li>
+                    {% endif %}
+                </ul>
+                
+                {% if current_user.is_authenticated %}
+                    {% if current_user.tiene_suscripcion_activa() and current_user.suscripcion.plan_id == id %}
+                        <button class="btn btn-outline-{{ plan.color }} w-100 mt-auto" disabled>
+                            <i class="bi bi-check-circle"></i> Plan Actual
+                        </button>
+                    {% else %}
+                        <a href="{{ url_for('payments.pagar', plan_id=id) }}" 
+                           class="btn btn-{{ plan.color }} w-100 mt-auto">
+                            <i class="bi bi-credit-card"></i> Pagar con PayPhone
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-{{ plan.color }} w-100 mt-auto">
+                        Registrarse para contratar
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="text-center mt-4">
+    <img src="https://payphone.app/wp-content/uploads/2021/05/logo-payphone.png" 
+         alt="PayPhone" style="height: 40px;">
+    <p class="text-muted mt-2">Pagos seguros procesados por PayPhone Ecuador</p>
+</div>
+{% endblock %}

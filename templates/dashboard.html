@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Panel de Control</h2>
+
+<div class="row">
+    <!-- Suscripcion -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-primary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-star-fill text-warning" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Suscripcion</h5>
+                {% if current_user.tiene_suscripcion_activa() %}
+                    <span class="badge bg-success fs-6">Activa</span>
+                    <p class="mt-2">{{ current_user.suscripcion.plan_id }}</p>
+                    <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-sm btn-outline-primary">Cambiar Plan</a>
+                {% else %}
+                    <span class="badge bg-secondary fs-6">Sin plan</span>
+                    <div class="mt-3">
+                        <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-primary btn-sm">Elegir Plan</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Facturas -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-info h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-receipt text-info" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Facturas</h5>
+                <p class="display-6 text-info">{{ total_facturas }}</p>
+                <small class="text-muted">procesadas</small>
+                <div class="mt-3 d-grid gap-1">
+                    <a href="{{ url_for('invoices.pagina_carga') }}" class="btn btn-info btn-sm">Cargar XMLs</a>
+                    <a href="{{ url_for('invoices.ver_facturas') }}" class="btn btn-outline-info btn-sm">Ver todas</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calculo ICE -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-success h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-calculator text-success" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Calculo ICE</h5>
+                <p class="text-muted small">Calcula el ICE de tus productos</p>
+                <div class="mt-3 d-grid gap-1">
+                    <a href="{{ url_for('ice.calculadora') }}" class="btn btn-success btn-sm">Individual</a>
+                    <a href="{{ url_for('ice.multiple') }}" class="btn btn-outline-success btn-sm">Multi-Producto</a>
+                    <a href="{{ url_for('ice.mezcla') }}" class="btn btn-outline-success btn-sm">Mezcla Total</a>
+                    <a href="{{ url_for('ice.comparativa') }}" class="btn btn-outline-success btn-sm">Comparativa</a>
+                    <a href="{{ url_for('ice.ver_tarifas') }}" class="btn btn-outline-success btn-sm">Tarifas</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <!-- Resumen ICE/IVA -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-warning h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-bar-chart text-warning" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Resumen ICE/IVA</h5>
+                <p class="text-muted small">Resumen de facturas procesadas</p>
+                <a href="{{ url_for('invoices.resumen') }}" class="btn btn-warning btn-sm mt-3">Ver Resumen</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Planes -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-secondary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-credit-card text-secondary" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Planes</h5>
+                <p class="text-muted small">Gestiona tu suscripcion</p>
+                <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-secondary btn-sm mt-3">Ver Planes</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Catalogo -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-primary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-box-seam text-primary" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Catalogo</h5>
+                <p class="text-muted small">Gestiona tus productos</p>
+                <a href="{{ url_for('catalog.ver_catalogo') }}" class="btn btn-primary btn-sm mt-3">Ver Catalogo</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <!-- Anexos SRI -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-danger h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-file-earmark-xml text-danger" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Anexos SRI</h5>
+                <p class="text-muted small">Genera anexos ICE y PVP</p>
+                <a href="{{ url_for('annexes.pagina_generar') }}" class="btn btn-danger btn-sm mt-3">Generar Anexo</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exportar Excel -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-success h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-file-earmark-excel text-success" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Exportar</h5>
+                <p class="text-muted small">Descarga reportes en Excel</p>
+                <a href="#" class="btn btn-success btn-sm mt-3 disabled">Proximamente</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Descarga Masiva -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-dark h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-cloud-download text-dark" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Descarga SRI</h5>
+                <p class="text-muted small">Descarga masiva de facturas</p>
+                <a href="#" class="btn btn-dark btn-sm mt-3 disabled">Proximamente</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

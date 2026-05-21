@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Registro{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white text-center">
+                <h3 class="mb-0">Crear Cuenta</h3>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">Nombre Completo *</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="empresa" class="form-label">Empresa</label>
+                        <input type="text" class="form-control" id="empresa" name="empresa">
+                    </div>
+                    <div class="mb-3">
+                        <label for="ruc" class="form-label">RUC</label>
+                        <input type="text" class="form-control" id="ruc" name="ruc" maxlength="13">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Contraseña *</label>
+                        <input type="password" class="form-control" id="password" name="password" required minlength="6">
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmar" class="form-label">Confirmar Contraseña *</label>
+                        <input type="password" class="form-control" id="confirmar" name="confirmar" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Registrarme</button>
+                </form>
+                <hr>
+                <p class="text-center mb-0">
+                    ¿Ya tienes cuenta? <a href="{{ url_for('auth.login') }}">Inicia sesión</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Resumen ICE/IVA{% endblock %}
+{% block content %}
+<h2 class="mb-4">Resumen de Impuestos</h2>
+<div class="card shadow">
+    <div class="card-body table-responsive">
+        <table class="table table-striped">
+            <thead class="table-dark">
+                <tr><th>Año</th><th>Mes</th><th>Cantidad</th><th>Total</th><th>Base ICE</th><th>ICE</th><th>Base IVA</th><th>IVA</th></tr>
+            </thead>
+            <tbody>
+                {% for r in resumen %}
+                <tr>
+                    <td>{{ r.anio }}</td><td>{{ r.mes }}</td><td>{{ r.cantidad }}</td>
+                    <td>${{ '%.2f'|format(r.total or 0) }}</td>
+                    <td>${{ '%.2f'|format(r.base_ice or 0) }}</td>
+                    <td>${{ '%.2f'|format(r.ice or 0) }}</td>
+                    <td>${{ '%.2f'|format(r.base_iva or 0) }}</td>
+                    <td>${{ '%.2f'|format(r.iva or 0) }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="text-center">No hay datos</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
