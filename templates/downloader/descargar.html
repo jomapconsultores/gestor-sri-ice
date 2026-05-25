@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Descarga Masiva SRI{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 class="page-title mb-0"><i class="bi bi-cloud-download me-2 text-secondary"></i>Descarga Masiva de Facturas SRI</h4>
+    <a href="{{ url_for('invoices.pagina_carga') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Volver a Facturas
+    </a>
+</div>
+
+<!-- GUÍA PASO A PASO -->
+<div class="card border-info mb-4">
+    <div class="card-header bg-info text-white fw-bold">
+        <i class="bi bi-book me-1"></i>Guía de Uso – Cómo descargar tus facturas del SRI
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <h6 class="fw-bold text-info mb-3"><i class="bi bi-1-circle-fill me-1"></i>Paso 1 – Obtener el archivo de claves desde el SRI</h6>
+                <ol class="small">
+                    <li class="mb-2">Ingresa al portal del SRI: <strong>sri.gob.ec</strong> con tu RUC y contraseña.</li>
+                    <li class="mb-2">Ve a <strong>Servicios en Línea → Comprobantes Electrónicos → Recibidos</strong>.</li>
+                    <li class="mb-2">Filtra por el período que necesitas (mes/año).</li>
+                    <li class="mb-2">Haz clic en <strong>"Exportar"</strong> o <strong>"Descargar listado"</strong> para obtener el archivo TXT o CSV con las claves de acceso de 49 dígitos.</li>
+                    <li class="mb-2">Guarda el archivo en tu computador.</li>
+                </ol>
+                <div class="alert alert-warning small py-2 mb-0">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <strong>Importante:</strong> Cada clave de acceso tiene exactamente 49 dígitos. El sistema las detecta automáticamente.
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-bold text-info mb-3"><i class="bi bi-2-circle-fill me-1"></i>Paso 2 – Subir el archivo aquí</h6>
+                <ol class="small">
+                    <li class="mb-2">Arrastra el archivo TXT/CSV a la zona de abajo, o haz clic para seleccionarlo.</li>
+                    <li class="mb-2">El sistema extrae automáticamente todas las claves de acceso del archivo.</li>
+                    <li class="mb-2">Inicia la descarga. El proceso puede tardar varios minutos según la cantidad de facturas.</li>
+                    <li class="mb-2">Una vez completado, las facturas quedan guardadas en tu cuenta para procesarlas.</li>
+                </ol>
+                <h6 class="fw-bold text-info mt-3 mb-2"><i class="bi bi-3-circle-fill me-1"></i>Paso 3 – Procesar las facturas</h6>
+                <ol class="small">
+                    <li class="mb-2">Ve a <a href="{{ url_for('invoices.pagina_carga') }}"><strong>Facturas → Subir Facturas</strong></a> para cargar los XML descargados.</li>
+                    <li>Clasifica las facturas de <strong>Gastos</strong> o consulta el reporte de <strong>Ingresos</strong>.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ZONA DE CARGA (drag & drop) -->
+<div class="card">
+    <div class="card-header bg-secondary text-white fw-bold">
+        <i class="bi bi-upload me-1"></i>Subir Archivo con Claves de Acceso
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('downloader.procesar_txt') }}" enctype="multipart/form-data" id="formDescarga">
+            <div id="dropZone"
+                 class="rounded p-5 text-center mb-3"
+                 style="border: 2px dashed #6c757d; cursor:pointer; background:#f8f9fa; transition: all 0.2s;"
+                 ondrop="handleDrop(event)"
+                 ondragover="event.preventDefault(); this.style.background='#e2e8f0';"
+                 ondragleave="this.style.background='#f8f9fa';"
+                 onclick="document.getElementById('archivo_txt').click()">
+                <i class="bi bi-file-earmark-arrow-up text-secondary" style="font-size:3rem;"></i>
+                <p class="fw-bold text-secondary mt-2 mb-1">Arrastra tu archivo TXT / CSV aquí</p>
+                <p class="text-muted small mb-0">o haz clic para seleccionar el archivo</p>
+                <input type="file" name="archivo_txt" id="archivo_txt"
+                       accept=".txt,.csv,.tsv" class="d-none"
+                       onchange="mostrarArchivo(this)">
+            </div>
+
+            <div id="archivoSeleccionado" class="alert alert-secondary small py-2 mb-3 d-none">
+                <i class="bi bi-file-earmark-text me-1"></i>
+                <span id="nombreArchivo"></span>
+            </div>
+
+            <!-- Barra de progreso -->
+            <div id="barraProgreso" class="mb-3 d-none">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Descargando facturas...</span>
+                    <span id="porcentaje">0%</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-secondary"
+                         id="barra" style="width:0%"></div>
+                </div>
+                <div class="text-muted small mt-1">
+                    <span id="completadas">0</span> de <span id="total_progress">0</span> facturas procesadas
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-secondary px-4" id="btnDescargar" disabled>
+                <i class="bi bi-cloud-download me-1"></i>Iniciar Descarga
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function mostrarArchivo(input) {
+    if (input.files.length > 0) {
+        document.getElementById('nombreArchivo').textContent = input.files[0].name + ' (' + (input.files[0].size/1024).toFixed(1) + ' KB)';
+        document.getElementById('archivoSeleccionado').classList.remove('d-none');
+        document.getElementById('btnDescargar').disabled = false;
+        document.getElementById('dropZone').style.borderColor = '#198754';
+        document.getElementById('dropZone').style.background = '#f0fdf4';
+    }
+}
+function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').style.background = '#f8f9fa';
+    var input = document.getElementById('archivo_txt');
+    input.files = e.dataTransfer.files;
+    mostrarArchivo(input);
+}
+document.getElementById('formDescarga').addEventListener('submit', function() {
+    document.getElementById('barraProgreso').classList.remove('d-none');
+    document.getElementById('btnDescargar').disabled = true;
+    document.getElementById('btnDescargar').innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Descargando...';
+    var intervalo = setInterval(function() {
+        fetch('/downloader/progreso').then(r => r.json()).then(data => {
+            if (data.total > 0) {
+                var pct = Math.round((data.completadas / data.total) * 100);
+                document.getElementById('barra').style.width = pct + '%';
+                document.getElementById('porcentaje').textContent = pct + '%';
+                document.getElementById('completadas').textContent = data.completadas;
+                document.getElementById('total_progress').textContent = data.total;
+            }
+            if (!data.activo && data.completadas > 0) clearInterval(intervalo);
+        }).catch(() => {});
+    }, 3000);
+});
+</script>
+{% endblock %}

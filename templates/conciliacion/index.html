@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}Conciliación Bancaria Odoo{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 class="page-title mb-0"><i class="bi bi-bank me-2 text-primary"></i>Conciliación Bancaria Odoo</h4>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Volver</a>
+</div>
+
+<div class="row g-3">
+    <!-- Panel izquierdo: carga -->
+    <div class="col-lg-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white fw-bold"><i class="bi bi-file-earmark-pdf me-1"></i>1. Subir Estados de Cuenta PDF</div>
+            <div class="card-body">
+                <div id="zonaUpload" class="border border-2 border-dashed rounded p-3 text-center mb-3" style="cursor:pointer; border-color:#0d6efd!important; min-height:120px">
+                    <i class="bi bi-cloud-upload text-primary" style="font-size:2rem"></i>
+                    <p class="small text-muted mt-1 mb-0">Arrastra PDFs aquí o haz clic</p>
+                    <input type="file" id="inputPDF" multiple accept=".pdf" class="d-none">
+                </div>
+
+                <div id="listaPDFs" class="mb-3"></div>
+
+                <button class="btn btn-primary w-100 fw-bold" id="btnProcesar" disabled onclick="procesarPDFs()">
+                    <i class="bi bi-cpu me-1"></i>2. Procesar con IA (Mistral)
+                </button>
+                <p class="text-muted small mt-2 mb-0 text-center"><i class="bi bi-info-circle me-1"></i>La IA extrae todas las transacciones automáticamente</p>
+            </div>
+        </div>
+
+        <div class="card mt-3 border-success d-none" id="panelExportar">
+            <div class="card-header bg-success text-white fw-bold"><i class="bi bi-download me-1"></i>3. Exportar a Excel Odoo</div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <label class="form-label small fw-bold">Nombre del archivo:</label>
+                    <input type="text" class="form-control form-control-sm" id="nombreArchivo" value="Importacion_Odoo_Final">
+                </div>
+                <button class="btn btn-success w-100 fw-bold" onclick="exportarExcel()">
+                    <i class="bi bi-file-earmark-excel me-1"></i>Descargar Excel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel derecho: tabla -->
+    <div class="col-lg-8">
+        <div class="card" id="panelTabla">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <span class="fw-bold"><i class="bi bi-table me-1"></i>Transacciones Extraídas</span>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary" onclick="agregarFila()"><i class="bi bi-plus me-1"></i>Añadir</button>
+                    <span class="badge bg-primary" id="contadorTx">0</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height:500px; overflow-y:auto">
+                    <table class="table table-sm table-hover mb-0" id="tablaTx">
+                        <thead class="table-dark sticky-top">
+                            <tr>
+                                <th style="width:110px">Fecha</th>
+                                <th>Descripción</th>
+                                <th style="width:160px">Diario</th>
+                                <th style="width:110px">Monto</th>
+                                <th style="width:40px"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTx">
+                            <tr id="filaVacia">
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox" style="font-size:2rem"></i><br>Sube PDFs y procesa para ver las transacciones
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log -->
+        <div class="card mt-3">
+            <div class="card-body py-2 px-3">
+                <small id="logTexto" class="text-muted">Listo. Sube los estados de cuenta en PDF.</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Spinner overlay -->
+<div class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center d-none" id="spinner" style="background:rgba(0,0,0,0.5); z-index:9999">
+    <div class="card p-4 text-center shadow-lg">
+        <div class="spinner-border text-primary mb-3" style="width:3rem;height:3rem"></div>
+        <p class="mb-0 fw-bold" id="spinnerMsg">Procesando con Mistral AI...</p>
+        <p class="small text-muted">Esto puede tardar unos segundos por PDF</p>
+    </div>
+</div>
+
+<script>
+let pdfArchivos = [];
+let diarios = {};
+let transacciones = [];
+
+// Drag & Drop
+const zona = document.getElementById('zonaUpload');
+const input = document.getElementById('inputPDF');
+
+zona.addEventListener('click', () => input.click());
+zona.addEventListener('dragover', e => { e.preventDefault(); zona.classList.add('border-primary'); });
+zona.addEventListener('dragleave', () => zona.classList.remove('border-primary'));
+zona.addEventListener('drop', e => {
+    e.preventDefault();
+    zona.classList.remove('border-primary');
+    agregarArchivos([...e.dataTransfer.files].filter(f => f.name.toLowerCase().endsWith('.pdf')));
+});
+input.addEventListener('change', () => agregarArchivos([...input.files]));
+
+function agregarArchivos(files) {
+    files.forEach(f => {
+        if (!pdfArchivos.find(p => p.name === f.name)) {
+            pdfArchivos.push(f);
+            const diario = prompt(`Diario Odoo para: ${f.name}`, 'Diario Bancario') || 'Diario Bancario';
+            diarios[f.name] = diario;
+        }
+    });
+    renderLista();
+}
+
+function renderLista() {
+    const lista = document.getElementById('listaPDFs');
+    if (pdfArchivos.length === 0) { lista.innerHTML = ''; return; }
+    lista.innerHTML = pdfArchivos.map((f, i) => `
+        <div class="d-flex justify-content-between align-items-center border-bottom py-1 small">
+            <span><i class="bi bi-file-earmark-pdf text-danger me-1"></i>${f.name}</span>
+            <span class="badge bg-light text-dark">${diarios[f.name]}</span>
+        </div>`).join('');
+    document.getElementById('btnProcesar').disabled = false;
+}
+
+async function procesarPDFs() {
+    if (!pdfArchivos.length) return;
+    const fd = new FormData();
+    pdfArchivos.forEach(f => fd.append('pdfs', f));
+    pdfArchivos.forEach(f => fd.append('diarios', diarios[f.name] || 'Diario Bancario'));
+
+    mostrarSpinner('Extrayendo transacciones con Mistral AI...');
+    log('Procesando ' + pdfArchivos.length + ' PDF(s)...');
+
+    try {
+        const resp = await fetch('{{ url_for("conciliacion.procesar") }}', {method:'POST', body:fd});
+        const data = await resp.json();
+        if (data.error) { alert(data.error); return; }
+
+        transacciones = data.transacciones || [];
+        if (data.errores && data.errores.length) {
+            log('⚠️ Errores: ' + data.errores.join(' | '));
+        }
+        log(`✅ ${transacciones.length} transacciones extraídas de ${pdfArchivos.length} PDF(s)`);
+        renderTabla();
+        document.getElementById('panelExportar').classList.remove('d-none');
+    } catch(e) {
+        alert('Error: ' + e.message);
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+function renderTabla() {
+    const tbody = document.getElementById('cuerpoTx');
+    if (!transacciones.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Sin transacciones</td></tr>';
+        document.getElementById('contadorTx').textContent = 0;
+        return;
+    }
+    document.getElementById('filaVacia') && document.getElementById('filaVacia').remove();
+    tbody.innerHTML = transacciones.map((t, i) => `
+        <tr>
+            <td><input type="date" class="form-control form-control-sm" value="${t.fecha||''}" oninput="transacciones[${i}].fecha=this.value; ordenar()"></td>
+            <td><input type="text" class="form-control form-control-sm" value="${escHtml(t.descripcion||'')}" oninput="transacciones[${i}].descripcion=this.value"></td>
+            <td><input type="text" class="form-control form-control-sm" value="${escHtml(t.diario||'')}" oninput="transacciones[${i}].diario=this.value"></td>
+            <td><input type="number" step="0.01" class="form-control form-control-sm" value="${t.monto||0}" oninput="transacciones[${i}].monto=parseFloat(this.value)||0"></td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="eliminarFila(${i})"><i class="bi bi-trash"></i></button></td>
+        </tr>`).join('');
+    document.getElementById('contadorTx').textContent = transacciones.length;
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+
+function agregarFila() {
+    transacciones.push({fecha: new Date().toISOString().slice(0,10), descripcion:'NUEVA TRANSACCIÓN', diario:'DIARIO', monto:0});
+    renderTabla();
+}
+
+function eliminarFila(idx) {
+    transacciones.splice(idx, 1);
+    renderTabla();
+}
+
+function ordenar() {
+    transacciones.sort((a,b) => (a.fecha||'') > (b.fecha||'') ? 1 : -1);
+    renderTabla();
+}
+
+async function exportarExcel() {
+    if (!transacciones.length) { alert('No hay transacciones para exportar'); return; }
+    mostrarSpinner('Generando Excel...');
+    try {
+        const nombre = document.getElementById('nombreArchivo').value.trim() || 'Importacion_Odoo';
+        const resp = await fetch('{{ url_for("conciliacion.exportar_excel") }}', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({transacciones, nombre_archivo: nombre})
+        });
+        if (!resp.ok) { const e = await resp.json(); alert(e.error); return; }
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = nombre + '.xlsx'; a.click();
+        URL.revokeObjectURL(url);
+    } catch(e) { alert('Error: ' + e.message); }
+    finally { ocultarSpinner(); }
+}
+
+function mostrarSpinner(msg) {
+    document.getElementById('spinnerMsg').textContent = msg;
+    document.getElementById('spinner').classList.remove('d-none');
+}
+function ocultarSpinner() { document.getElementById('spinner').classList.add('d-none'); }
+function log(msg) { document.getElementById('logTexto').textContent = msg; }
+</script>
+{% endblock %}

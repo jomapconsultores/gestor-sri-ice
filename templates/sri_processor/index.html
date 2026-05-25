@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}Gestor SRI Pro{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 class="page-title mb-0"><i class="bi bi-cloud-download me-2 text-secondary"></i>Gestor SRI Pro – Descarga y Clasificación</h4>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Volver</a>
+</div>
+
+<!-- Tabs de modo -->
+<ul class="nav nav-tabs mb-3" id="modoTabs">
+    <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabTXT">
+            <i class="bi bi-file-text me-1"></i>Desde TXT (claves SRI)
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabXML">
+            <i class="bi bi-file-earmark-code me-1"></i>Importar XMLs locales
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <!-- Modo TXT -->
+    <div class="tab-pane fade show active" id="tabTXT">
+        <div class="card mb-3">
+            <div class="card-header bg-secondary text-white fw-bold py-2">
+                <i class="bi bi-upload me-1"></i>Paso 1 – Sube el TXT de claves del SRI
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Archivos TXT con claves de acceso <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control form-control-sm" id="inputTXT" multiple accept=".txt,.csv,.tsv">
+                        <div class="form-text">Los claves de 49 dígitos se extraen automáticamente</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Mapa de clasificación (opcional)</label>
+                        <input type="file" class="form-control form-control-sm" id="mapaClasificacionTXT" accept=".xlsx,.xls">
+                        <div class="form-text">Excel: Col A=RUC, Col C=Categoría</div>
+                    </div>
+                </div>
+                <button class="btn btn-secondary mt-3 fw-bold" onclick="procesarTXT()">
+                    <i class="bi bi-cloud-download me-1"></i>Descargar y Procesar XMLs del SRI
+                </button>
+                <div class="alert alert-info mt-3 small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Se conectará al SRI y descargará los XMLs de todas las claves de acceso encontradas en el TXT (hasta 10 descargas en paralelo).
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modo XML local -->
+    <div class="tab-pane fade" id="tabXML">
+        <div class="card mb-3">
+            <div class="card-header bg-warning text-dark fw-bold py-2">
+                <i class="bi bi-folder-open me-1"></i>Paso 1 – Importa XMLs desde tu computadora
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Archivos XML <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control form-control-sm" id="inputXML" multiple accept=".xml">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Mapa de clasificación (opcional)</label>
+                        <input type="file" class="form-control form-control-sm" id="mapaClasificacionXML" accept=".xlsx,.xls">
+                        <div class="form-text">Excel: Col A=RUC, Col C=Categoría</div>
+                    </div>
+                </div>
+                <button class="btn btn-warning mt-3 fw-bold text-dark" onclick="procesarXMLs()">
+                    <i class="bi bi-gear me-1"></i>Procesar XMLs
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resultados -->
+<div class="card d-none" id="panelResultados">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-table me-1"></i>Facturas Procesadas</span>
+        <div class="d-flex gap-2 align-items-center">
+            <input type="text" class="form-control form-control-sm" id="busqueda" placeholder="Buscar..." style="width:180px" oninput="filtrar()">
+            <span class="badge bg-light text-dark" id="contadorFacturas">0</span>
+            <button class="btn btn-success btn-sm fw-bold" onclick="exportarExcel()">
+                <i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive" style="max-height:420px; overflow-y:auto">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-dark sticky-top">
+                    <tr>
+                        <th>Estado</th><th>Fecha</th><th>RUC</th><th>Factura</th>
+                        <th>Nombre</th><th>Clasificación</th>
+                        <th class="text-end">Base 0%</th><th class="text-end">Base 15%</th>
+                        <th class="text-end">IVA 15%</th><th class="text-end">Total</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoResultados"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Log -->
+<div class="card mt-3">
+    <div class="card-body py-2 px-3">
+        <small id="logTexto" class="text-muted">Listo.</small>
+    </div>
+</div>
+
+<!-- Spinner -->
+<div class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center d-none" id="spinner" style="background:rgba(0,0,0,0.5);z-index:9999">
+    <div class="card p-4 text-center shadow-lg">
+        <div class="spinner-border text-secondary mb-3" style="width:3rem;height:3rem"></div>
+        <p class="mb-0 fw-bold" id="spinnerMsg">Procesando...</p>
+        <p class="small text-muted mb-0">Por favor espera, descargando del SRI...</p>
+    </div>
+</div>
+
+<script>
+let todasFilas = [];
+
+async function procesarTXT() {
+    const inputTXT = document.getElementById('inputTXT');
+    const mapaFile = document.getElementById('mapaClasificacionTXT');
+    if (!inputTXT.files.length) { alert('Selecciona al menos un archivo TXT'); return; }
+
+    const fd = new FormData();
+    [...inputTXT.files].forEach(f => fd.append('archivos_txt', f));
+    if (mapaFile.files[0]) fd.append('mapa', mapaFile.files[0]);
+
+    mostrarSpinner('Descargando XMLs del SRI... (puede tardar varios minutos)');
+    try {
+        const resp = await fetch('{{ url_for("sri_processor.procesar_txt") }}', {method:'POST', body:fd});
+        const data = await resp.json();
+        if (data.error) { alert(data.error); return; }
+        todasFilas = data.filas || [];
+        log(`✅ ${data.claves_encontradas} claves | ${data.xml_descargados} XMLs | ${todasFilas.length} facturas | ${data.errores_descarga} errores de descarga | Mapa: ${data.mapa_cargado} RUCs`);
+        renderTabla(todasFilas);
+    } catch(e) { alert('Error: ' + e.message); }
+    finally { ocultarSpinner(); }
+}
+
+async function procesarXMLs() {
+    const inputXML = document.getElementById('inputXML');
+    const mapaFile = document.getElementById('mapaClasificacionXML');
+    if (!inputXML.files.length) { alert('Selecciona archivos XML'); return; }
+
+    const fd = new FormData();
+    [...inputXML.files].forEach(f => fd.append('archivos_xml', f));
+    if (mapaFile.files[0]) fd.append('mapa', mapaFile.files[0]);
+
+    mostrarSpinner('Procesando XMLs...');
+    try {
+        const resp = await fetch('{{ url_for("sri_processor.procesar_xmls") }}', {method:'POST', body:fd});
+        const data = await resp.json();
+        if (data.error) { alert(data.error); return; }
+        todasFilas = data.filas || [];
+        log(`✅ ${todasFilas.length} facturas procesadas | Mapa: ${data.mapa_cargado} RUCs`);
+        renderTabla(todasFilas);
+    } catch(e) { alert('Error: ' + e.message); }
+    finally { ocultarSpinner(); }
+}
+
+function renderTabla(filas) {
+    const tbody = document.getElementById('cuerpoResultados');
+    const ok = filas.filter(f => f.Estado !== 'DUPLICADO');
+    const dup = filas.filter(f => f.Estado === 'DUPLICADO');
+    tbody.innerHTML = filas.map(f => {
+        const isDup = f.Estado === 'DUPLICADO';
+        return `<tr class="${isDup ? 'table-danger' : ''}">
+            <td><span class="badge ${isDup ? 'bg-danger' : 'bg-success'}">${f.Estado}</span></td>
+            <td class="small">${f.Fecha||''}</td>
+            <td class="small">${f.RUC||''}</td>
+            <td class="small">${f.Factura||''}</td>
+            <td class="small">${(f.Nombre||'').substring(0,30)}</td>
+            <td class="small"><span class="badge bg-secondary">${f.Clasificación||''}</span></td>
+            <td class="text-end small">$${fmt(f['Base 0%'])}</td>
+            <td class="text-end small">$${fmt(f['Base 15%'])}</td>
+            <td class="text-end small">$${fmt(f['IVA 15%'])}</td>
+            <td class="text-end small fw-bold">$${fmt(f.Total)}</td>
+        </tr>`;
+    }).join('');
+    document.getElementById('contadorFacturas').textContent = `${ok.length} ok, ${dup.length} dup`;
+    document.getElementById('panelResultados').classList.remove('d-none');
+}
+
+function fmt(v) { return (parseFloat(v)||0).toFixed(2); }
+
+function filtrar() {
+    const q = document.getElementById('busqueda').value.toLowerCase();
+    const filtradas = q ? todasFilas.filter(f =>
+        Object.values(f).some(v => String(v).toLowerCase().includes(q))
+    ) : todasFilas;
+    renderTabla(filtradas);
+}
+
+async function exportarExcel() {
+    if (!todasFilas.length) { alert('No hay datos para exportar'); return; }
+    mostrarSpinner('Generando Excel...');
+    try {
+        const resp = await fetch('{{ url_for("sri_processor.exportar_excel") }}', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({filas: todasFilas.filter(f => f.Estado !== 'DUPLICADO')})
+        });
+        if (!resp.ok) { const e = await resp.json(); alert(e.error); return; }
+        const blob = await resp.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'Reporte_SRI.xlsx'; a.click();
+    } catch(e) { alert('Error: ' + e.message); }
+    finally { ocultarSpinner(); }
+}
+
+function mostrarSpinner(msg) { document.getElementById('spinnerMsg').textContent = msg; document.getElementById('spinner').classList.remove('d-none'); }
+function ocultarSpinner() { document.getElementById('spinner').classList.add('d-none'); }
+function log(msg) { document.getElementById('logTexto').textContent = msg; }
+</script>
+{% endblock %}

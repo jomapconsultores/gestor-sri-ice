@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block content %}
+<h2 class="page-title mb-3"><i class="bi bi-shield-lock me-2"></i>Administración</h2>
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-warning">Pagos Pendientes</div>
+            <div class="card-body table-responsive p-2">
+                {% if pagos_pendientes %}
+                <table class="table table-hover table-sm mb-0">
+                    <thead><tr><th>ID</th><th>Usuario</th><th>Monto</th><th>Fecha</th><th>Comp.</th><th>Acción</th></tr></thead>
+                    <tbody>
+                        {% for p in pagos_pendientes %}
+                        <tr>
+                            <td>#{{ p.id }}</td>
+                            <td>{{ p.usuario.nombre }}<br><small>{{ p.usuario.email }}</small></td>
+                            <td class="fw-bold">${{ '%.2f'|format(p.monto) }}</td>
+                            <td><small>{{ p.fecha_pago.strftime('%d/%m/%Y') }}</small></td>
+                            <td>{% if p.comprobante_ruta %}<a href="/{{ p.comprobante_ruta }}" target="_blank" class="btn btn-info btn-sm">Ver</a>{% else %}-{% endif %}</td>
+                            <td>
+                                <a href="{{ url_for('payments.aprobar_pago', pago_id=p.id) }}" class="btn btn-success btn-sm">Aprobar</a>
+                                <form method="POST" action="{{ url_for('payments.rechazar_pago', pago_id=p.id) }}" class="d-inline">
+                                    <input type="hidden" name="motivo" value="Rechazado">
+                                    <button class="btn btn-danger btn-sm">Rechazar</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}<p class="text-center text-muted py-3 mb-0">Sin pagos pendientes</p>{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">Usuarios</div>
+            <div class="card-body p-2">
+                {% for u in usuarios %}
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom small">
+                    <div><strong>{{ u.nombre }}</strong><br>{{ u.email }}</div>
+                    {% if u.tiene_suscripcion_activa() %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Sin plan</span>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

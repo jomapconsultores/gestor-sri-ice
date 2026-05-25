@@ -15,12 +15,30 @@ CATALOGO_INICIAL = [
     {'nombre': 'COCKTAIL GUARANA 5V 750ML (12U)', 'cod_marca': '000007', 'cod_impuesto': '3031', 'cod_clasificacion': '057', 'presentacion': '013', 'capacidad': '000750', 'unidad': '66', 'grado_alcoholico': '000005', 'cod_pais': '593', 'es_pack': False, 'unidades_por_caja': 12},
 ]
 
+# Categorías de gastos personales SRI
+CATEGORIAS_GASTO = [
+    'ALIMENTACION', 'EDUCACION', 'SALUD', 'VESTIMENTA',
+    'VIVIENDA', 'TURISMO', 'ARTE Y CULTURA', 'VARIOS'
+]
+
+
+# ─── PARTE 1: CATÁLOGO DE LICORES ────────────────────────────────────────────
 
 @catalog.route('/ver')
 @login_required
 def ver_catalogo():
-    productos = CatalogoProducto.query.filter_by(usuario_id=current_user.id).order_by(CatalogoProducto.nombre).all()
-    return render_template('catalog/ver.html', productos=productos)
+    """Catálogo de productos de licores del usuario."""
+    uid = current_user.id if not current_user.is_admin else None
+    if uid:
+        productos = CatalogoProducto.query.filter_by(usuario_id=uid).order_by(CatalogoProducto.nombre).all()
+    else:
+        # Admin ve todos
+        uid_param = request.args.get('usuario_id', type=int)
+        if uid_param:
+            productos = CatalogoProducto.query.filter_by(usuario_id=uid_param).order_by(CatalogoProducto.nombre).all()
+        else:
+            productos = CatalogoProducto.query.order_by(CatalogoProducto.nombre).all()
+    return render_template('catalog/ver.html', productos=productos, categorias=CATEGORIAS_GASTO)
 
 
 @catalog.route('/inicializar', methods=['POST'])
@@ -28,28 +46,13 @@ def ver_catalogo():
 def inicializar_catalogo():
     existentes = CatalogoProducto.query.filter_by(usuario_id=current_user.id).count()
     if existentes > 0:
-        flash('El catalogo ya tiene productos. Se omitio la inicializacion.', 'info')
+        flash('El catálogo ya tiene productos.', 'info')
         return redirect(url_for('catalog.ver_catalogo'))
-    
     for prod in CATALOGO_INICIAL:
-        p = CatalogoProducto(
-            usuario_id=current_user.id,
-            nombre=prod['nombre'],
-            cod_marca=prod['cod_marca'],
-            cod_impuesto=prod['cod_impuesto'],
-            cod_clasificacion=prod['cod_clasificacion'],
-            presentacion=prod['presentacion'],
-            capacidad=prod['capacidad'],
-            unidad=prod['unidad'],
-            grado_alcoholico=prod['grado_alcoholico'],
-            cod_pais=prod['cod_pais'],
-            es_pack=prod['es_pack'],
-            unidades_por_caja=prod['unidades_por_caja']
-        )
+        p = CatalogoProducto(usuario_id=current_user.id, **prod)
         db.session.add(p)
-    
     db.session.commit()
-    flash('Catalogo inicializado con 7 productos.', 'success')
+    flash('Catálogo inicializado con 7 productos de ejemplo.', 'success')
     return redirect(url_for('catalog.ver_catalogo'))
 
 
@@ -78,18 +81,19 @@ def agregar_producto():
             return redirect(url_for('catalog.ver_catalogo'))
         except Exception as e:
             flash(f'Error: {str(e)}', 'danger')
-    
     return render_template('catalog/agregar.html')
 
 
 @catalog.route('/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar_producto(id):
-    producto = CatalogoProducto.query.filter_by(id=id, usuario_id=current_user.id).first()
+    filtro = {'id': id}
+    if not current_user.is_admin:
+        filtro['usuario_id'] = current_user.id
+    producto = CatalogoProducto.query.filter_by(**filtro).first()
     if not producto:
         flash('Producto no encontrado.', 'danger')
         return redirect(url_for('catalog.ver_catalogo'))
-    
     if request.method == 'POST':
         try:
             producto.nombre = request.form.get('nombre', producto.nombre).upper()
@@ -108,14 +112,16 @@ def editar_producto(id):
             return redirect(url_for('catalog.ver_catalogo'))
         except Exception as e:
             flash(f'Error: {str(e)}', 'danger')
-    
     return render_template('catalog/editar.html', producto=producto)
 
 
 @catalog.route('/eliminar/<int:id>', methods=['POST'])
 @login_required
 def eliminar_producto(id):
-    producto = CatalogoProducto.query.filter_by(id=id, usuario_id=current_user.id).first()
+    filtro = {'id': id}
+    if not current_user.is_admin:
+        filtro['usuario_id'] = current_user.id
+    producto = CatalogoProducto.query.filter_by(**filtro).first()
     if producto:
         nombre = producto.nombre
         db.session.delete(producto)
@@ -127,11 +133,48 @@ def eliminar_producto(id):
 @catalog.route('/codigo/<int:id>')
 @login_required
 def ver_codigo(id):
-    producto = CatalogoProducto.query.filter_by(id=id, usuario_id=current_user.id).first()
+    filtro = {'id': id}
+    if not current_user.is_admin:
+        filtro['usuario_id'] = current_user.id
+    producto = CatalogoProducto.query.filter_by(**filtro).first()
     if not producto:
         flash('Producto no encontrado.', 'danger')
         return redirect(url_for('catalog.ver_catalogo'))
-    
-    codigo = f"{producto.cod_impuesto}-{producto.cod_clasificacion}-{producto.cod_marca}-{producto.presentacion}-{producto.capacidad}-{producto.unidad}-{producto.cod_pais}-{producto.grado_alcoholico}"
-    
+    codigo = (f"{producto.cod_impuesto}-{producto.cod_clasificacion}-{producto.cod_marca}-"
+              f"{producto.presentacion}-{producto.capacidad}-{producto.unidad}-"
+              f"{producto.cod_pais}-{producto.grado_alcoholico}")
     return render_template('catalog/codigo.html', producto=producto, codigo=codigo)
+
+
+# ─── PARTE 2: CATÁLOGO DE GASTOS PERSONALES ──────────────────────────────────
+
+@catalog.route('/gastos')
+@login_required
+def gastos_catalogo():
+    """
+    Catálogo de proveedores con su clasificación de gastos personales.
+    Sirve para que el usuario suba su mapa de proveedores→categoría
+    y luego clasifique sus facturas de gasto automáticamente.
+    """
+    from models.user import MapaClasificacion, MapaClasificacionDetalle, ClasificacionGasto, Factura
+    from sqlalchemy import func
+
+    mapas = MapaClasificacion.query.filter_by(
+        usuario_id=current_user.id, activo=True
+    ).order_by(MapaClasificacion.fecha_subida.desc()).all()
+
+    resumen = db.session.query(
+        ClasificacionGasto.categoria,
+        func.sum(ClasificacionGasto.monto).label('total'),
+        func.count(ClasificacionGasto.id).label('cantidad')
+    ).filter_by(usuario_id=current_user.id).group_by(ClasificacionGasto.categoria).all()
+
+    total_gastos_personales = sum(
+        float(r.total or 0) for r in resumen if r.categoria in CATEGORIAS_GASTO
+    )
+
+    return render_template('catalog/gastos.html',
+                           mapas=mapas,
+                           resumen=resumen,
+                           categorias=CATEGORIAS_GASTO,
+                           total_gastos_personales=total_gastos_personales)

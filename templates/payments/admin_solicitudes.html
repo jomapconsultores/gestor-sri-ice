@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Admin – Solicitudes de Módulos{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 class="page-title mb-0"><i class="bi bi-check2-circle me-2 text-warning"></i>Solicitudes de Activación de Módulos</h4>
+    <a href="{{ url_for('admin_reports.reportes') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Volver a Reportes
+    </a>
+</div>
+
+{% set pendientes = solicitudes | selectattr('estado','equalto','pendiente') | list %}
+{% set procesadas = solicitudes | rejectattr('estado','equalto','pendiente') | list %}
+
+{% if pendientes %}
+<div class="card border-warning mb-4">
+    <div class="card-header bg-warning text-dark fw-bold">
+        <i class="bi bi-hourglass-split me-1"></i>Pendientes de Revisión ({{ pendientes|length }})
+    </div>
+    <div class="card-body p-0">
+        {% for s in pendientes %}
+        <div class="p-3 border-bottom">
+            <div class="row align-items-start g-2">
+                <div class="col-md-4">
+                    <div class="fw-bold">{{ s.usuario.nombre }}</div>
+                    <div class="text-muted small">{{ s.usuario.email }}</div>
+                    <div class="text-muted small">{{ s.fecha_solicitud.strftime('%d/%m/%Y %H:%M') }}</div>
+                </div>
+                <div class="col-md-4">
+                    <div class="small fw-bold mb-1">Módulos solicitados:</div>
+                    {% if s.modulos %}
+                    {% for mid in s.modulos | from_json %}
+                    {% set info = MODULOS.get(mid, {}) %}
+                    <span class="badge bg-secondary me-1 mb-1">
+                        {{ info.get('nombre', mid) if info else mid }}
+                    </span>
+                    {% endfor %}
+                    {% endif %}
+                    <div class="small text-muted mt-1">Duración: {{ s.duracion_meses }} mes(es)</div>
+                    <div class="small fw-bold text-primary">Total: ${{ "%.2f"|format(s.monto_total or 0) }}</div>
+                </div>
+                <div class="col-md-4">
+                    {% if s.comprobante_path %}
+                    <div class="small text-muted mb-2">
+                        <i class="bi bi-file-earmark me-1"></i>Comprobante: {{ s.comprobante_path }}
+                    </div>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('payments.admin_aprobar', solicitud_id=s.id) }}" class="d-inline me-1">
+                        <button type="submit" class="btn btn-success btn-sm"
+                                onclick="return confirm('¿Aprobar y activar los módulos?')">
+                            <i class="bi bi-check-lg me-1"></i>Aprobar
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="collapse"
+                            data-bs-target="#rechazar-{{ s.id }}">
+                        <i class="bi bi-x-lg me-1"></i>Rechazar
+                    </button>
+                    <div class="collapse mt-2" id="rechazar-{{ s.id }}">
+                        <form method="POST" action="{{ url_for('payments.admin_rechazar', solicitud_id=s.id) }}">
+                            <textarea name="nota" class="form-control form-control-sm mb-1"
+                                      placeholder="Motivo del rechazo (opcional)" rows="2"></textarea>
+                            <button type="submit" class="btn btn-danger btn-sm w-100">Confirmar Rechazo</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="alert alert-success">
+    <i class="bi bi-check-circle me-1"></i>No hay solicitudes pendientes.
+</div>
+{% endif %}
+
+{% if procesadas %}
+<div class="card">
+    <div class="card-header bg-light fw-bold"><i class="bi bi-clock-history me-1"></i>Historial Procesado</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr><th>Fecha</th><th>Usuario</th><th>Módulos</th><th>Total</th><th>Estado</th><th>Resp.</th></tr>
+                </thead>
+                <tbody>
+                {% for s in procesadas %}
+                <tr>
+                    <td class="small">{{ s.fecha_solicitud.strftime('%d/%m/%Y') }}</td>
+                    <td class="small">{{ s.usuario.nombre }}</td>
+                    <td class="small">{{ s.modulos }}</td>
+                    <td class="small">${{ "%.2f"|format(s.monto_total or 0) }}</td>
+                    <td>
+                        {% if s.estado == 'aprobado' %}
+                        <span class="badge bg-success">Aprobado</span>
+                        {% else %}
+                        <span class="badge bg-danger">Rechazado</span>
+                        {% endif %}
+                    </td>
+                    <td class="small text-muted">
+                        {{ s.fecha_respuesta.strftime('%d/%m/%Y') if s.fecha_respuesta else '—' }}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

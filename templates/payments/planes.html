@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}Planes y Módulos{% endblock %}
+{% block content %}
+
+<div class="text-center mb-4">
+    <h2 class="page-title">Arma tu Plan a la Medida</h2>
+    <p class="text-muted">Selecciona solo los módulos que necesitas. Sin contratos. Facturas ilimitadas incluye el catálogo sin costo extra.</p>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-header fw-bold"><i class="bi bi-grid me-2"></i>Módulos Disponibles</div>
+            <div class="card-body">
+                <div class="row g-2">
+                    {% for id, m in modulos.items() %}
+                    <div class="col-6">
+                        <div class="card border modulo-card h-100 {% if id in modulos_activos %}border-success bg-light-green{% endif %}"
+                             onclick="toggleModulo('{{ id }}', this)"
+                             data-precio="{{ m.precio }}" data-unico="{{ 'true' if m.precio_unico else 'false' }}"
+                             style="cursor:pointer;">
+                            <div class="card-body p-2">
+                                <div class="d-flex align-items-start gap-2">
+                                    <input class="form-check-input mt-1 flex-shrink-0" type="checkbox"
+                                           name="modulos" value="{{ id }}" id="mod_{{ id }}"
+                                           onchange="actualizarPrecio()" onclick="event.stopPropagation()"
+                                           {% if id in modulos_activos %}disabled{% endif %}>
+                                    <div class="w-100">
+                                        <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                            <span class="badge bg-{{ m.color }} p-1"><i class="bi bi-{{ m.icono }}"></i></span>
+                                            <span class="fw-bold small">{{ m.nombre }}</span>
+                                            {% if id in modulos_activos %}
+                                            <span class="badge bg-success ms-auto">ACTIVO</span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-muted mb-1" style="font-size:0.7rem;">{{ m.descripcion[:100] }}{% if m.descripcion|length > 100 %}...{% endif %}</p>
+                                        <div>
+                                            {% if m.precio_unico %}
+                                            <span class="badge bg-warning text-dark">PAGO ÚNICO</span>
+                                            <span class="badge bg-{{ m.color }}">${{ "%.2f"|format(m.precio) }} + IVA</span>
+                                            {% else %}
+                                            <span class="badge bg-{{ m.color }}">${{ "%.2f"|format(m.precio) }} + IVA/mes</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="alert alert-info mt-3 small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Catálogo de productos incluido gratis</strong> con el módulo <em>Facturas Ilimitadas</em>.
+                    Permite gestionar gastos personales y datos de licores para los cálculos ICE y anexos del SRI.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card sticky-top" style="top:70px;">
+            <div class="card-header bg-primary text-white fw-bold"><i class="bi bi-receipt me-1"></i>Resumen de Pago</div>
+            <div class="card-body">
+
+                <label class="form-label small fw-bold">Duración del plan:</label>
+                <select class="form-select form-select-sm mb-3" id="duracion" onchange="actualizarPrecio()">
+                    {% for meses, info in duraciones.items() %}
+                    <option value="{{ meses }}">{{ info.nombre }}{% if info.descuento > 0 %} (–{{ info.descuento }}% desc.){% endif %}</option>
+                    {% endfor %}
+                </select>
+
+                <div id="resumenModulos" class="small mb-2 text-muted">Selecciona módulos para continuar</div>
+
+                <div class="bg-light rounded p-2 small mb-3">
+                    <div class="d-flex justify-content-between"><span>Subtotal mensual:</span><span id="precioMensual">$0.00</span></div>
+                    <div class="d-flex justify-content-between" id="filaUnico" style="display:none!important;"><span>Pago único:</span><span id="precioUnico">$0.00</span></div>
+                    <div class="d-flex justify-content-between text-success fw-bold" id="filaDescuento" style="display:none!important;"><span>Descuento (<span id="descuentoPct">0</span>%):</span><span id="descuentoMonto">–$0.00</span></div>
+                    <div class="d-flex justify-content-between"><span>Subtotal:</span><span id="subtotalFinal">$0.00</span></div>
+                    <div class="d-flex justify-content-between text-muted"><span>IVA 12%:</span><span id="iva">$0.00</span></div>
+                    <hr class="my-1">
+                    <div class="d-flex justify-content-between fw-bold fs-6"><span>TOTAL:</span><span id="total" class="text-primary">$0.00</span></div>
+                </div>
+
+                <button class="btn btn-primary w-100" id="btnPagar" data-bs-toggle="modal" data-bs-target="#modalPago" disabled>
+                    <i class="bi bi-bank me-1"></i>Pagar con Transferencia
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Transferencia -->
+<div class="modal fade" id="modalPago" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h6 class="modal-title"><i class="bi bi-bank me-2"></i>Datos para Transferencia Bancaria</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card border-primary mb-3">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-building-fill-check me-1"></i>Cuenta de Destino</h6>
+                        <table class="table table-sm mb-0">
+                            <tr><td class="text-muted small">Empresa:</td><td class="fw-bold">{{ config.BANCO_TITULAR }}</td></tr>
+                            <tr><td class="text-muted small">Banco:</td><td>Produbanco</td></tr>
+                            <tr><td class="text-muted small">Tipo cuenta:</td><td>Corriente</td></tr>
+                            <tr><td class="text-muted small">N° Cuenta:</td><td class="fw-bold text-primary fs-5">{{ config.BANCO_CUENTA }}</td></tr>
+                            <tr><td class="text-muted small">RUC:</td><td>{{ config.BANCO_RUC }}</td></tr>
+                            <tr><td class="text-muted small">Correo:</td><td>{{ config.BANCO_CORREO }}</td></tr>
+                            <tr><td class="text-muted small">Celular:</td><td>{{ config.BANCO_CELULAR }}</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning small mb-3">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Transfiere exactamente <strong id="totalModal">$0.00</strong> (incluye IVA).
+                    Una vez realizada la transferencia, sube el comprobante a continuación.
+                    Activaremos tus módulos en máximo <strong>24 horas hábiles</strong>.
+                </div>
+
+                <form method="POST" action="{{ url_for('payments.pagar_transferencia') }}" enctype="multipart/form-data">
+                    <div id="modulosTransferencia"></div>
+                    <input type="hidden" name="duracion" id="duracionTransferencia" value="1">
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Comprobante de transferencia <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control form-control-sm" name="comprobante"
+                               accept=".jpg,.jpeg,.png,.pdf" required>
+                        <div class="form-text">Formatos: JPG, PNG o PDF</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-upload me-1"></i>Enviar Comprobante
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleModulo(id, card) {
+    var cb = document.getElementById('mod_' + id);
+    if (cb.disabled) return;
+    cb.checked = !cb.checked;
+    card.style.borderColor = cb.checked ? '#059669' : '#e2e8f0';
+    card.style.background = cb.checked ? '#f0fdf4' : '#fff';
+    actualizarPrecio();
+}
+
+function actualizarPrecio() {
+    var modulos = [];
+    document.querySelectorAll('input[name="modulos"]:checked:not(:disabled)').forEach(c => modulos.push(c.value));
+    var duracion = parseInt(document.getElementById('duracion').value);
+    document.getElementById('duracionTransferencia').value = duracion;
+
+    if (modulos.length === 0) {
+        document.getElementById('resumenModulos').innerHTML = 'Selecciona módulos para continuar';
+        document.getElementById('btnPagar').disabled = true;
+        ['precioMensual','precioUnico','subtotalFinal','iva','total'].forEach(id => document.getElementById(id).textContent = '$0.00');
+        return;
+    }
+
+    fetch('/payments/calcular_precio', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({modulos: modulos, duracion: duracion})
+    }).then(r => r.json()).then(d => {
+        document.getElementById('precioMensual').textContent = '$' + d.subtotal_mensual.toFixed(2);
+        document.getElementById('precioUnico').textContent = '$' + d.subtotal_unico.toFixed(2);
+        document.getElementById('subtotalFinal').textContent = '$' + d.subtotal_final.toFixed(2);
+        document.getElementById('iva').textContent = '$' + d.iva.toFixed(2);
+        document.getElementById('total').textContent = '$' + d.total.toFixed(2);
+        document.getElementById('totalModal').textContent = '$' + d.total.toFixed(2);
+
+        document.getElementById('filaUnico').style.display = d.subtotal_unico > 0 ? 'flex' : 'none';
+        document.getElementById('filaDescuento').style.display = d.aplica_descuento ? 'flex' : 'none';
+        if (d.aplica_descuento) {
+            document.getElementById('descuentoPct').textContent = d.descuento_pct;
+            document.getElementById('descuentoMonto').textContent = '–$' + d.descuento.toFixed(2);
+        }
+
+        var nombres = modulos.map(m => {
+            var el = document.querySelector('[data-bs-toggle] + div .fw-bold.small') || document.getElementById('mod_'+m);
+            return m;
+        });
+        document.getElementById('resumenModulos').innerHTML = '<span class="text-success fw-bold">' + modulos.length + ' módulo(s) seleccionado(s)</span>';
+        document.getElementById('btnPagar').disabled = false;
+    });
+}
+
+document.getElementById('modalPago').addEventListener('show.bs.modal', function() {
+    var c = document.getElementById('modulosTransferencia');
+    c.innerHTML = '';
+    document.querySelectorAll('input[name="modulos"]:checked:not(:disabled)').forEach(cb => {
+        var i = document.createElement('input');
+        i.type = 'hidden'; i.name = 'modulos'; i.value = cb.value;
+        c.appendChild(i);
+    });
+});
+</script>
+
+<style>
+.modulo-card { border: 2px solid #e2e8f0; transition: all 0.15s; }
+.modulo-card:hover { border-color: #93c5fd; background: #f8fafc; }
+.bg-light-green { background: #f0fdf4 !important; }
+</style>
+{% endblock %}

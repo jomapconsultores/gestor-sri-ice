@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+{% block title %}Editor XML Anexos SRI{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 class="page-title mb-0"><i class="bi bi-file-earmark-code me-2 text-warning"></i>Editor Pro Anexos SRI – ICE / PVP</h4>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Volver</a>
+</div>
+
+<!-- Toolbar -->
+<div class="card mb-3 border-warning">
+    <div class="card-body py-2 d-flex flex-wrap gap-2 align-items-center">
+        <!-- Tipo de Anexo -->
+        <div class="btn-group" role="group">
+            <input type="radio" class="btn-check" name="tipoAnexo" id="tipoICE" value="ICE" checked>
+            <label class="btn btn-outline-danger btn-sm" for="tipoICE"><i class="bi bi-fire me-1"></i>ICE</label>
+            <input type="radio" class="btn-check" name="tipoAnexo" id="tipoPVP" value="PVP">
+            <label class="btn btn-outline-primary btn-sm" for="tipoPVP"><i class="bi bi-tag me-1"></i>PVP</label>
+        </div>
+
+        <label class="btn btn-outline-info btn-sm mb-0">
+            <i class="bi bi-upload me-1"></i>Cargar XML Existente
+            <input type="file" id="archivoXML" accept=".xml" class="d-none">
+        </label>
+
+        <button class="btn btn-success btn-sm" onclick="agregarFila()">
+            <i class="bi bi-plus-circle me-1"></i>Añadir Producto
+        </button>
+
+        <button class="btn btn-warning btn-sm fw-bold ms-auto" onclick="generarXML()">
+            <i class="bi bi-download me-1"></i>Generar XML SRI
+        </button>
+    </div>
+</div>
+
+<!-- Cabecera -->
+<div class="card mb-3">
+    <div class="card-header bg-dark text-white fw-bold py-2">
+        <i class="bi bi-person-badge me-1"></i>Datos Generales del Contribuyente
+    </div>
+    <div class="card-body">
+        <div class="row g-2" id="camposCabecera">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold mb-1">TipoIDInformante</label>
+                <input type="text" class="form-control form-control-sm" name="TipoIDInformante" value="R">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold mb-1">IdInformante (RUC)</label>
+                <input type="text" class="form-control form-control-sm" name="IdInformante" placeholder="1706903406001">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold mb-1">razonSocial</label>
+                <input type="text" class="form-control form-control-sm" name="razonSocial" placeholder="EMPRESA SAS">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label small fw-bold mb-1">Año</label>
+                <input type="text" class="form-control form-control-sm" name="Anio" value="2026" maxlength="4">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label small fw-bold mb-1">Mes</label>
+                <input type="text" class="form-control form-control-sm" name="Mes" value="01" maxlength="2">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold mb-1">codigoOperativo</label>
+                <input type="text" class="form-control form-control-sm" name="codigoOperativo" id="codigoOp" value="ICE">
+            </div>
+            <div class="col-md-2" id="campoExtra">
+                <label class="form-label small fw-bold mb-1">actImport</label>
+                <input type="text" class="form-control form-control-sm" name="actImport" value="0">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de Productos -->
+<div class="card">
+    <div class="card-header bg-secondary text-white fw-bold py-2 d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-table me-1"></i>Detalle de Productos / Ventas</span>
+        <span class="badge bg-light text-dark" id="contadorFilas">0 filas</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0" id="tablaProductos">
+                <thead class="table-dark" id="cabeceraTabla"></thead>
+                <tbody id="cuerpoTabla"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Spinner -->
+<div class="text-center my-3 d-none" id="spinner">
+    <div class="spinner-border text-warning" role="status"></div>
+    <p class="mt-2 text-muted">Procesando...</p>
+</div>
+
+<script>
+const CAMPOS_ICE = {{ campos_ice | tojson }};
+const CAMPOS_PVP = {{ campos_pvp | tojson }};
+const DEFAULTS = {devICE:'0', cantProdBajaICE:'0', ventaICE:'0.00', precioExPVP:'0.00', precioPVP:'0.00', gramoAzucar:'0.00'};
+
+let tipoActual = 'ICE';
+let filas = [];
+
+function getTipo() {
+    return document.querySelector('input[name="tipoAnexo"]:checked').value;
+}
+
+function getCampos() {
+    return getTipo() === 'ICE' ? CAMPOS_ICE : CAMPOS_PVP;
+}
+
+function renderHeaders() {
+    const campos = getCampos();
+    const th = campos.map(c => `<th class="small">${c}</th>`).join('') + '<th></th>';
+    document.getElementById('cabeceraTabla').innerHTML = `<tr>${th}</tr>`;
+}
+
+function renderFilas() {
+    const campos = getCampos();
+    const tbody = document.getElementById('cuerpoTabla');
+    tbody.innerHTML = '';
+    filas.forEach((fila, idx) => {
+        const celdas = campos.map(c => {
+            const val = fila[c] || DEFAULTS[c] || '';
+            return `<td><input type="text" class="form-control form-control-sm" style="min-width:80px" value="${val}" oninput="filas[${idx}]['${c}']=this.value"></td>`;
+        }).join('');
+        const eliminar = `<td><button class="btn btn-sm btn-outline-danger" onclick="eliminarFila(${idx})"><i class="bi bi-trash"></i></button></td>`;
+        tbody.innerHTML += `<tr>${celdas}${eliminar}</tr>`;
+    });
+    document.getElementById('contadorFilas').textContent = `${filas.length} fila(s)`;
+}
+
+function agregarFila() {
+    const campos = getCampos();
+    const fila = {};
+    campos.forEach(c => fila[c] = DEFAULTS[c] || '');
+    filas.push(fila);
+    renderFilas();
+}
+
+function eliminarFila(idx) {
+    filas.splice(idx, 1);
+    renderFilas();
+}
+
+// Cambio de tipo ICE/PVP
+document.querySelectorAll('input[name="tipoAnexo"]').forEach(r => r.addEventListener('change', () => {
+    tipoActual = getTipo();
+    filas = [];
+    document.getElementById('codigoOp').value = tipoActual;
+    // Actualizar campo extra cabecera
+    const extra = document.getElementById('campoExtra');
+    const campo = tipoActual === 'ICE' ? 'actImport' : 'tipoCarga';
+    extra.innerHTML = `<label class="form-label small fw-bold mb-1">${campo}</label>
+        <input type="text" class="form-control form-control-sm" name="${campo}" value="0">`;
+    renderHeaders();
+    renderFilas();
+}));
+
+// Cargar XML
+document.getElementById('archivoXML').addEventListener('change', async function() {
+    if (!this.files[0]) return;
+    const fd = new FormData();
+    fd.append('archivo_xml', this.files[0]);
+    document.getElementById('spinner').classList.remove('d-none');
+    try {
+        const resp = await fetch('{{ url_for("ats.cargar_xml") }}', {method:'POST', body:fd});
+        const data = await resp.json();
+        if (data.error) { alert('Error: ' + data.error); return; }
+
+        // Seleccionar tipo
+        document.querySelector(`input[value="${data.tipo}"]`).checked = true;
+        tipoActual = data.tipo;
+        document.getElementById('codigoOp').value = data.tipo;
+
+        // Llenar cabecera
+        Object.entries(data.cabecera).forEach(([k,v]) => {
+            const el = document.querySelector(`[name="${k}"]`);
+            if (el) el.value = v;
+        });
+
+        // Actualizar campo extra
+        const extra = document.getElementById('campoExtra');
+        const campoE = data.campo_extra;
+        extra.innerHTML = `<label class="form-label small fw-bold mb-1">${campoE}</label>
+            <input type="text" class="form-control form-control-sm" name="${campoE}" value="${data.cabecera[campoE]||'0'}">`;
+
+        filas = data.ventas || [];
+        renderHeaders();
+        renderFilas();
+    } catch(e) {
+        alert('Error procesando el XML: ' + e.message);
+    } finally {
+        document.getElementById('spinner').classList.add('d-none');
+        this.value = '';
+    }
+});
+
+async function generarXML() {
+    const tipo = getTipo();
+    const campos = getCampos();
+
+    // Recolectar cabecera
+    const cab = {};
+    document.querySelectorAll('#camposCabecera [name], #campoExtra [name]').forEach(el => {
+        cab[el.name] = el.value;
+    });
+    cab['codigoOperativo'] = tipo;
+
+    if (!cab['IdInformante'] || !cab['razonSocial']) {
+        alert('Completa al menos el RUC y la Razón Social.'); return;
+    }
+
+    // Actualizar filas desde el DOM
+    const rows = document.querySelectorAll('#cuerpoTabla tr');
+    rows.forEach((tr, idx) => {
+        const inputs = tr.querySelectorAll('input');
+        campos.forEach((c, ci) => {
+            if (filas[idx] && inputs[ci]) filas[idx][c] = inputs[ci].value;
+        });
+    });
+
+    const payload = {tipo, cabecera: cab, ventas: filas};
+    document.getElementById('spinner').classList.remove('d-none');
+
+    try {
+        const resp = await fetch('{{ url_for("ats.generar_xml") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        if (!resp.ok) { const e = await resp.json(); alert(e.error); return; }
+
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Anexo_${tipo}.xml`;
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch(e) {
+        alert('Error generando XML: ' + e.message);
+    } finally {
+        document.getElementById('spinner').classList.add('d-none');
+    }
+}
+
+// Inicializar
+renderHeaders();
+</script>
+{% endblock %}

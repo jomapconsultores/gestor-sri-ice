@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block title %}Procesador Retenciones XML{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 class="page-title mb-0"><i class="bi bi-file-earmark-minus me-2 text-primary"></i>Procesador de Retenciones XML</h4>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Volver</a>
+</div>
+
+<!-- Carga de archivos -->
+<div class="card mb-3 border-primary">
+    <div class="card-header bg-primary text-white fw-bold py-2">
+        <i class="bi bi-upload me-1"></i>Cargar XMLs de Retenciones
+    </div>
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-8">
+                <label class="form-label small fw-bold">Archivos XML de retenciones <span class="text-danger">*</span></label>
+                <input type="file" class="form-control form-control-sm" id="inputXML" multiple accept=".xml">
+                <div class="form-text">Sube uno o varios XMLs de comprobantes de retención del SRI</div>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-primary fw-bold w-100" onclick="procesarXMLs()">
+                    <i class="bi bi-gear me-1"></i>Procesar Retenciones
+                </button>
+            </div>
+        </div>
+        <div class="alert alert-info mt-3 small mb-0">
+            <i class="bi bi-info-circle me-1"></i>
+            Se detectan automáticamente: Renta (código 1), IVA (código 2) e ISD (código 6). Los duplicados se marcan en rojo.
+        </div>
+    </div>
+</div>
+
+<!-- Panel de resultados -->
+<div class="card d-none" id="panelResultados">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-table me-1"></i>Retenciones Procesadas</span>
+        <div class="d-flex gap-2 align-items-center">
+            <input type="text" class="form-control form-control-sm" id="busqueda" placeholder="Buscar..." style="width:180px" oninput="filtrar()">
+            <span class="badge bg-light text-dark" id="contadorRet">0</span>
+            <button class="btn btn-success btn-sm fw-bold" onclick="exportarExcel()">
+                <i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive" style="max-height:420px; overflow-y:auto">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-dark sticky-top">
+                    <tr>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>RUC Emisor</th>
+                        <th>Agente de Retención</th>
+                        <th>Nro. Comprobante</th>
+                        <th>Periodo</th>
+                        <th class="text-end">Base Renta</th>
+                        <th class="text-end">% Renta</th>
+                        <th class="text-end">Ret. Renta</th>
+                        <th class="text-end">Base IVA</th>
+                        <th class="text-end">% IVA</th>
+                        <th class="text-end">Ret. IVA</th>
+                        <th class="text-end">Ret. ISD</th>
+                        <th class="text-end fw-bold">Total</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoResultados"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Resumen totales -->
+<div class="row mt-3 d-none" id="panelResumen">
+    <div class="col-md-3">
+        <div class="card border-secondary text-center">
+            <div class="card-body py-2">
+                <div class="small text-muted">Retenciones</div>
+                <div class="fw-bold fs-5" id="resTotal">0</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-danger text-center">
+            <div class="card-body py-2">
+                <div class="small text-muted">Total Ret. Renta</div>
+                <div class="fw-bold fs-5 text-danger" id="resTotalRenta">$0.00</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning text-center">
+            <div class="card-body py-2">
+                <div class="small text-muted">Total Ret. IVA</div>
+                <div class="fw-bold fs-5 text-warning" id="resTotalIVA">$0.00</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-success text-center">
+            <div class="card-body py-2">
+                <div class="small text-muted">Total Retenido</div>
+                <div class="fw-bold fs-5 text-success" id="resTotalGeneral">$0.00</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log -->
+<div class="card mt-3">
+    <div class="card-body py-2 px-3">
+        <small id="logTexto" class="text-muted">Listo. Sube los XMLs de retenciones para procesar.</small>
+    </div>
+</div>
+
+<!-- Spinner -->
+<div class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center d-none" id="spinner" style="background:rgba(0,0,0,0.5);z-index:9999">
+    <div class="card p-4 text-center shadow-lg">
+        <div class="spinner-border text-primary mb-3" style="width:3rem;height:3rem"></div>
+        <p class="mb-0 fw-bold" id="spinnerMsg">Procesando...</p>
+    </div>
+</div>
+
+<script>
+let todasFilas = [];
+
+async function procesarXMLs() {
+    const input = document.getElementById('inputXML');
+    if (!input.files.length) { alert('Selecciona al menos un archivo XML'); return; }
+
+    const fd = new FormData();
+    [...input.files].forEach(f => fd.append('archivos_xml', f));
+
+    mostrarSpinner('Procesando XMLs de retenciones...');
+    try {
+        const resp = await fetch('{{ url_for("retenciones.procesar") }}', {method:'POST', body:fd});
+        const data = await resp.json();
+        if (data.error) { alert(data.error); return; }
+        todasFilas = data.filas || [];
+        const ok = todasFilas.filter(f => f.Estado !== 'DUPLICADO');
+        const dup = todasFilas.filter(f => f.Estado === 'DUPLICADO');
+        log(`✅ ${data.total} procesadas | ${ok.length} únicas | ${data.duplicados} duplicadas`);
+        renderTabla(todasFilas);
+        actualizarResumen(ok);
+        document.getElementById('panelResultados').classList.remove('d-none');
+        document.getElementById('panelResumen').classList.remove('d-none');
+    } catch(e) { alert('Error: ' + e.message); }
+    finally { ocultarSpinner(); }
+}
+
+function renderTabla(filas) {
+    const tbody = document.getElementById('cuerpoResultados');
+    tbody.innerHTML = filas.map(f => {
+        const isDup = f.Estado === 'DUPLICADO';
+        return `<tr class="${isDup ? 'table-danger' : ''}">
+            <td><span class="badge ${isDup ? 'bg-danger' : 'bg-success'}">${f.Estado}</span></td>
+            <td class="small">${f.Fecha||''}</td>
+            <td class="small">${f['RUC Emisor']||''}</td>
+            <td class="small">${(f['Agente Retención']||'').substring(0,30)}</td>
+            <td class="small">${f['Nro. Comprobante']||''}</td>
+            <td class="small">${f['Periodo Fiscal']||''}</td>
+            <td class="text-end small">$${fmt(f['Base Renta'])}</td>
+            <td class="text-end small">${fmt2(f['% Renta'])}%</td>
+            <td class="text-end small text-danger">$${fmt(f['Ret. Renta'])}</td>
+            <td class="text-end small">$${fmt(f['Base IVA'])}</td>
+            <td class="text-end small">${fmt2(f['% IVA'])}%</td>
+            <td class="text-end small text-warning">$${fmt(f['Ret. IVA'])}</td>
+            <td class="text-end small">$${fmt(f['Ret. ISD'])}</td>
+            <td class="text-end small fw-bold text-success">$${fmt(f['Total Retenido'])}</td>
+        </tr>`;
+    }).join('');
+    const ok = filas.filter(f => f.Estado !== 'DUPLICADO');
+    const dup = filas.filter(f => f.Estado === 'DUPLICADO');
+    document.getElementById('contadorRet').textContent = `${ok.length} ok, ${dup.length} dup`;
+}
+
+function actualizarResumen(filas) {
+    const totalRenta = filas.reduce((s, f) => s + (parseFloat(f['Ret. Renta']) || 0), 0);
+    const totalIVA   = filas.reduce((s, f) => s + (parseFloat(f['Ret. IVA'])   || 0), 0);
+    const totalGen   = filas.reduce((s, f) => s + (parseFloat(f['Total Retenido']) || 0), 0);
+    document.getElementById('resTotal').textContent = filas.length;
+    document.getElementById('resTotalRenta').textContent   = '$' + totalRenta.toFixed(2);
+    document.getElementById('resTotalIVA').textContent     = '$' + totalIVA.toFixed(2);
+    document.getElementById('resTotalGeneral').textContent = '$' + totalGen.toFixed(2);
+}
+
+function filtrar() {
+    const q = document.getElementById('busqueda').value.toLowerCase();
+    const filtradas = q ? todasFilas.filter(f =>
+        Object.values(f).some(v => String(v).toLowerCase().includes(q))
+    ) : todasFilas;
+    renderTabla(filtradas);
+}
+
+async function exportarExcel() {
+    if (!todasFilas.length) { alert('No hay datos para exportar'); return; }
+    mostrarSpinner('Generando Excel...');
+    try {
+        const resp = await fetch('{{ url_for("retenciones.exportar_excel") }}', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({filas: todasFilas})
+        });
+        if (!resp.ok) { const e = await resp.json(); alert(e.error); return; }
+        const blob = await resp.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'Retenciones.xlsx';
+        a.click();
+    } catch(e) { alert('Error: ' + e.message); }
+    finally { ocultarSpinner(); }
+}
+
+function fmt(v)  { return (parseFloat(v) || 0).toFixed(2); }
+function fmt2(v) { return (parseFloat(v) || 0).toFixed(1); }
+function mostrarSpinner(msg) { document.getElementById('spinnerMsg').textContent = msg; document.getElementById('spinner').classList.remove('d-none'); }
+function ocultarSpinner() { document.getElementById('spinner').classList.add('d-none'); }
+function log(msg) { document.getElementById('logTexto').textContent = msg; }
+</script>
+{% endblock %}

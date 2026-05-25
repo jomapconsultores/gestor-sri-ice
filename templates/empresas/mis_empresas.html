@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Empresas{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-building"></i> Mis Empresas</h2>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <a href="{{ url_for('empresas.agregar_empresa') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Agregar Empresa
+        </a>
+    </div>
+    <div class="col-md-6 text-end">
+        <span class="badge bg-info fs-6">{{ empresas|length }} empresas</span>
+    </div>
+</div>
+
+<div class="row">
+    {% for e in empresas %}
+    <div class="col-md-6 mb-3">
+        <div class="card shadow h-100 {% if current_user.suscripcion.empresa_actual_id == e.id %}border-success border-2{% endif %}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5>{{ e.nombre }}</h5>
+                        <p class="text-muted mb-1">RUC: {{ e.ruc }}</p>
+                        {% if e.razon_social %}
+                        <p class="text-muted small mb-0">{{ e.razon_social }}</p>
+                        {% endif %}
+                    </div>
+                    {% if current_user.suscripcion.empresa_actual_id == e.id %}
+                    <span class="badge bg-success">Actual</span>
+                    {% endif %}
+                </div>
+                <div class="mt-3">
+                    {% if current_user.suscripcion.empresa_actual_id != e.id %}
+                    <a href="{{ url_for('empresas.seleccionar_empresa', empresa_id=e.id) }}" class="btn btn-success btn-sm">
+                        <i class="bi bi-check-circle"></i> Seleccionar
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('empresas.editar_empresa', empresa_id=e.id) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{{ url_for('empresas.desactivar_empresa', empresa_id=e.id) }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Desactivar esta empresa?')">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-building text-muted" style="font-size: 4rem;"></i>
+                <h4 class="text-muted mt-3">No tienes empresas registradas</h4>
+                <p>Agrega tu primera empresa para empezar a gestionar sus facturas.</p>
+                <a href="{{ url_for('empresas.agregar_empresa') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-plus-circle"></i> Agregar Empresa
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

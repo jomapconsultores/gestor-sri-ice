@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Reporte de Ingresos{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 class="page-title mb-0"><i class="bi bi-bar-chart-fill me-2 text-success"></i>Reporte de Facturas de Ingresos</h4>
+    <div class="d-flex gap-2 flex-wrap">
+        {% if tiene_anexos %}
+        <a href="{{ url_for('annexes.pagina_generar') }}" class="btn btn-warning btn-sm">
+            <i class="bi bi-file-earmark-zip me-1"></i>Generar Anexo PVP/ICE
+        </a>
+        {% else %}
+        <span class="btn btn-outline-warning btn-sm disabled" title="Requiere módulo Anexos SRI">
+            <i class="bi bi-lock me-1"></i>Generar Anexo (requiere módulo)
+        </span>
+        {% endif %}
+        <a href="{{ url_for('invoices.cargar_ingresos') }}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-cloud-upload me-1"></i>Subir Más
+        </a>
+    </div>
+</div>
+
+{% if tiene_anexos %}
+<div class="alert alert-success small mb-3">
+    <i class="bi bi-check-circle-fill me-1"></i>
+    <strong>Módulo Anexos SRI activo:</strong> Puedes generar el Anexo PVP e ICE directamente desde los datos cargados.
+    El sistema calculará el ICE correspondiente para tu declaración mensual.
+    <a href="{{ url_for('annexes.pagina_generar') }}" class="ms-2 fw-bold">Ir a Generar Anexo →</a>
+</div>
+{% else %}
+<div class="alert alert-info small mb-3">
+    <i class="bi bi-info-circle me-1"></i>
+    Para generar el <strong>Anexo PVP e ICE</strong> necesitas el módulo <em>Generación Anexos SRI</em> ($15+IVA/mes).
+    <a href="{{ url_for('payments.ver_planes') }}" class="ms-2 fw-bold">Contratar →</a>
+</div>
+{% endif %}
+
+<!-- Resumen por período -->
+{% if resumen %}
+<div class="card mb-4">
+    <div class="card-header bg-success text-white fw-bold">
+        <i class="bi bi-calendar3 me-1"></i>Resumen por Período
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-success">
+                    <tr>
+                        <th>Período</th><th class="text-end">Facturas</th>
+                        <th class="text-end">Total</th><th class="text-end">Base ICE</th>
+                        <th class="text-end">ICE</th><th class="text-end">Base IVA</th><th class="text-end">IVA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% set meses = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'] %}
+                {% set total_ice_global = namespace(v=0) %}
+                {% for r in resumen %}
+                {% set _ = total_ice_global.__setattr__('v', total_ice_global.v + (r.ice or 0)) %}
+                <tr>
+                    <td class="fw-bold">{{ meses[r.mes|int] }} {{ r.anio|int }}</td>
+                    <td class="text-end">{{ r.cantidad }}</td>
+                    <td class="text-end">${{ "%.2f"|format(r.total or 0) }}</td>
+                    <td class="text-end text-danger">${{ "%.2f"|format(r.base_ice or 0) }}</td>
+                    <td class="text-end text-danger fw-bold">${{ "%.2f"|format(r.ice or 0) }}</td>
+                    <td class="text-end">${{ "%.2f"|format(r.base_iva or 0) }}</td>
+                    <td class="text-end">${{ "%.2f"|format(r.iva or 0) }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                <tfoot class="table-dark">
+                    <tr>
+                        <td colspan="4" class="fw-bold">TOTAL ICE A DECLARAR:</td>
+                        <td class="text-end fw-bold text-warning">${{ "%.2f"|format(resumen|sum(attribute='ice') or 0) }}</td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Detalle de facturas -->
+{% if facturas %}
+<div class="card">
+    <div class="card-header bg-light d-flex justify-content-between">
+        <span><i class="bi bi-list-ul me-1"></i>Detalle de Facturas</span>
+        <span class="badge bg-success">{{ facturas|length }} facturas</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha</th><th>N° Factura</th><th>Cliente / RUC</th>
+                        <th class="text-end">Total</th><th class="text-end">ICE</th><th class="text-end">IVA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for f in facturas %}
+                <tr>
+                    <td class="small">{{ f.fecha_emision.strftime('%d/%m/%Y') if f.fecha_emision else '—' }}</td>
+                    <td class="small">{{ f.numero_factura or '—' }}</td>
+                    <td class="small">{{ (f.razon_social_comprador or '—')[:25] }}<br>
+                        <span class="text-muted" style="font-size:0.7rem;">{{ f.ruc_comprador or '' }}</span>
+                    </td>
+                    <td class="text-end small">${{ "%.2f"|format(f.importe_total or 0) }}</td>
+                    <td class="text-end small text-danger">${{ "%.2f"|format(f.valor_ice or 0) }}</td>
+                    <td class="text-end small">${{ "%.2f"|format(f.valor_iva or 0) }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-secondary text-center">
+    <i class="bi bi-inbox me-2"></i>No hay facturas de ingresos. <a href="{{ url_for('invoices.cargar_ingresos') }}">Subir ahora</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,139 +1,258 @@
 {% extends "base.html" %}
-
 {% block title %}Dashboard{% endblock %}
-
 {% block content %}
-<h2 class="mb-4">Panel de Control</h2>
 
-<div class="row">
-    <!-- Suscripcion -->
-    <div class="col-md-4 mb-3">
-        <div class="card border-primary h-100">
-            <div class="card-body text-center">
-                <i class="bi bi-star-fill text-warning" style="font-size: 2rem;"></i>
-                <h5 class="card-title mt-2">Suscripcion</h5>
-                {% if current_user.tiene_suscripcion_activa() %}
-                    <span class="badge bg-success fs-6">Activa</span>
-                    <p class="mt-2">{{ current_user.suscripcion.plan_id }}</p>
-                    <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-sm btn-outline-primary">Cambiar Plan</a>
-                {% else %}
-                    <span class="badge bg-secondary fs-6">Sin plan</span>
-                    <div class="mt-3">
-                        <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-primary btn-sm">Elegir Plan</a>
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h4 class="page-title mb-0">
+            <i class="bi bi-house-fill me-2"></i>Bienvenido, {{ current_user.nombre }}
+        </h4>
+        <small class="text-muted">{{ current_user.email }}</small>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        {% if current_user.is_admin %}
+        <a href="{{ url_for('admin_reports.reportes') }}" class="btn btn-warning btn-sm">
+            <i class="bi bi-shield-fill me-1"></i>Panel Admin
+        </a>
+        {% endif %}
+        <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-plus-circle me-1"></i>Agregar Módulos
+        </a>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-danger btn-sm">
+            <i class="bi bi-box-arrow-right me-1"></i>Cerrar Sesión
+        </a>
+    </div>
+</div>
+
+<!-- Estado de módulos -->
+{% if modulos_activos %}
+<div class="alert alert-success py-2 small mb-3">
+    <i class="bi bi-check-circle-fill me-1"></i>
+    <strong>Módulos activos:</strong>
+    {% for m in modulos_activos %}
+    <span class="badge bg-success ms-1">{{ m }}</span>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-warning py-2 small mb-3">
+    <i class="bi bi-exclamation-triangle me-1"></i>
+    No tienes módulos activos.
+    <a href="{{ url_for('payments.ver_planes') }}" class="fw-bold">Contrata un módulo aquí</a> para comenzar a usar el sistema.
+</div>
+{% endif %}
+
+<!-- Accesos rápidos por módulo -->
+<div class="row g-3">
+
+    <!-- FACTURAS ILIMITADAS -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 {% if 'facturas' in modulos_activos %}border-danger{% else %}border-secondary opacity-75{% endif %}">
+            <div class="card-header {% if 'facturas' in modulos_activos %}bg-danger text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-receipt me-1"></i>Facturas Ilimitadas</span>
+                {% if 'facturas' not in modulos_activos %}<span class="badge bg-light text-dark">No activo</span>{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row text-center mb-2">
+                    <div class="col">
+                        <div class="fw-bold text-danger fs-4">{{ total_facturas }}</div>
+                        <div class="text-muted" style="font-size:0.75rem;">facturas cargadas</div>
                     </div>
+                </div>
+                <div class="d-grid gap-1">
+                    <a href="{{ url_for('invoices.pagina_carga') }}" class="btn btn-sm {% if 'facturas' in modulos_activos %}btn-danger{% else %}btn-outline-secondary disabled{% endif %}">
+                        <i class="bi bi-cloud-upload me-1"></i>Subir Facturas Gastos
+                    </a>
+                    <a href="{{ url_for('invoices.cargar_ingresos') }}" class="btn btn-sm {% if 'facturas' in modulos_activos %}btn-outline-danger{% else %}btn-outline-secondary disabled{% endif %}">
+                        <i class="bi bi-cloud-upload me-1"></i>Subir Facturas Ingresos
+                    </a>
+                    <a href="{{ url_for('invoices.ver_facturas') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-list-ul me-1"></i>Ver Todas
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CATÁLOGO (incluido con facturas) -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 {% if 'facturas' in modulos_activos %}border-primary{% else %}border-secondary opacity-75{% endif %}">
+            <div class="card-header {% if 'facturas' in modulos_activos %}bg-primary text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-box-seam me-1"></i>Catálogo de Productos</span>
+                {% if 'facturas' in modulos_activos %}
+                <span class="badge bg-light text-success">Incluido gratis</span>
+                {% else %}
+                <span class="badge bg-light text-dark">Con Facturas</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-2">Gestiona tus productos de licores y la clasificación de gastos personales.</p>
+                <div class="d-grid gap-1">
+                    <a href="{{ url_for('catalog.ver_catalogo') }}" class="btn btn-sm {% if 'facturas' in modulos_activos %}btn-primary{% else %}btn-outline-secondary disabled{% endif %}">
+                        <i class="bi bi-list-check me-1"></i>Catálogo Licores
+                    </a>
+                    <a href="{{ url_for('catalog.gastos_catalogo') }}" class="btn btn-sm {% if 'facturas' in modulos_activos %}btn-outline-primary{% else %}btn-outline-secondary disabled{% endif %}">
+                        <i class="bi bi-wallet2 me-1"></i>Catálogo Gastos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CÁLCULO ICE SIMPLE -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 {% if 'ice_simple' in modulos_activos %}border-success{% else %}border-secondary opacity-75{% endif %}">
+            <div class="card-header {% if 'ice_simple' in modulos_activos %}bg-success text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-calculator me-1"></i>Cálculo ICE Simple</span>
+                {% if 'ice_simple' not in modulos_activos %}<span class="badge bg-light text-dark">No activo</span>{% endif %}
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-2">Calcula el ICE de un producto individual.</p>
+                <div class="d-grid gap-1">
+                    <a href="{{ url_for('ice.calculadora') }}" class="btn btn-sm {% if 'ice_simple' in modulos_activos %}btn-success{% else %}btn-outline-secondary disabled{% endif %}">
+                        <i class="bi bi-calculator me-1"></i>Calcular ICE
+                    </a>
+                    <a href="{{ url_for('ice.ver_tarifas') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-table me-1"></i>Ver Tarifas
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CÁLCULO ICE MÚLTIPLE + MEZCLA -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 {% if 'ice_multiple' in modulos_activos %}border-primary{% else %}border-secondary opacity-75{% endif %}">
+            <div class="card-header {% if 'ice_multiple' in modulos_activos %}bg-primary text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-calculator-fill me-1"></i>ICE Múltiple + Mezcla</span>
+                {% if 'ice_multiple' not in modulos_activos %}<span class="badge bg-light text-dark">No activo</span>{% endif %}
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-2">Multi-producto y cálculo de mezcla total.</p>
+                <div class="d-grid gap-1">
+                    <a href="{{ url_for('ice.multiple') }}" class="btn btn-sm {% if 'ice_multiple' in modulos_activos %}btn-primary{% else %}btn-outline-secondary disabled{% endif %}">
+                        <i class="bi bi-layers me-1"></i>Multi-Producto
+                    </a>
+                    <a href="{{ url_for('ice.mezcla') }}" class="btn btn-sm {% if 'ice_multiple' in modulos_activos %}btn-outline-primary{% else %}btn-outline-secondary disabled{% endif %}">
+                        <i class="bi bi-shuffle me-1"></i>Mezcla Total
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANEXOS SRI -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 {% if 'anexos' in modulos_activos %}border-warning{% else %}border-secondary opacity-75{% endif %}">
+            <div class="card-header {% if 'anexos' in modulos_activos %}bg-warning text-dark{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-file-earmark-zip me-1"></i>Anexos SRI</span>
+                {% if 'anexos' not in modulos_activos %}<span class="badge bg-light text-dark">No activo</span>{% endif %}
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-2">Genera los anexos XML (PVP e ICE) para el SRI.</p>
+                <div class="d-grid gap-1">
+                    <a href="{{ url_for('annexes.pagina_generar') }}" class="btn btn-sm {% if 'anexos' in modulos_activos %}btn-warning text-dark{% else %}btn-outline-secondary disabled{% endif %}">
+                        <i class="bi bi-file-earmark-code me-1"></i>Generar Anexo
+                    </a>
+                    <a href="{{ url_for('annexes.historial') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-clock-history me-1"></i>Historial
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXPORTACIÓN EXCEL -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 {% if 'exportacion' in modulos_activos %}border-info{% else %}border-secondary opacity-75{% endif %}">
+            <div class="card-header {% if 'exportacion' in modulos_activos %}bg-info text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-file-earmark-excel me-1"></i>Exportación Excel</span>
+                {% if 'exportacion' not in modulos_activos %}<span class="badge bg-light text-dark">No activo</span>{% endif %}
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-2">Exporta reportes de todos los módulos a Excel.</p>
+                <div class="d-grid gap-1">
+                    <a href="{{ url_for('exports.exportar_declaracion') }}" class="btn btn-sm {% if 'exportacion' in modulos_activos %}btn-info text-white{% else %}btn-outline-secondary disabled{% endif %}">
+                        <i class="bi bi-download me-1"></i>Exportar Declaración
+                    </a>
+                    <a href="{{ url_for('gastos.exportar_excel') }}" class="btn btn-sm {% if 'exportacion' in modulos_activos %}btn-outline-info{% else %}btn-outline-secondary disabled{% endif %}">
+                        <i class="bi bi-download me-1"></i>Exportar Gastos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DESCARGA MASIVA SRI -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 {% if 'descarga_sri' in modulos_activos %}border-secondary{% else %}border-secondary opacity-75{% endif %}">
+            <div class="card-header {% if 'descarga_sri' in modulos_activos %}bg-secondary text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-cloud-download me-1"></i>Descarga Masiva SRI</span>
+                {% if 'descarga_sri' not in modulos_activos %}
+                <span class="badge bg-warning text-dark">Pago único</span>
+                {% else %}
+                <span class="badge bg-light text-success">Activo</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-2">Descarga masivamente tus facturas del portal SRI. Pago único.</p>
+                <div class="d-grid">
+                    <a href="{{ url_for('downloader.pagina_descarga') }}" class="btn btn-sm {% if 'descarga_sri' in modulos_activos %}btn-secondary{% else %}btn-outline-secondary disabled{% endif %}">
+                        <i class="bi bi-cloud-download me-1"></i>Abrir Herramienta
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SOPORTE PRIORITARIO -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 {% if 'soporte' in modulos_activos %}border-dark{% else %}border-secondary opacity-75{% endif %}">
+            <div class="card-header {% if 'soporte' in modulos_activos %}bg-dark text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-headset me-1"></i>Soporte Prioritario</span>
+                {% if 'soporte' not in modulos_activos %}<span class="badge bg-light text-dark">No activo</span>{% endif %}
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-2">Atención preferencial por WhatsApp y correo.</p>
+                {% if 'soporte' in modulos_activos %}
+                <div class="d-grid gap-1">
+                    <a href="https://wa.me/593963511411" target="_blank" class="btn btn-sm btn-success">
+                        <i class="bi bi-whatsapp me-1"></i>WhatsApp
+                    </a>
+                    <a href="mailto:jomapconsultores@outlook.com" class="btn btn-sm btn-outline-dark">
+                        <i class="bi bi-envelope me-1"></i>Correo
+                    </a>
+                </div>
+                {% else %}
+                <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-sm btn-outline-secondary w-100">
+                    <i class="bi bi-plus-circle me-1"></i>Contratar
+                </a>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Facturas -->
-    <div class="col-md-4 mb-3">
-        <div class="card border-info h-100">
-            <div class="card-body text-center">
-                <i class="bi bi-receipt text-info" style="font-size: 2rem;"></i>
-                <h5 class="card-title mt-2">Facturas</h5>
-                <p class="display-6 text-info">{{ total_facturas }}</p>
-                <small class="text-muted">procesadas</small>
-                <div class="mt-3 d-grid gap-1">
-                    <a href="{{ url_for('invoices.pagina_carga') }}" class="btn btn-info btn-sm">Cargar XMLs</a>
-                    <a href="{{ url_for('invoices.ver_facturas') }}" class="btn btn-outline-info btn-sm">Ver todas</a>
+    <!-- MIS MÓDULOS / RESUMEN -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-light">
+            <div class="card-header bg-light text-dark">
+                <i class="bi bi-grid me-1"></i>Mi Cuenta
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-2">Gestiona tus módulos y suscripciones.</p>
+                <div class="d-grid gap-1">
+                    <a href="{{ url_for('payments.mis_modulos') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-grid me-1"></i>Mis Módulos
+                    </a>
+                    <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-plus-circle me-1"></i>Agregar Módulos
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-box-arrow-right me-1"></i>Cerrar Sesión
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Calculo ICE -->
-    <div class="col-md-4 mb-3">
-        <div class="card border-success h-100">
-            <div class="card-body text-center">
-                <i class="bi bi-calculator text-success" style="font-size: 2rem;"></i>
-                <h5 class="card-title mt-2">Calculo ICE</h5>
-                <p class="text-muted small">Calcula el ICE de tus productos</p>
-                <div class="mt-3 d-grid gap-1">
-                    <a href="{{ url_for('ice.calculadora') }}" class="btn btn-success btn-sm">Individual</a>
-                    <a href="{{ url_for('ice.multiple') }}" class="btn btn-outline-success btn-sm">Multi-Producto</a>
-                    <a href="{{ url_for('ice.mezcla') }}" class="btn btn-outline-success btn-sm">Mezcla Total</a>
-                    <a href="{{ url_for('ice.comparativa') }}" class="btn btn-outline-success btn-sm">Comparativa</a>
-                    <a href="{{ url_for('ice.ver_tarifas') }}" class="btn btn-outline-success btn-sm">Tarifas</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mt-3">
-    <!-- Resumen ICE/IVA -->
-    <div class="col-md-4 mb-3">
-        <div class="card border-warning h-100">
-            <div class="card-body text-center">
-                <i class="bi bi-bar-chart text-warning" style="font-size: 2rem;"></i>
-                <h5 class="card-title mt-2">Resumen ICE/IVA</h5>
-                <p class="text-muted small">Resumen de facturas procesadas</p>
-                <a href="{{ url_for('invoices.resumen') }}" class="btn btn-warning btn-sm mt-3">Ver Resumen</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Planes -->
-    <div class="col-md-4 mb-3">
-        <div class="card border-secondary h-100">
-            <div class="card-body text-center">
-                <i class="bi bi-credit-card text-secondary" style="font-size: 2rem;"></i>
-                <h5 class="card-title mt-2">Planes</h5>
-                <p class="text-muted small">Gestiona tu suscripcion</p>
-                <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-secondary btn-sm mt-3">Ver Planes</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Catalogo -->
-    <div class="col-md-4 mb-3">
-        <div class="card border-primary h-100">
-            <div class="card-body text-center">
-                <i class="bi bi-box-seam text-primary" style="font-size: 2rem;"></i>
-                <h5 class="card-title mt-2">Catalogo</h5>
-                <p class="text-muted small">Gestiona tus productos</p>
-                <a href="{{ url_for('catalog.ver_catalogo') }}" class="btn btn-primary btn-sm mt-3">Ver Catalogo</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mt-3">
-    <!-- Anexos SRI -->
-    <div class="col-md-4 mb-3">
-        <div class="card border-danger h-100">
-            <div class="card-body text-center">
-                <i class="bi bi-file-earmark-xml text-danger" style="font-size: 2rem;"></i>
-                <h5 class="card-title mt-2">Anexos SRI</h5>
-                <p class="text-muted small">Genera anexos ICE y PVP</p>
-                <a href="{{ url_for('annexes.pagina_generar') }}" class="btn btn-danger btn-sm mt-3">Generar Anexo</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Exportar Excel -->
-    <div class="col-md-4 mb-3">
-        <div class="card border-success h-100">
-            <div class="card-body text-center">
-                <i class="bi bi-file-earmark-excel text-success" style="font-size: 2rem;"></i>
-                <h5 class="card-title mt-2">Exportar</h5>
-                <p class="text-muted small">Descarga reportes en Excel</p>
-                <a href="#" class="btn btn-success btn-sm mt-3 disabled">Proximamente</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Descarga Masiva -->
-    <div class="col-md-4 mb-3">
-        <div class="card border-dark h-100">
-            <div class="card-body text-center">
-                <i class="bi bi-cloud-download text-dark" style="font-size: 2rem;"></i>
-                <h5 class="card-title mt-2">Descarga SRI</h5>
-                <p class="text-muted small">Descarga masiva de facturas</p>
-                <a href="#" class="btn btn-dark btn-sm mt-3 disabled">Proximamente</a>
-            </div>
-        </div>
-    </div>
 </div>
 {% endblock %}

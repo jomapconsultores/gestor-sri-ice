@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+{% block title %}Panel de Administración{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 class="page-title mb-0"><i class="bi bi-shield-fill me-2 text-warning"></i>Panel de Administración</h4>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('payments.admin_solicitudes') }}" class="btn btn-warning btn-sm position-relative">
+            <i class="bi bi-check2-circle me-1"></i>Aprobar Módulos
+            {% if solicitudes_pendientes %}
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {{ solicitudes_pendientes|length }}
+            </span>
+            {% endif %}
+        </a>
+        <a href="{{ url_for('security.admin_ips') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-shield-lock me-1"></i>IPs
+        </a>
+    </div>
+</div>
+
+<!-- KPIs -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-success text-center h-100">
+            <div class="card-body py-3">
+                <i class="bi bi-cash-stack text-success" style="font-size:1.8rem;"></i>
+                <div class="fs-4 fw-bold text-success mt-1">${{ "%.2f"|format(total_recaudado) }}</div>
+                <div class="text-muted small">Total Recaudado (c/IVA)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-primary text-center h-100">
+            <div class="card-body py-3">
+                <i class="bi bi-people text-primary" style="font-size:1.8rem;"></i>
+                <div class="fs-4 fw-bold text-primary mt-1">{{ usuarios|length }}</div>
+                <div class="text-muted small">Usuarios Registrados</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning text-center h-100">
+            <div class="card-body py-3">
+                <i class="bi bi-hourglass-split text-warning" style="font-size:1.8rem;"></i>
+                <div class="fs-4 fw-bold text-warning mt-1">{{ solicitudes_pendientes|length }}</div>
+                <div class="text-muted small">Comprobantes Pendientes</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-danger text-center h-100">
+            <div class="card-body py-3">
+                <i class="bi bi-file-earmark-text text-danger" style="font-size:1.8rem;"></i>
+                <div class="fs-4 fw-bold text-danger mt-1">{{ facturas_pendientes|length }}</div>
+                <div class="text-muted small">Facturas por Emitir</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+
+    <!-- Recaudación por usuario -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white fw-bold">
+                <i class="bi bi-person-lines-fill me-1"></i>Recaudación por Usuario
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-primary">
+                            <tr><th>Usuario</th><th class="text-end">Módulos</th><th class="text-end">Subtotal</th><th class="text-end">Total c/IVA</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                        {% for r in recaudacion_usuarios %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold small">{{ r.nombre }}</div>
+                                <div class="text-muted" style="font-size:0.7rem;">{{ r.email }}</div>
+                            </td>
+                            <td class="text-end small">{{ r.cantidad }}</td>
+                            <td class="text-end small">${{ "%.2f"|format(r.subtotal or 0) }}</td>
+                            <td class="text-end small fw-bold">${{ "%.2f"|format((r.subtotal or 0) + (r.iva_total or 0)) }}</td>
+                            <td>
+                                {% for u in usuarios if u.nombre == r.nombre %}
+                                <a href="{{ url_for('admin_reports.ver_usuario', usuario_id=u.id) }}" class="btn btn-xs btn-outline-primary" style="font-size:0.7rem;padding:1px 6px;">Ver</a>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center text-muted py-3">Sin datos</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recaudación por módulo/producto -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white fw-bold">
+                <i class="bi bi-grid me-1"></i>Recaudación por Módulo
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-success">
+                            <tr><th>Módulo</th><th class="text-end">Contratos</th><th class="text-end">Total c/IVA</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for r in recaudacion_modulos %}
+                        {% set info = MODULOS.get(r.modulo_id, {}) %}
+                        <tr>
+                            <td class="small">
+                                {% if info %}
+                                <i class="bi bi-{{ info.icono }} text-{{ info.color }} me-1"></i>{{ info.nombre }}
+                                {% else %}{{ r.modulo_id }}{% endif %}
+                            </td>
+                            <td class="text-end small">{{ r.cantidad }}</td>
+                            <td class="text-end small fw-bold">${{ "%.2f"|format((r.subtotal or 0) + (r.iva_total or 0)) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-muted py-3">Sin datos</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- Recaudación mensual -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-info text-white fw-bold">
+                <i class="bi bi-calendar3 me-1"></i>Evolución Mensual
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-info">
+                            <tr><th>Período</th><th class="text-end">Activaciones</th><th class="text-end">Total c/IVA</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for r in recaudacion_mensual %}
+                        <tr>
+                            <td class="small fw-bold">{{ MESES[r.mes|int] }} {{ r.anio|int }}</td>
+                            <td class="text-end small">{{ r.cantidad }}</td>
+                            <td class="text-end small">${{ "%.2f"|format(r.total or 0) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-muted py-3">Sin datos</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recaudación anual -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-dark text-white fw-bold">
+                <i class="bi bi-graph-up-arrow me-1"></i>Evolución Anual
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-dark">
+                            <tr><th>Año</th><th class="text-end">Activaciones</th><th class="text-end">Total c/IVA</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for r in recaudacion_anual %}
+                        <tr>
+                            <td class="fw-bold">{{ r.anio|int }}</td>
+                            <td class="text-end small">{{ r.cantidad }}</td>
+                            <td class="text-end small fw-bold">${{ "%.2f"|format(r.total or 0) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-muted py-3">Sin datos</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Facturas por emitir -->
+<div class="card mb-4">
+    <div class="card-header bg-danger text-white fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-file-earmark-text me-1"></i>Facturas Pendientes de Emitir</span>
+        {% if facturas_pendientes %}
+        <span class="badge bg-white text-danger">{{ facturas_pendientes|length }} pendiente(s)</span>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-danger">
+                    <tr><th>N° Factura</th><th>Usuario</th><th>Fecha</th><th class="text-end">Monto</th><th class="text-center">Acción</th></tr>
+                </thead>
+                <tbody>
+                {% for f in facturas_pendientes %}
+                <tr>
+                    <td class="fw-bold small">{{ f.numero_factura }}</td>
+                    <td class="small">{{ f.usuario.nombre if f.usuario else '—' }}</td>
+                    <td class="small">{{ f.fecha_emision.strftime('%d/%m/%Y') if f.fecha_emision else '—' }}</td>
+                    <td class="text-end small">${{ "%.2f"|format(f.monto or 0) }}</td>
+                    <td class="text-center">
+                        <form method="POST" action="{{ url_for('admin_reports.marcar_factura', factura_id=f.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="bi bi-check-circle me-1"></i>Marcar Emitida
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-3">Sin facturas pendientes</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Generar factura manual -->
+<div class="card mb-4">
+    <div class="card-header bg-light fw-bold"><i class="bi bi-file-earmark-plus me-1"></i>Generar Factura Manual</div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('admin_reports.generar_factura') }}" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small fw-bold">Usuario</label>
+                <select name="usuario_id" class="form-select form-select-sm" required>
+                    <option value="">Selecciona un usuario...</option>
+                    {% for u in usuarios %}
+                    <option value="{{ u.id }}">{{ u.nombre }} ({{ u.email }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Monto ($)</label>
+                <input type="number" name="monto" step="0.01" min="0.01" class="form-control form-control-sm" required>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-file-earmark-plus me-1"></i>Generar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de todos los usuarios -->
+<div class="card">
+    <div class="card-header bg-light fw-bold"><i class="bi bi-people me-1"></i>Todos los Usuarios</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                    <tr><th>Nombre</th><th>Email</th><th>RUC</th><th>Registro</th><th>Admin</th><th></th></tr>
+                </thead>
+                <tbody>
+                {% for u in usuarios %}
+                <tr>
+                    <td class="small fw-bold">{{ u.nombre }}</td>
+                    <td class="small">{{ u.email }}</td>
+                    <td class="small text-muted">{{ u.ruc or '—' }}</td>
+                    <td class="small text-muted">{{ u.fecha_registro.strftime('%d/%m/%Y') if u.fecha_registro else '—' }}</td>
+                    <td>{% if u.is_admin %}<span class="badge bg-warning text-dark">Admin</span>{% endif %}</td>
+                    <td>
+                        <a href="{{ url_for('admin_reports.ver_usuario', usuario_id=u.id) }}" class="btn btn-xs btn-outline-primary" style="font-size:0.7rem;padding:2px 8px;">
+                            <i class="bi bi-eye"></i> Ver
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

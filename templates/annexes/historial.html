@@ -6,11 +6,47 @@
 <h2 class="mb-4"><i class="bi bi-clock-history"></i> Historial de Anexos</h2>
 
 <div class="card shadow">
-    <div class="card-body text-center py-5">
-        <i class="bi bi-file-earmark-xml text-muted" style="font-size: 4rem;"></i>
-        <h4 class="text-muted mt-3">Anexos Generados</h4>
-        <p>Los anexos que generes se descargaran automaticamente.</p>
-        <a href="{{ url_for('annexes.pagina_generar') }}" class="btn btn-primary">
+    <div class="card-header">
+        <h5 class="mb-0">Períodos con facturas ICE disponibles</h5>
+    </div>
+    <div class="card-body">
+        {% if resumen %}
+        <p class="text-muted small">Selecciona un período para generar su anexo.</p>
+        <table class="table table-hover table-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th>Año</th>
+                    <th>Mes</th>
+                    <th class="text-center">Facturas con ICE</th>
+                    <th class="text-end">Total ICE ($)</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fila in resumen %}
+                <tr>
+                    <td>{{ fila.anio | int }}</td>
+                    <td>{{ '%02d' % (fila.mes | int) }}</td>
+                    <td class="text-center">{{ fila.cantidad }}</td>
+                    <td class="text-end">{{ '%.2f' % (fila.total_ice or 0) }}</td>
+                    <td class="text-center">
+                        <a href="{{ url_for('annexes.pagina_generar') }}?anio={{ fila.anio | int }}&mes={{ '%02d' % (fila.mes | int) }}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-file-earmark-xml"></i> Generar
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-file-earmark-xml text-muted" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mt-3">Sin facturas con ICE</h4>
+            <p>Carga facturas XML desde el módulo de facturas para poder generar anexos.</p>
+        </div>
+        {% endif %}
+        <a href="{{ url_for('annexes.pagina_generar') }}" class="btn btn-primary mt-2">
             <i class="bi bi-plus-circle"></i> Generar Nuevo Anexo
         </a>
     </div>

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Contratar {{ plan.nombre }}{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Contratar {{ plan.nombre }} - ${{ plan.precio }}/mes</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow mb-3">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-credit-card"></i> Pagar con Tarjeta</h5>
+            </div>
+            <div class="card-body text-center">
+                <p>Pago seguro con PayPhone</p>
+                <a href="{{ url_for('payments.pagar_payphone', plan_id=plan_id) }}" class="btn btn-success btn-lg w-100">
+                    <i class="bi bi-credit-card-2-front"></i> Pagar con Tarjeta
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-bank"></i> Transferencia Bancaria</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Datos Bancarios:</strong><br>
+                    Banco: {{ config.BANCO_NOMBRE }}<br>
+                    Cuenta: {{ config.BANCO_CUENTA }}<br>
+                    Tipo: {{ config.BANCO_TIPO }}<br>
+                    Titular: {{ config.BANCO_TITULAR }}<br>
+                    RUC: {{ config.BANCO_RUC }}
+                </div>
+                
+                <form method="POST" action="{{ url_for('payments.pagar_transferencia', plan_id=plan_id) }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Comprobante de pago</label>
+                        <input type="file" class="form-control" name="comprobante" accept=".jpg,.jpeg,.png,.pdf" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Referencia (opcional)</label>
+                        <input type="text" class="form-control" name="referencia" placeholder="Ej: Transferencia #123">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-upload"></i> Subir Comprobante
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

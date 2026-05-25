@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Clasificación de Gastos SRI{% endblock %}
+{% block content %}
+<h2 class="page-title mb-3"><i class="bi bi-tags me-2"></i>Clasificación de Gastos SRI</h2>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-3">
+        <div class="card text-center"><div class="card-body p-3">
+            <h6 class="small">Gastos Personales</h6>
+            <h4 class="text-success">${{ '%.2f'|format(gastos_personales_total) }}</h4>
+        </div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center"><div class="card-body p-3">
+            <h6 class="small">Gastos Ejercicio</h6>
+            <h4 class="text-primary">${{ '%.2f'|format(gastos_ejercicio_total) }}</h4>
+        </div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center"><div class="card-body p-3">
+            <h6 class="small">Total Clasificado</h6>
+            <h4>${{ '%.2f'|format(gastos_personales_total + gastos_ejercicio_total) }}</h4>
+        </div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center"><div class="card-body p-3">
+            <h6 class="small">Acciones</h6>
+            <a href="{{ url_for('gastos.auto_clasificar') }}" class="btn btn-warning btn-sm w-100 mb-1">Auto-Clasificar</a>
+            <a href="{{ url_for('gastos.exportar_excel') }}" class="btn btn-success btn-sm w-100">Exportar Excel</a>
+        </div></div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">Mapa de Clasificación (RUC → Categoría)</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('gastos.subir_mapa') }}" enctype="multipart/form-data" class="mb-3">
+                    <input type="file" class="form-control form-control-sm mb-2" name="archivo_mapa" accept=".xlsx,.xls" required>
+                    <button type="submit" class="btn btn-primary btn-sm w-100">Subir Mapa Excel</button>
+                    <small class="text-muted">Formato: Col A=RUC, Col B=Nombre, Col C=Categoría</small>
+                </form>
+                {% if mapas %}
+                <hr>
+                <p class="small fw-bold mb-2">Mapas Activos:</p>
+                {% for m in mapas %}
+                <div class="d-flex justify-content-between align-items-center mb-1 small">
+                    <span>{{ m.nombre[:30] }}</span>
+                    <form method="POST" action="{{ url_for('gastos.eliminar_mapa', mapa_id=m.id) }}">
+                        <button class="btn btn-danger btn-sm">Eliminar</button>
+                    </form>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">Resumen por Categoría</div>
+            <div class="card-body table-responsive p-2">
+                <table class="table table-sm small mb-0">
+                    <thead><tr><th>Categoría</th><th>Cant.</th><th>Total</th></tr></thead>
+                    <tbody>
+                        {% for r in resumen %}
+                        <tr>
+                            <td>{{ r.categoria }}</td>
+                            <td>{{ r.cantidad }}</td>
+                            <td class="{% if r.categoria in categorias %}text-success{% else %}text-primary{% endif %}">
+                                ${{ '%.2f'|format(r.total or 0) }}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center py-3 text-muted">Sin datos</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">Facturas de Gasto</div>
+            <div class="card-body table-responsive p-2">
+                <table class="table table-sm small mb-0">
+                    <thead><tr><th>Fecha</th><th>N°</th><th>Proveedor</th><th>Total</th><th>Categoría</th><th>Acción</th></tr></thead>
+                    <tbody>
+                        {% for f in facturas %}
+                        <tr>
+                            <td>{{ f.fecha_emision.strftime('%d/%m/%Y') if f.fecha_emision else '-' }}</td>
+                            <td>{{ f.numero_factura }}</td>
+                            <td>{{ f.razon_social_emisor[:25] if f.razon_social_emisor else (f.razon_social_comprador[:25] if f.razon_social_comprador else '-') }}</td>
+                            <td>${{ '%.2f'|format(f.importe_total) }}</td>
+                            <td>
+                                {% set clasif = clasificaciones|selectattr('factura_id','equalto',f.id)|list|first %}
+                                {% if clasif %}<span class="badge bg-info">{{ clasif.categoria }}</span>
+                                {% else %}<span class="badge bg-secondary">Sin clasificar</span>{% endif %}
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ url_for('gastos.clasificar_gasto', factura_id=f.id) }}" class="d-flex gap-1">
+                                    <select class="form-select form-select-sm" name="categoria" style="width:100px;">
+                                        {% for c in categorias %}<option value="{{ c }}">{{ c[:12] }}</option>{% endfor %}
+                                        <option value="OTROS">OTROS</option>
+                                    </select>
+                                    <button class="btn btn-info btn-sm">OK</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center py-3 text-muted">Sin facturas de gasto. Sube XMLs en GASTOS.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

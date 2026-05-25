@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% block title %}Auditoría ICE – Sistema Integrado{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 class="page-title mb-0"><i class="bi bi-fire me-2 text-danger"></i>Sistema Integrado ICE – Auditoría + Anexo SRI</h4>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Volver</a>
+</div>
+
+<!-- Configuración y carga -->
+<div class="row g-3 mb-3">
+    <div class="col-md-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white fw-bold py-2">
+                <i class="bi bi-upload me-1"></i>1. Cargar Facturas XML
+            </div>
+            <div class="card-body">
+                <input type="file" class="form-control form-control-sm mb-2" id="inputXMLs" multiple accept=".xml">
+                <button class="btn btn-danger fw-bold" onclick="procesarXMLs()">
+                    <i class="bi bi-gear me-1"></i>Procesar XMLs
+                </button>
+                <div class="alert alert-info small mt-2 mb-0 py-2">
+                    <i class="bi bi-info-circle me-1"></i>Se detectarán automáticamente packs, se calculará ICE específico y Ad-Valorem.
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-dark h-100">
+            <div class="card-header bg-dark text-white fw-bold py-2"><i class="bi bi-gear-fill me-1"></i>Parámetros</div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <label class="form-label small fw-bold">Año fiscal</label>
+                    <select class="form-select form-select-sm" id="anioFiscal">
+                        {% for a in anios %}<option value="{{ a }}" {% if a=='2026' %}selected{% endif %}>{{ a }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small fw-bold">Tipo de Anexo</label>
+                    <div class="btn-group w-100">
+                        <input type="radio" class="btn-check" name="tipoAnexo" id="rICE" value="ICE" checked>
+                        <label class="btn btn-outline-danger btn-sm" for="rICE">ICE</label>
+                        <input type="radio" class="btn-check" name="tipoAnexo" id="rPVP" value="PVP">
+                        <label class="btn btn-outline-primary btn-sm" for="rPVP">PVP</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Datos contribuyente (para generar XML) -->
+<div class="card mb-3 d-none" id="panelEmisor">
+    <div class="card-header bg-secondary text-white py-2 fw-bold"><i class="bi bi-person-badge me-1"></i>Datos del Contribuyente (para el Anexo XML)</div>
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">RUC</label>
+                <input type="text" class="form-control form-control-sm" id="emisorRUC" placeholder="1706903406001">
+            </div>
+            <div class="col-md-5">
+                <label class="form-label small fw-bold">Razón Social</label>
+                <input type="text" class="form-control form-control-sm" id="emisorRazon" placeholder="EMPRESA SAS">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Año</label>
+                <input type="text" class="form-control form-control-sm" id="emisorAnio" value="2026" maxlength="4">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Mes</label>
+                <input type="text" class="form-control form-control-sm" id="emisorMes" value="01" maxlength="2">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botones de acción -->
+<div class="card mb-3 d-none" id="panelAcciones">
+    <div class="card-body py-2 d-flex flex-wrap gap-2">
+        <button class="btn btn-purple btn-sm fw-bold" style="background:#8e44ad;color:white" onclick="generarXMLAnexo()">
+            <i class="bi bi-file-earmark-code me-1"></i>Generar XML Anexo
+        </button>
+        <button class="btn btn-danger btn-sm fw-bold" onclick="exportarAuditoria()">
+            <i class="bi bi-file-earmark-excel me-1"></i>Excel Auditoría (3 hojas)
+        </button>
+        <span class="ms-auto badge bg-secondary d-flex align-items-center" id="statsICE"></span>
+    </div>
+</div>
+
+<!-- Tabs de resultados -->
+<div class="card d-none" id="panelResultados">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" id="resultTabs">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabDatos">
+                    <i class="bi bi-table me-1"></i>Datos <span class="badge bg-danger" id="cntICE">0</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabPacks">
+                    <i class="bi bi-box me-1"></i>Packs <span class="badge bg-warning text-dark" id="cntPacks">0</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabReporte">
+                    <i class="bi bi-bar-chart me-1"></i>Reporte
+                </button>
+            </li>
+        </ul>
+    </div>
+    <div class="tab-content">
+        <!-- Tab Datos -->
+        <div class="tab-pane fade show active p-0" id="tabDatos">
+            <div class="table-responsive" style="max-height:380px;overflow-y:auto">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-dark sticky-top">
+                        <tr>
+                            <th>Fecha</th><th>Cliente</th><th>Producto</th><th>Pack</th>
+                            <th class="text-end">Cajas</th><th class="text-end">Bots</th>
+                            <th class="text-end">$/Caja</th><th class="text-end">ICE</th><th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoDatos"></tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Tab Packs -->
+        <div class="tab-pane fade p-0" id="tabPacks">
+            <div class="table-responsive" style="max-height:380px;overflow-y:auto">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-warning sticky-top">
+                        <tr>
+                            <th>Fecha</th><th>Cliente</th><th>Pack</th>
+                            <th>Prod 1</th><th>Cap 1</th><th>Prod 2</th><th>Cap 2</th>
+                            <th class="text-end">Cajas</th><th class="text-end">$/Pack</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoPacks"></tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Tab Reporte -->
+        <div class="tab-pane fade p-3" id="tabReporte">
+            <pre id="textoReporte" class="bg-light p-3 rounded small" style="max-height:380px;overflow-y:auto"></pre>
+        </div>
+    </div>
+</div>
+
+<!-- Log -->
+<div class="card mt-3">
+    <div class="card-body py-2 px-3">
+        <small id="logTexto" class="text-muted">Listo. Sube los archivos XML de facturas ICE.</small>
+    </div>
+</div>
+
+<!-- Spinner -->
+<div class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center d-none" id="spinner" style="background:rgba(0,0,0,0.5);z-index:9999">
+    <div class="card p-4 text-center shadow-lg">
+        <div class="spinner-border text-danger mb-3" style="width:3rem;height:3rem"></div>
+        <p class="mb-0 fw-bold" id="spinnerMsg">Procesando XMLs...</p>
+    </div>
+</div>
+
+<script>
+let datosICE = [], datosPVP = [];
+
+function getTipo() { return document.querySelector('input[name="tipoAnexo"]:checked').value; }
+
+async function procesarXMLs() {
+    const input = document.getElementById('inputXMLs');
+    if (!input.files.length) { alert('Selecciona archivos XML'); return; }
+
+    const fd = new FormData();
+    [...input.files].forEach(f => fd.append('archivos_xml', f));
+
+    mostrarSpinner('Analizando facturas ICE...');
+    try {
+        const resp = await fetch('{{ url_for("ice_auditoria.procesar") }}', {method:'POST', body:fd});
+        const data = await resp.json();
+        if (data.error) { alert(data.error); return; }
+
+        datosICE = data.datos_ice || [];
+        datosPVP = data.datos_pvp || [];
+
+        log(`✅ ${data.archivos} archivos | ${datosICE.length} registros ICE | ${datosPVP.length} registros PVP`);
+
+        renderDatos();
+        renderPacks();
+        renderReporte();
+
+        document.getElementById('panelResultados').classList.remove('d-none');
+        document.getElementById('panelAcciones').classList.remove('d-none');
+        document.getElementById('panelEmisor').classList.remove('d-none');
+        document.getElementById('cntICE').textContent = datosICE.length;
+
+        const packs = datosICE.filter(r => r.es_pack);
+        document.getElementById('cntPacks').textContent = packs.length;
+
+        const totalICE = datosICE.reduce((s, r) => s + (parseFloat(r.valor_ice)||0), 0);
+        document.getElementById('statsICE').textContent = `ICE Total: $${totalICE.toFixed(2)}`;
+    } catch(e) { alert('Error: ' + e.message); }
+    finally { ocultarSpinner(); }
+}
+
+function renderDatos() {
+    const datos = getTipo() === 'ICE' ? datosICE : datosPVP;
+    document.getElementById('cuerpoDatos').innerHTML = datos.map(r => `
+        <tr class="${r.es_pack ? 'table-warning' : ''}">
+            <td class="small">${r.fecha_emision||''}</td>
+            <td class="small">${(r.razon_social_cliente||'').substring(0,25)}</td>
+            <td class="small">${(r.nombre_producto||'').substring(0,30)}</td>
+            <td class="text-center"><span class="badge ${r.es_pack ? 'bg-warning text-dark' : 'bg-light text-dark'}">${r.es_pack?'PACK':'—'}</span></td>
+            <td class="text-end small">${(parseFloat(r.cantidad_cajas)||0).toFixed(0)}</td>
+            <td class="text-end small">${r.unidades_botellas||0}</td>
+            <td class="text-end small">$${(parseFloat(r.precio_por_caja)||0).toFixed(2)}</td>
+            <td class="text-end small text-danger fw-bold">$${(parseFloat(r.valor_ice)||0).toFixed(2)}</td>
+            <td class="text-end small">$${(parseFloat(r.importe_total)||0).toFixed(2)}</td>
+        </tr>`).join('') || '<tr><td colspan="9" class="text-center text-muted">Sin datos</td></tr>';
+}
+
+function renderPacks() {
+    const packs = datosICE.filter(r => r.es_pack);
+    document.getElementById('cuerpoPacks').innerHTML = packs.map(r => {
+        const prods = descompPack(r.nombre_producto||'');
+        return `<tr>
+            <td class="small">${r.fecha_emision||''}</td>
+            <td class="small">${(r.razon_social_cliente||'').substring(0,20)}</td>
+            <td class="small">${(r.nombre_producto||'').substring(0,30)}</td>
+            <td class="small">${prods[0]?prods[0][0]:'—'}</td>
+            <td class="small">${prods[0]?prods[0][1]:'—'}ml</td>
+            <td class="small">${prods[1]?prods[1][0]:'—'}</td>
+            <td class="small">${prods[1]?prods[1][1]:'—'}ml</td>
+            <td class="text-end small">${(parseFloat(r.cantidad_cajas)||0).toFixed(0)}</td>
+            <td class="text-end small">$${(parseFloat(r.precio_total_sin_impuesto)||0).toFixed(2)}</td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="9" class="text-center text-muted">Sin packs detectados</td></tr>';
+}
+
+function renderReporte() {
+    const datos = getTipo() === 'ICE' ? datosICE : datosPVP;
+    const agrupado = {};
+    datos.forEach(r => {
+        const cli = r.razon_social_cliente || 'DESCONOCIDO';
+        const prod = r.nombre_producto || '';
+        if (!agrupado[cli]) agrupado[cli] = {};
+        if (!agrupado[cli][prod]) agrupado[cli][prod] = {bot: 0, ice: 0};
+        agrupado[cli][prod].bot += r.unidades_botellas || 0;
+        agrupado[cli][prod].ice += parseFloat(r.valor_ice) || 0;
+    });
+    let txt = '='.repeat(100) + '\nREPORTE AGRUPADO\n' + '='.repeat(100);
+    Object.entries(agrupado).sort().forEach(([cli, prods]) => {
+        txt += `\n\nCLIENTE: ${cli}`;
+        Object.entries(prods).sort().forEach(([prod, vals]) => {
+            txt += `\n  ${prod.substring(0,50).padEnd(52)} ${String(vals.bot).padStart(8)} bots   ICE: $${vals.ice.toFixed(2).padStart(10)}`;
+        });
+    });
+    document.getElementById('textoReporte').textContent = txt;
+}
+
+function descompPack(desc) {
+    const d = desc.toUpperCase();
+    const prods = [];
+    if (d.includes('VODKA')) prods.push(['VODKA SECO GLACIAL', '750']);
+    if (d.includes('LICOR ORO')) prods.push(['LICOR ORO', '750']);
+    if (d.includes('AGUARDIENTE')) prods.push(['AGUARDIENTE DE CAÑA', d.includes('375') ? '375' : '750']);
+    return prods.length ? prods : [['LICOR ORO', '750']];
+}
+
+document.querySelectorAll('input[name="tipoAnexo"]').forEach(r => r.addEventListener('change', () => { renderDatos(); }));
+
+async function generarXMLAnexo() {
+    const datos = getTipo() === 'ICE' ? datosICE : datosPVP;
+    if (!datos.length) { alert('No hay datos. Procesa los XMLs primero.'); return; }
+    const ruc = document.getElementById('emisorRUC').value.trim();
+    const razon = document.getElementById('emisorRazon').value.trim();
+    const anio = document.getElementById('emisorAnio').value.trim();
+    const mes = document.getElementById('emisorMes').value.trim();
+    if (!ruc || !razon) { alert('Completa el RUC y Razón Social'); return; }
+
+    mostrarSpinner('Generando XML Anexo...');
+    try {
+        const resp = await fetch('{{ url_for("ice_auditoria.generar_xml_anexo") }}', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({tipo: getTipo(), ruc, razon, anio, mes, datos})
+        });
+        if (!resp.ok) { const e = await resp.json(); alert(e.error); return; }
+        const blob = await resp.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Anexo_${getTipo()}_${ruc}_${anio}${mes}.xml`;
+        a.click();
+    } catch(e) { alert('Error: ' + e.message); }
+    finally { ocultarSpinner(); }
+}
+
+async function exportarAuditoria() {
+    if (!datosICE.length) { alert('No hay datos ICE para exportar.'); return; }
+    const anio = document.getElementById('anioFiscal').value;
+    mostrarSpinner('Generando Excel de Auditoría (3 hojas)...');
+    try {
+        const resp = await fetch('{{ url_for("ice_auditoria.exportar_auditoria") }}', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({datos_ice: datosICE, anio})
+        });
+        if (!resp.ok) { const e = await resp.json(); alert(e.error); return; }
+        const blob = await resp.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Auditoria_ICE_${anio}.xlsx`;
+        a.click();
+    } catch(e) { alert('Error: ' + e.message); }
+    finally { ocultarSpinner(); }
+}
+
+function mostrarSpinner(msg) { document.getElementById('spinnerMsg').textContent = msg; document.getElementById('spinner').classList.remove('d-none'); }
+function ocultarSpinner() { document.getElementById('spinner').classList.add('d-none'); }
+function log(msg) { document.getElementById('logTexto').textContent = msg; }
+</script>
+{% endblock %}

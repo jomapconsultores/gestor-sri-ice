@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Catálogo – Gastos Personales{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h4 class="page-title mb-0"><i class="bi bi-wallet2 me-2 text-primary"></i>Catálogo – Gastos Personales</h4>
+        <small class="text-muted">Clasifica tus facturas de compra según las 8 categorías del SRI para declaración de IR</small>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('catalog.ver_catalogo') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-list-check me-1"></i>Catálogo Licores
+        </a>
+        <a href="{{ url_for('gastos.panel') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-grid me-1"></i>Panel de Gastos
+        </a>
+    </div>
+</div>
+
+<div class="alert alert-info small mb-3">
+    <i class="bi bi-info-circle me-1"></i>
+    <strong>¿Cómo funciona?</strong> Sube un archivo Excel con tus proveedores (columnas: RUC | Nombre | Categoría) en el
+    <a href="{{ url_for('gastos.panel') }}" class="fw-bold">Panel de Gastos</a>. El sistema clasificará automáticamente
+    tus facturas XML de compra según las 8 categorías del SRI. El total acumulado sirve para el formulario de Impuesto a la Renta.
+</div>
+
+<!-- Categorías SRI con totales -->
+<div class="row g-3 mb-4">
+    {% set iconos = {'ALIMENTACION':'basket2','EDUCACION':'book','SALUD':'heart-pulse','VESTIMENTA':'bag','VIVIENDA':'house','TURISMO':'airplane','ARTE Y CULTURA':'music-note-beamed','VARIOS':'three-dots'} %}
+    {% set colores = {'ALIMENTACION':'success','EDUCACION':'primary','SALUD':'danger','VESTIMENTA':'warning','VIVIENDA':'info','TURISMO':'secondary','ARTE Y CULTURA':'dark','VARIOS':'light'} %}
+    {% for cat in categorias %}
+    {% set cat_data = resumen | selectattr('categoria','equalto',cat) | list %}
+    <div class="col-md-3 col-sm-6">
+        <div class="card h-100 border-{{ colores.get(cat,'secondary') }}">
+            <div class="card-body text-center p-3">
+                <i class="bi bi-{{ iconos.get(cat,'tag') }} text-{{ colores.get(cat,'secondary') }}" style="font-size:1.8rem;"></i>
+                <h6 class="mt-2 mb-1 small fw-bold">{{ cat }}</h6>
+                {% if cat_data %}
+                <div class="fw-bold fs-6 text-{{ colores.get(cat,'secondary') }}">${{ "%.2f"|format(cat_data[0].total or 0) }}</div>
+                <div class="text-muted" style="font-size:0.7rem;">{{ cat_data[0].cantidad }} factura(s)</div>
+                {% else %}
+                <div class="text-muted small">$0.00</div>
+                <div class="text-muted" style="font-size:0.7rem;">0 facturas</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Total global -->
+<div class="card border-primary mb-4">
+    <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h6 class="mb-0 fw-bold text-primary"><i class="bi bi-calculator me-1"></i>Total Gastos Personales Clasificados</h6>
+            <small class="text-muted">Sumatoria para declaración de Impuesto a la Renta (IR)</small>
+        </div>
+        <div class="fs-4 fw-bold text-primary">${{ "%.2f"|format(total_gastos_personales) }}</div>
+    </div>
+</div>
+
+<!-- Mapas cargados -->
+<div class="card">
+    <div class="card-header fw-bold bg-light">
+        <i class="bi bi-file-earmark-excel me-1"></i>Mapas de Proveedores → Categoría
+    </div>
+    <div class="card-body">
+        {% if mapas %}
+        <div class="table-responsive mb-3">
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr><th>Archivo</th><th>Fecha</th><th>Estado</th><th></th></tr>
+                </thead>
+                <tbody>
+                {% for m in mapas %}
+                <tr>
+                    <td>{{ m.nombre }}</td>
+                    <td class="small text-muted">{{ m.fecha_subida.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td><span class="badge bg-success">Activo</span></td>
+                    <td>
+                        <form method="POST" action="{{ url_for('gastos.eliminar_mapa', mapa_id=m.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('¿Eliminar este mapa?')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted small mb-3">
+            Aún no tienes mapas de proveedores. Sube un Excel con columnas: <strong>RUC | Nombre proveedor | Categoría</strong>
+        </p>
+        {% endif %}
+
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ url_for('gastos.panel') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-upload me-1"></i>Subir Mapa Excel
+            </a>
+            <a href="{{ url_for('gastos.auto_clasificar') }}" class="btn btn-success btn-sm">
+                <i class="bi bi-magic me-1"></i>Auto-Clasificar Facturas
+            </a>
+            <a href="{{ url_for('gastos.exportar_excel') }}" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-download me-1"></i>Exportar a Excel
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

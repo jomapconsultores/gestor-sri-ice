@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+
+# Virtual environment
+venv/
+
+# Flask / SQLite
+instance/
+uploads/
+backups/
+
+# Logs and temp files
+*.log
+startup_out.txt
+startup_err.txt
+
+# OS
+.DS_Store
+Thumbs.db

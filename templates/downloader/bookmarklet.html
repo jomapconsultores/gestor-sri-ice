@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Bookmarklet{% endblock %}
+{% block content %}
+<h2 class="page-title mb-3"><i class="bi bi-bookmark-star me-2"></i>Bookmarklet SRI</h2>
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">Instalación</div>
+            <div class="card-body">
+                <div class="bg-dark text-success p-3 rounded small mb-3" style="font-size:0.7rem; max-height:80px; overflow:auto;">
+                    <code id="codigo">javascript:(function(){if(window.location.href.indexOf('srienlinea.sri.gob.ec')>-1){var b=document.createElement('button');b.innerHTML='📥 DESCARGAR XMLs';b.style.cssText='position:fixed;top:10px;right:10px;z-index:999999;padding:12px 20px;background:#2e7d32;color:#fff;font-weight:bold;border-radius:8px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.5);';document.body.appendChild(b);b.onclick=function(){var e=[];document.querySelectorAll('img[src*=xml i]').forEach(function(img){var a=img.closest('a');if(a)e.push(a);});if(e.length===0){alert('Sin facturas. Haz clic en CONSULTAR primero.');return;}if(!confirm('Descargar '+e.length+' XMLs?'))return;var i=0;function n(){if(i>=e.length){b.innerHTML='✅ '+e.length+' descargados!';setTimeout(function(){b.remove();},5000);return;}e[i].click();i++;setTimeout(n,2000);}n();};}})();</code>
+                </div>
+                <button class="btn btn-success btn-sm w-100 mb-3" onclick="copiar()">Copiar Código</button>
+                <ol class="small">
+                    <li class="mb-1">Copia el código de arriba</li>
+                    <li class="mb-1">En Chrome: Click derecho en barra de favoritos → Agregar página</li>
+                    <li class="mb-1">Nombre: <strong>Descargar XMLs SRI</strong></li>
+                    <li class="mb-1">URL: Pega el código copiado</li>
+                    <li class="mb-1">Ve al <a href="https://srienlinea.sri.gob.ec" target="_blank">portal SRI</a> → Facturación Electrónica → Comprobantes Recibidos</li>
+                    <li class="mb-1">Haz clic en CONSULTAR y luego en el marcador</li>
+                </ol>
+                <a href="{{ url_for('invoices.pagina_carga') }}" class="btn btn-info btn-sm w-100 mt-2">Subir XMLs descargados</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">Guía Visual</div>
+            <div class="card-body small">
+                <p><strong>1.</strong> En Chrome, presiona <kbd>Ctrl+Shift+B</kbd> para mostrar la barra de favoritos.</p>
+                <p><strong>2.</strong> Click derecho en la barra → <strong>"Agregar página"</strong>.</p>
+                <p><strong>3.</strong> Pega el código en el campo <strong>URL</strong>.</p>
+                <p><strong>4.</strong> Ve al SRI, consulta facturas y haz clic en el marcador.</p>
+                <p><strong>5.</strong> Aparecerá un botón verde. Haz clic para descargar.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<script>function copiar(){navigator.clipboard.writeText(document.getElementById('codigo').textContent);alert('Código copiado!');}</script>
+{% endblock %}

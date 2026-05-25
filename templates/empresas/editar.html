@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Empresa{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-pencil"></i> Editar Empresa</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre de la Empresa *</label>
+                        <input type="text" class="form-control" name="nombre" value="{{ empresa.nombre }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">RUC *</label>
+                        <input type="text" class="form-control" name="ruc" value="{{ empresa.ruc }}" required maxlength="13">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Razon Social</label>
+                        <input type="text" class="form-control" name="razon_social" value="{{ empresa.razon_social or '' }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Actualizar</button>
+                    <a href="{{ url_for('empresas.mis_empresas') }}" class="btn btn-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

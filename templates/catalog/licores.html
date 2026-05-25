@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Mis Licores{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="page-title mb-0"><i class="bi bi-cup-straw me-2"></i>Mis Licores</h2>
+    <a href="{{ url_for('catalog.agregar_licor') }}" class="btn btn-primary btn-sm">+ Agregar Licor</a>
+</div>
+<div class="card">
+    <div class="card-body table-responsive p-2">
+        <table class="table table-hover table-sm mb-0">
+            <thead><tr><th>Nombre</th><th>Tipo</th><th>Precio Fáb.</th><th>Vol.</th><th>Grado</th><th>Código SRI</th></tr></thead>
+            <tbody>
+                {% for l in licores %}
+                <tr>
+                    <td>{{ l.nombre[:35] }}</td><td>{{ l.tipo }}</td>
+                    <td>${{ '%.2f'|format(l.precio_fabrica) }}</td>
+                    <td>{{ l.volumen_cc }}cc</td><td>{{ l.grado_alcoholico }}%</td>
+                    <td><code>{{ l.codigo_sri }}</code></td>
+                </tr>
+                {% else %}<tr><td colspan="6" class="text-center py-3 text-muted">Sin licores registrados</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

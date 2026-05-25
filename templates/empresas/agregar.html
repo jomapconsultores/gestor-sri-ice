@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Agregar Empresa{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-plus-circle"></i> Agregar Empresa</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre de la Empresa *</label>
+                        <input type="text" class="form-control" name="nombre" required placeholder="Ej: Distribuidora ABC">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">RUC *</label>
+                        <input type="text" class="form-control" name="ruc" required placeholder="13 digitos" maxlength="13">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Razon Social</label>
+                        <input type="text" class="form-control" name="razon_social" placeholder="Razon social completa">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar Empresa</button>
+                    <a href="{{ url_for('empresas.mis_empresas') }}" class="btn btn-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

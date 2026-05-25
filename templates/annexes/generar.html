@@ -1,87 +1,46 @@
 {% extends "base.html" %}
-
-{% block title %}Generar Anexos SRI{% endblock %}
-
+{% block title %}Anexos SRI{% endblock %}
 {% block content %}
-<h2 class="mb-4"><i class="bi bi-file-earmark-xml"></i> Generar Anexos SRI</h2>
-
-<div class="row">
-    <div class="col-md-5">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Datos del Anexo</h5>
-            </div>
+<h2 class="page-title mb-3"><i class="bi bi-file-earmark-xml me-2"></i>Generar Anexo</h2>
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">Datos del Anexo</div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('annexes.generar_xml') }}">
-                    <div class="mb-3">
-                        <label class="form-label">Tipo de Anexo</label>
-                        <select class="form-select" name="tipo" required>
-                            <option value="ICE">ICE - Impuesto Consumos Especiales</option>
-                            <option value="PVP">PVP - Precio Venta Publico</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">RUC</label>
-                        <input type="text" class="form-control" name="ruc" value="1706903406001" maxlength="13" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Razon Social</label>
-                        <input type="text" class="form-control" name="razon" value="AYABACA MARIA ROSARIO" required>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Anio</label>
-                            <select class="form-select" name="anio" required>
-                                {% for a in range(2021, 2027) %}
-                                <option value="{{ a }}" {{ 'selected' if a == 2026 else '' }}>{{ a }}</option>
-                                {% endfor %}
+                    <select class="form-select form-select-sm mb-2" name="tipo">
+                        <option value="ICE">Anexo ICE</option>
+                        <option value="PVP">Anexo PVP</option>
+                    </select>
+                    <input type="text" class="form-control form-control-sm mb-2" name="ruc" value="1706903406001" placeholder="RUC">
+                    <input type="text" class="form-control form-control-sm mb-2" name="razon" value="AYABACA MARIA ROSARIO" placeholder="Razón Social">
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <select class="form-select form-select-sm" name="anio">
+                                {% for a in range(2021, 2027) %}<option value="{{ a }}" {{ 'selected' if a==2026 }}>{{ a }}</option>{% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Mes</label>
-                            <select class="form-select" name="mes" required>
-                                {% for m in range(1, 13) %}
-                                <option value="{{ '%02d'|format(m) }}">{{ '%02d'|format(m) }}</option>
-                                {% endfor %}
+                        <div class="col-6">
+                            <select class="form-select form-select-sm" name="mes">
+                                {% for m in range(1, 13) %}<option value="{{ '%02d'|format(m) }}">{{ '%02d'|format(m) }}</option>{% endfor %}
                             </select>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-download"></i> Generar y Descargar XML
-                    </button>
+                    <button type="submit" class="btn btn-danger btn-sm w-100">Descargar XML</button>
                 </form>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-7">
-        <div class="card shadow">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">Facturas con ICE Disponibles</h5>
-            </div>
-            <div class="card-body table-responsive">
-                <table class="table table-sm table-striped">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>N° Factura</th>
-                            <th>Cliente</th>
-                            <th>Total</th>
-                            <th>ICE</th>
-                        </tr>
-                    </thead>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">Facturas con ICE</div>
+            <div class="card-body table-responsive p-2">
+                <table class="table table-sm small mb-0">
+                    <thead><tr><th>Fecha</th><th>N°</th><th>Cliente</th><th>ICE</th></tr></thead>
                     <tbody>
                         {% for f in facturas %}
-                        <tr>
-                            <td>{{ f.fecha_emision.strftime('%d/%m/%Y') if f.fecha_emision else 'N/A' }}</td>
-                            <td>{{ f.numero_factura }}</td>
-                            <td>{{ f.razon_social_comprador[:25] if f.razon_social_comprador else 'N/A' }}</td>
-                            <td>${{ '%.2f'|format(f.importe_total) }}</td>
-                            <td>${{ '%.2f'|format(f.valor_ice or 0) }}</td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="5" class="text-center">No hay facturas con ICE</td></tr>
-                        {% endfor %}
+                        <tr><td>{{ f.fecha_emision.strftime('%d/%m/%Y') if f.fecha_emision else '-' }}</td><td>{{ f.numero_factura }}</td><td>{{ f.razon_social_comprador[:20] }}</td><td>${{ '%.2f'|format(f.valor_ice or 0) }}</td></tr>
+                        {% else %}<tr><td colspan="4" class="text-center py-3 text-muted">Sin facturas con ICE</td></tr>{% endfor %}
                     </tbody>
                 </table>
             </div>

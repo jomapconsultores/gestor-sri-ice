@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Mis Módulos{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 class="page-title mb-0"><i class="bi bi-grid me-2"></i>Mis Módulos Contratados</h4>
+    <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle me-1"></i>Agregar Módulos
+    </a>
+</div>
+
+<!-- Módulos activos -->
+{% set activos = modulos_db | selectattr('verificado') | list %}
+{% if activos %}
+<div class="card mb-4">
+    <div class="card-header bg-success text-white fw-bold"><i class="bi bi-check-circle me-1"></i>Módulos Activos</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead class="table-success">
+                    <tr>
+                        <th>Módulo</th><th>Tipo</th><th>Precio</th>
+                        <th>Inicio</th><th>Vence</th><th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for m in activos %}
+                {% set info = MODULOS.get(m.modulo_id, {}) %}
+                <tr class="{{ 'table-warning' if not m.esta_activo() else '' }}">
+                    <td class="fw-bold">
+                        {% if info %}
+                        <i class="bi bi-{{ info.icono }} me-1 text-{{ info.color }}"></i>
+                        {{ info.nombre }}
+                        {% else %}
+                        {{ m.modulo_id }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if m.es_pago_unico %}
+                        <span class="badge bg-warning text-dark">Pago Único</span>
+                        {% else %}
+                        <span class="badge bg-primary">Mensual</span>
+                        {% endif %}
+                    </td>
+                    <td>${{ "%.2f"|format(m.precio_pagado or 0) }} + IVA</td>
+                    <td class="small">{{ m.fecha_inicio.strftime('%d/%m/%Y') if m.fecha_inicio else '—' }}</td>
+                    <td class="small">
+                        {% if m.es_pago_unico %}
+                        <span class="text-success">Permanente</span>
+                        {% elif m.fecha_vencimiento %}
+                        {{ m.fecha_vencimiento.strftime('%d/%m/%Y') }}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>
+                        {% if m.esta_activo() %}
+                        <span class="badge bg-success">Activo</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Vencido</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle me-1"></i>
+    No tienes módulos activos.
+    <a href="{{ url_for('payments.ver_planes') }}" class="fw-bold">Contratar ahora</a>
+</div>
+{% endif %}
+
+<!-- Solicitudes pendientes / historial -->
+{% if solicitudes %}
+<div class="card">
+    <div class="card-header bg-light fw-bold"><i class="bi bi-clock-history me-1"></i>Historial de Solicitudes</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr><th>Fecha</th><th>Módulos</th><th>Duración</th><th>Total</th><th>Estado</th></tr>
+                </thead>
+                <tbody>
+                {% for s in solicitudes %}
+                <tr>
+                    <td class="small">{{ s.fecha_solicitud.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td class="small">
+                        {% if s.modulos %}
+                        {% for mid in s.modulos | from_json %}
+                        <span class="badge bg-secondary me-1">{{ MODULOS.get(mid, {}).get('nombre', mid) if MODULOS.get(mid) else mid }}</span>
+                        {% endfor %}
+                        {% endif %}
+                    </td>
+                    <td class="small">{{ s.duracion_meses }} mes(es)</td>
+                    <td class="small">${{ "%.2f"|format(s.monto_total or 0) }}</td>
+                    <td>
+                        {% if s.estado == 'pendiente' %}
+                        <span class="badge bg-warning text-dark">Pendiente</span>
+                        {% elif s.estado == 'aprobado' %}
+                        <span class="badge bg-success">Aprobado</span>
+                        {% else %}
+                        <span class="badge bg-danger">Rechazado</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Info de pago -->
+<div class="card mt-4 border-primary">
+    <div class="card-header bg-primary text-white"><i class="bi bi-bank me-1"></i>¿Quieres renovar o agregar módulos?</div>
+    <div class="card-body">
+        <p class="small mb-2">Realiza una transferencia a la siguiente cuenta y sube el comprobante:</p>
+        <table class="table table-sm mb-0 small">
+            <tr><td class="text-muted">Empresa:</td><td class="fw-bold">CMAJ ASOCIADOS SAS</td></tr>
+            <tr><td class="text-muted">Banco / Cuenta:</td><td class="fw-bold text-primary">Produbanco Corriente · 27059106889</td></tr>
+            <tr><td class="text-muted">RUC:</td><td>0195146942001</td></tr>
+            <tr><td class="text-muted">Correo:</td><td>jomapconsultores@outlook.com</td></tr>
+            <tr><td class="text-muted">Celular:</td><td>0963511411</td></tr>
+        </table>
+        <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-primary btn-sm mt-3">
+            <i class="bi bi-plus-circle me-1"></i>Ir a Módulos y Precios
+        </a>
+    </div>
+</div>
+
+{% endblock %}

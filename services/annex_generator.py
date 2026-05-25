@@ -4,18 +4,14 @@ from datetime import datetime
 class AnnexGenerator:
     
     @staticmethod
-    def componer_codigo_ice(factura):
+    def componer_codigo_ice(factura, producto=None):
         """Genera el codigo compuesto para el anexo ICE"""
-        cod_impuesto = "3031"
-        cod_clasificacion = "057"
-        cod_marca = "000001"
-        presentacion = "013"
-        capacidad = "000750"
-        unidad = "66"
-        cod_pais = "593"
-        grado = "000015"
-        
-        return f"{cod_impuesto}-{cod_clasificacion}-{cod_marca}-{presentacion}-{capacidad}-{unidad}-{cod_pais}-{grado}"
+        if producto:
+            return (f"{producto.cod_impuesto}-{producto.cod_clasificacion}-"
+                    f"{producto.cod_marca}-{producto.presentacion}-"
+                    f"{producto.capacidad}-{producto.unidad}-"
+                    f"{producto.cod_pais}-{producto.grado_alcoholico}")
+        return "3031-057-000001-013-000750-66-593-000015"
     
     @staticmethod
     def obtener_letra_tipo_id(tipo_id):
@@ -24,7 +20,7 @@ class AnnexGenerator:
         return mapeo.get(str(tipo_id).strip(), 'F')
     
     @staticmethod
-    def generar_anexo(tipo, ruc, razon_social, anio, mes, facturas):
+    def generar_anexo(tipo, ruc, razon_social, anio, mes, facturas, producto=None):
         """Genera el XML del anexo ICE o PVP"""
         
         root = ET.Element(tipo.lower())
@@ -48,7 +44,7 @@ class AnnexGenerator:
             vta = ET.SubElement(ventas, 'vta')
             
             if tipo == 'ICE':
-                codigo = AnnexGenerator.componer_codigo_ice(factura)
+                codigo = AnnexGenerator.componer_codigo_ice(factura, producto)
                 letra_id = AnnexGenerator.obtener_letra_tipo_id(factura.ruc_comprador or '07')
                 
                 ET.SubElement(vta, 'codProdICE').text = codigo
