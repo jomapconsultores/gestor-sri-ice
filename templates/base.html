@@ -3,165 +3,517 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Gestor SRI + ICE{% endblock %}</title>
+    <title>{% block title %}Gestor SRI + ICE{% endblock %} — CMAJ Asociados</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
     <style>
-        body { background: #f8fafc; }
-        .navbar-brand { font-weight: 700; letter-spacing: -0.5px; }
-        .nav-link { font-size: 0.88rem; }
-        .btn-salir { background: #dc3545; color: #fff; border-radius: 6px; font-weight: 600; font-size: 0.85rem; padding: 5px 14px; }
-        .btn-salir:hover { background: #b02a37; color: #fff; }
-        .dropdown-menu { font-size: 0.88rem; }
-        .page-title { font-weight: 700; color: #1e3a5f; }
-        .section-subtitle { color: #6b7280; }
+        :root {
+            --sb-w: 240px;
+            --tb-h: 56px;
+            --sb-bg: #0d1b2e;
+            --sb-hover: rgba(255,255,255,0.06);
+            --sb-active: #2563eb;
+            --sb-sep: rgba(255,255,255,0.07);
+            --accent: #2563eb;
+            --accent-light: #eff6ff;
+            --body-bg: #f1f5f9;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 10px 15px rgba(0,0,0,0.04);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.05);
+            --radius: 10px;
+            --border: #e2e8f0;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--body-bg);
+            color: #1e293b;
+            overflow-x: hidden;
+            font-size: 0.875rem;
+        }
+
+        /* ═══════════════════════════════
+           SIDEBAR
+        ═══════════════════════════════ */
+        #sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: var(--sb-w);
+            background: var(--sb-bg);
+            display: flex;
+            flex-direction: column;
+            z-index: 1050;
+            transition: transform 0.25s cubic-bezier(.4,0,.2,1);
+            overflow: hidden;
+        }
+
+        /* Brand */
+        .sb-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: var(--tb-h);
+            padding: 0 16px;
+            border-bottom: 1px solid var(--sb-sep);
+            flex-shrink: 0;
+            text-decoration: none;
+        }
+        .sb-brand-icon {
+            width: 34px; height: 34px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .sb-brand-name {
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: #fff;
+            letter-spacing: -0.3px;
+            white-space: nowrap;
+        }
+        .sb-brand-sub {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.38);
+            font-weight: 400;
+        }
+
+        /* Nav */
+        .sb-nav {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 6px 8px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+        .sb-nav::-webkit-scrollbar { width: 3px; }
+        .sb-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+        .sb-section {
+            color: rgba(255,255,255,0.28);
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 14px 8px 4px;
+        }
+
+        .sb-link {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 7px 10px;
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 450;
+            border-radius: 7px;
+            transition: background 0.15s, color 0.15s;
+            white-space: nowrap;
+        }
+        .sb-link i { font-size: 0.95rem; width: 18px; text-align: center; flex-shrink: 0; }
+        .sb-link:hover { background: var(--sb-hover); color: #fff; }
+        .sb-link.active { background: var(--accent); color: #fff; font-weight: 600; }
+        .sb-link .sb-badge {
+            margin-left: auto;
+            font-size: 0.58rem;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.6);
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            flex-shrink: 0;
+        }
+        .sb-link.active .sb-badge { background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.9); }
+
+        /* User footer */
+        .sb-user {
+            border-top: 1px solid var(--sb-sep);
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            cursor: pointer;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+        .sb-user:hover { background: var(--sb-hover); }
+        .sb-avatar {
+            width: 32px; height: 32px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 700; font-size: 0.78rem;
+            flex-shrink: 0;
+        }
+        .sb-user-name { color: #fff; font-size: 0.8rem; font-weight: 600; }
+        .sb-user-role { color: rgba(255,255,255,0.38); font-size: 0.65rem; }
+
+        /* ═══════════════════════════════
+           TOPBAR
+        ═══════════════════════════════ */
+        #topbar {
+            position: fixed;
+            top: 0;
+            left: var(--sb-w);
+            right: 0;
+            height: var(--tb-h);
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1040;
+            gap: 12px;
+            box-shadow: var(--shadow-sm);
+            transition: left 0.25s cubic-bezier(.4,0,.2,1);
+        }
+
+        #topbar .tb-title {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        /* ═══════════════════════════════
+           CONTENT
+        ═══════════════════════════════ */
+        #main {
+            margin-left: var(--sb-w);
+            margin-top: var(--tb-h);
+            padding: 22px 24px;
+            min-height: calc(100vh - var(--tb-h));
+            transition: margin-left 0.25s cubic-bezier(.4,0,.2,1);
+        }
+
+        /* Overlay for mobile */
+        #sb-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1049;
+            backdrop-filter: blur(2px);
+        }
+
+        /* ═══════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════ */
+        @media (max-width: 991.98px) {
+            #sidebar { transform: translateX(-100%); }
+            #sidebar.open { transform: translateX(0); }
+            #sidebar.open + #sb-overlay { display: block; }
+            #topbar { left: 0; }
+            #main { margin-left: 0; }
+        }
+
+        /* ═══════════════════════════════
+           GLOBAL COMPONENT STYLES
+        ═══════════════════════════════ */
+        .card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+        }
+        .card-header {
+            border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0 !important;
+            font-weight: 600;
+            font-size: 0.83rem;
+            padding: 12px 16px;
+        }
+        .card-body { padding: 16px; }
+
+        .btn {
+            font-weight: 500;
+            font-size: 0.82rem;
+            border-radius: 7px;
+        }
+        .btn-sm { font-size: 0.77rem; padding: 5px 11px; }
+
+        .table { font-size: 0.82rem; }
+        .table th { font-weight: 600; color: #475569; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+        .table-dark th { color: rgba(255,255,255,0.8); }
+
+        .badge { font-weight: 600; }
+        .form-control, .form-select { font-size: 0.82rem; border-radius: 7px; }
+        .form-label { font-weight: 600; font-size: 0.78rem; color: #475569; margin-bottom: 5px; }
+        .form-text { font-size: 0.72rem; }
+
+        .alert { border-radius: var(--radius); border: none; font-size: 0.82rem; }
+        .alert-info    { background: #eff6ff; color: #1d4ed8; }
+        .alert-success { background: #f0fdf4; color: #15803d; }
+        .alert-warning { background: #fffbeb; color: #b45309; }
+        .alert-danger  { background: #fef2f2; color: #dc2626; }
+
+        /* Page header pattern used in all inner pages */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .page-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .page-title i { color: var(--accent); }
+        .page-subtitle { color: #64748b; font-size: 0.78rem; margin: 2px 0 0; }
+
+        /* Tab overrides */
+        .nav-tabs .nav-link { font-size: 0.82rem; font-weight: 500; }
+        .nav-tabs .nav-link.active { font-weight: 600; }
+
+        /* Spinner overlay */
+        .spinner-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,27,46,0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(3px);
+        }
+        .spinner-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 32px 40px;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            min-width: 200px;
+        }
+
+        /* Divider with text */
+        .divider-text {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #94a3b8;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            margin: 16px 0;
+        }
+        .divider-text::before, .divider-text::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
     </style>
+    {% block head %}{% endblock %}
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-    <div class="container-fluid px-3">
-        <a class="navbar-brand" href="/">
-            <i class="bi bi-calculator-fill me-1"></i> Gestor SRI + ICE
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navMain">
-            {% if current_user.is_authenticated %}
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('dashboard') }}"><i class="bi bi-house me-1"></i>Dashboard</a>
-                </li>
-                <!-- Facturas -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-receipt me-1"></i>Facturas</a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ url_for('invoices.pagina_carga') }}"><i class="bi bi-cloud-upload me-1"></i>Subir Facturas</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('invoices.ver_facturas') }}"><i class="bi bi-list-ul me-1"></i>Ver Facturas</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('invoices.resumen') }}"><i class="bi bi-bar-chart me-1"></i>Resumen ICE/IVA</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ url_for('gastos.panel') }}"><i class="bi bi-wallet2 me-1"></i>Gastos Personales</a></li>
-                    </ul>
-                </li>
-                <!-- ICE -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-calculator me-1"></i>ICE</a>
-                    <ul class="dropdown-menu">
-                        <li><h6 class="dropdown-header">Cálculo Simple</h6></li>
-                        <li><a class="dropdown-item" href="{{ url_for('ice.calculadora') }}"><i class="bi bi-calculator me-1"></i>Cálculo Individual</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('ice.ver_tarifas') }}"><i class="bi bi-table me-1"></i>Tarifas ICE</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><h6 class="dropdown-header">Múltiple + Mezcla</h6></li>
-                        <li><a class="dropdown-item" href="{{ url_for('ice.multiple') }}"><i class="bi bi-layers me-1"></i>Multi-Producto</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('ice.mezcla') }}"><i class="bi bi-shuffle me-1"></i>Mezcla Total</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('ice.comparativa') }}"><i class="bi bi-graph-up me-1"></i>Comparativa</a></li>
-                    </ul>
-                </li>
-                <!-- Catálogo -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-box-seam me-1"></i>Catálogo</a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ url_for('catalog.ver_catalogo') }}"><i class="bi bi-list-check me-1"></i>Catálogo Licores</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('catalog.gastos_catalogo') }}"><i class="bi bi-wallet2 me-1"></i>Catálogo Gastos</a></li>
-                    </ul>
-                </li>
-                <!-- SRI -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-file-earmark-zip me-1"></i>SRI</a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ url_for('annexes.pagina_generar') }}"><i class="bi bi-file-earmark-code me-1"></i>Generar Anexos</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('annexes.historial') }}"><i class="bi bi-clock-history me-1"></i>Historial Anexos</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ url_for('downloader.pagina_descarga') }}"><i class="bi bi-cloud-download me-1"></i>Descarga Masiva SRI</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ url_for('exports.exportar_declaracion') }}"><i class="bi bi-file-earmark-excel me-1"></i>Exportar a Excel</a></li>
-                    </ul>
-                </li>
-                <!-- Herramientas Pro -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-tools me-1"></i>Pro</a>
-                    <ul class="dropdown-menu">
-                        <li><h6 class="dropdown-header">ICE</h6></li>
-                        <li><a class="dropdown-item" href="{{ safe_url_for('ats.editor') }}"><i class="bi bi-file-earmark-code me-1"></i>Editor Anexos ICE/PVP</a></li>
-                        <li><a class="dropdown-item" href="{{ safe_url_for('ice_auditoria.index') }}"><i class="bi bi-fire me-1"></i>Auditoría ICE Completa</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><h6 class="dropdown-header">Facturas y Retenciones</h6></li>
-                        <li><a class="dropdown-item" href="{{ safe_url_for('sri_processor.index') }}"><i class="bi bi-cloud-download me-1"></i>Gestor SRI Pro</a></li>
-                        <li><a class="dropdown-item" href="{{ safe_url_for('retenciones.index') }}"><i class="bi bi-file-earmark-minus me-1"></i>Retenciones XML</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><h6 class="dropdown-header">Contabilidad</h6></li>
-                        <li><a class="dropdown-item" href="{{ safe_url_for('conciliacion.index') }}"><i class="bi bi-bank me-1"></i>Conciliación Bancaria</a></li>
-                    </ul>
-                </li>
-                {% if current_user.is_admin %}
-                <!-- Admin -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle text-warning" href="#" data-bs-toggle="dropdown"><i class="bi bi-shield-fill me-1"></i>Admin</a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ url_for('admin_reports.reportes') }}"><i class="bi bi-graph-up-arrow me-1"></i>Reportes</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('payments.admin_solicitudes') }}"><i class="bi bi-check2-circle me-1"></i>Aprobar Módulos</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('security.admin_ips') }}"><i class="bi bi-shield-lock me-1"></i>IPs de Acceso</a></li>
-                    </ul>
-                </li>
-                {% endif %}
-            </ul>
-            <ul class="navbar-nav ms-auto align-items-center gap-2">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                        <i class="bi bi-person-circle me-1"></i>{{ current_user.nombre[:15] }}
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="{{ url_for('payments.mis_modulos') }}"><i class="bi bi-grid me-1"></i>Mis Módulos</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('payments.ver_planes') }}"><i class="bi bi-plus-circle me-1"></i>Agregar Módulos</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('security.solicitar_ip') }}"><i class="bi bi-pc-display me-1"></i>Mis IPs</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item text-danger fw-bold" href="{{ url_for('auth.logout') }}">
-                                <i class="bi bi-box-arrow-right me-1"></i>Cerrar Sesión
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('auth.logout') }}" class="btn-salir ms-1">
-                        <i class="bi bi-box-arrow-right me-1"></i>Salir
-                    </a>
-                </li>
-            </ul>
-            {% else %}
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('auth.login') }}"><i class="bi bi-box-arrow-in-right me-1"></i>Iniciar Sesión</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('auth.register') }}"><i class="bi bi-person-plus me-1"></i>Registrarse</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('payments.ver_planes') }}"><i class="bi bi-grid me-1"></i>Módulos y Precios</a>
-                </li>
-            </ul>
-            {% endif %}
-        </div>
-    </div>
-</nav>
 
-<div class="container-fluid px-3 mt-2">
+<!-- ═══ SIDEBAR ═══ -->
+<aside id="sidebar">
+    <a class="sb-brand" href="{{ url_for('dashboard') }}">
+        <div class="sb-brand-icon"><i class="bi bi-calculator-fill"></i></div>
+        <div>
+            <div class="sb-brand-name">Gestor SRI + ICE</div>
+            <div class="sb-brand-sub">CMAJ Asociados SAS</div>
+        </div>
+    </a>
+
+    <nav class="sb-nav">
+    {% if current_user.is_authenticated %}
+
+        <a href="{{ url_for('dashboard') }}" class="sb-link">
+            <i class="bi bi-house-door"></i>Dashboard
+        </a>
+
+        <div class="sb-section">Facturación</div>
+        <a href="{{ url_for('invoices.pagina_carga') }}" class="sb-link">
+            <i class="bi bi-cloud-upload"></i>Subir Facturas
+        </a>
+        <a href="{{ url_for('invoices.cargar_ingresos') }}" class="sb-link">
+            <i class="bi bi-cloud-upload"></i>Subir Ingresos
+        </a>
+        <a href="{{ url_for('invoices.ver_facturas') }}" class="sb-link">
+            <i class="bi bi-receipt"></i>Ver Facturas
+        </a>
+        <a href="{{ url_for('gastos.panel') }}" class="sb-link">
+            <i class="bi bi-wallet2"></i>Gastos Personales
+        </a>
+
+        <div class="sb-section">Cálculo ICE</div>
+        <a href="{{ url_for('ice.calculadora') }}" class="sb-link">
+            <i class="bi bi-calculator"></i>Cálculo Individual
+        </a>
+        <a href="{{ url_for('ice.multiple') }}" class="sb-link">
+            <i class="bi bi-layers"></i>Multi-Producto
+        </a>
+        <a href="{{ url_for('ice.mezcla') }}" class="sb-link">
+            <i class="bi bi-shuffle"></i>Mezcla Total
+        </a>
+        <a href="{{ url_for('ice.ver_tarifas') }}" class="sb-link">
+            <i class="bi bi-table"></i>Tarifas ICE
+        </a>
+
+        <div class="sb-section">SRI</div>
+        <a href="{{ url_for('annexes.pagina_generar') }}" class="sb-link">
+            <i class="bi bi-file-earmark-code"></i>Generar Anexos
+        </a>
+        <a href="{{ url_for('annexes.historial') }}" class="sb-link">
+            <i class="bi bi-clock-history"></i>Historial Anexos
+        </a>
+        <a href="{{ url_for('downloader.pagina_descarga') }}" class="sb-link">
+            <i class="bi bi-cloud-download"></i>Descarga Masiva
+        </a>
+        <a href="{{ url_for('exports.exportar_declaracion') }}" class="sb-link">
+            <i class="bi bi-file-earmark-excel"></i>Exportar Excel
+        </a>
+
+        <div class="sb-section">Herramientas Pro</div>
+        <a href="{{ safe_url_for('ats.editor') }}" class="sb-link">
+            <i class="bi bi-file-earmark-code"></i>Editor Anexos ICE/PVP<span class="sb-badge">PRO</span>
+        </a>
+        <a href="{{ safe_url_for('ice_auditoria.index') }}" class="sb-link">
+            <i class="bi bi-fire"></i>Auditoría ICE<span class="sb-badge">PRO</span>
+        </a>
+        <a href="{{ safe_url_for('sri_processor.index') }}" class="sb-link">
+            <i class="bi bi-cloud-arrow-down"></i>Gestor SRI Pro<span class="sb-badge">PRO</span>
+        </a>
+        <a href="{{ safe_url_for('retenciones.index') }}" class="sb-link">
+            <i class="bi bi-file-earmark-minus"></i>Retenciones XML<span class="sb-badge">PRO</span>
+        </a>
+        <a href="{{ safe_url_for('conciliacion.index') }}" class="sb-link">
+            <i class="bi bi-bank"></i>Conciliación Bancaria<span class="sb-badge">PRO</span>
+        </a>
+
+        <div class="sb-section">Catálogo</div>
+        <a href="{{ url_for('catalog.ver_catalogo') }}" class="sb-link">
+            <i class="bi bi-list-check"></i>Catálogo Licores
+        </a>
+        <a href="{{ url_for('catalog.gastos_catalogo') }}" class="sb-link">
+            <i class="bi bi-wallet2"></i>Catálogo Gastos
+        </a>
+
+        {% if current_user.is_admin %}
+        <div class="sb-section">Administración</div>
+        <a href="{{ url_for('admin_reports.reportes') }}" class="sb-link">
+            <i class="bi bi-graph-up-arrow"></i>Reportes
+        </a>
+        <a href="{{ url_for('payments.admin_solicitudes') }}" class="sb-link">
+            <i class="bi bi-check2-circle"></i>Aprobar Módulos
+        </a>
+        <a href="{{ url_for('security.admin_ips') }}" class="sb-link">
+            <i class="bi bi-shield-lock"></i>IPs de Acceso
+        </a>
+        {% endif %}
+
+        <div class="sb-section">Mi Cuenta</div>
+        <a href="{{ url_for('payments.mis_modulos') }}" class="sb-link">
+            <i class="bi bi-grid"></i>Mis Módulos
+        </a>
+        <a href="{{ url_for('payments.ver_planes') }}" class="sb-link">
+            <i class="bi bi-plus-circle"></i>Agregar Módulos
+        </a>
+        <a href="{{ url_for('security.solicitar_ip') }}" class="sb-link">
+            <i class="bi bi-pc-display"></i>Mis IPs
+        </a>
+
+    {% endif %}
+    </nav>
+
+    {% if current_user.is_authenticated %}
+    <div class="sb-user dropdown">
+        <div data-bs-toggle="dropdown" class="d-flex align-items-center gap-2 w-100">
+            <div class="sb-avatar">{{ current_user.nombre[0].upper() }}</div>
+            <div class="overflow-hidden flex-grow-1">
+                <div class="sb-user-name text-truncate">{{ current_user.nombre[:18] }}</div>
+                <div class="sb-user-role">{% if current_user.is_admin %}Administrador{% else %}Usuario{% endif %}</div>
+            </div>
+            <i class="bi bi-chevron-up" style="font-size:.65rem;color:rgba(255,255,255,.35);flex-shrink:0"></i>
+        </div>
+        <ul class="dropdown-menu dropdown-menu-dark mb-1" style="width:220px;font-size:.82rem">
+            <li class="px-3 py-2">
+                <div style="font-size:.75rem;color:rgba(255,255,255,.5)">{{ current_user.email }}</div>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('payments.mis_modulos') }}"><i class="bi bi-grid me-2"></i>Mis Módulos</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('security.solicitar_ip') }}"><i class="bi bi-pc-display me-2"></i>Mis IPs</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión</a></li>
+        </ul>
+    </div>
+    {% endif %}
+</aside>
+<div id="sb-overlay" onclick="document.getElementById('sidebar').classList.remove('open')"></div>
+
+<!-- ═══ TOPBAR ═══ -->
+<header id="topbar">
+    <button class="btn btn-sm d-lg-none me-1 p-1" onclick="document.getElementById('sidebar').classList.toggle('open')" style="color:#64748b;background:none;border:none">
+        <i class="bi bi-list" style="font-size:1.3rem"></i>
+    </button>
+    <span class="tb-title">{% block topbar_title %}Gestor SRI + ICE{% endblock %}</span>
+    <div class="ms-auto d-flex align-items-center gap-2">
+        {% if current_user.is_authenticated %}
+        {% if current_user.is_admin %}
+        <a href="{{ url_for('admin_reports.reportes') }}" class="btn btn-sm btn-warning fw-bold">
+            <i class="bi bi-shield-fill me-1"></i>Admin
+        </a>
+        {% endif %}
+        <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>Módulos
+        </a>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">
+            <i class="bi bi-box-arrow-right me-1"></i>Salir
+        </a>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-primary">Iniciar Sesión</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-sm btn-outline-primary">Registrarse</a>
+        <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-sm btn-outline-secondary">Módulos y Precios</a>
+        {% endif %}
+    </div>
+</header>
+
+<!-- ═══ CONTENT ═══ -->
+<main id="main">
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
+        <div class="mb-3">
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show py-2 small" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
+            <div class="alert alert-{{ category }} alert-dismissible fade show py-2" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
             {% endfor %}
+        </div>
         {% endif %}
     {% endwith %}
-</div>
 
-<main class="container-fluid px-3 my-3">
     {% block content %}{% endblock %}
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Highlight active sidebar link
+(function() {
+    const path = window.location.pathname;
+    document.querySelectorAll('.sb-link').forEach(a => {
+        const href = new URL(a.href, location.origin).pathname;
+        if (href !== '/' && path.startsWith(href)) a.classList.add('active');
+        if (href === '/' && path === '/') a.classList.add('active');
+    });
+})();
+</script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

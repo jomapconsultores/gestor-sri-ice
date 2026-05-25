@@ -1,258 +1,374 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
+
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+<!-- Welcome header -->
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
     <div>
-        <h4 class="page-title mb-0">
-            <i class="bi bi-house-fill me-2"></i>Bienvenido, {{ current_user.nombre }}
-        </h4>
-        <small class="text-muted">{{ current_user.email }}</small>
+        <h1 style="font-size:1.35rem;font-weight:700;color:#0f172a;margin:0">
+            Bienvenido, {{ current_user.nombre.split()[0] }} 👋
+        </h1>
+        <p class="mb-0" style="color:#64748b;font-size:.82rem;margin-top:3px">
+            {{ current_user.email }}
+            {% if current_user.is_admin %}<span class="badge ms-2" style="background:#fef3c7;color:#92400e;font-size:.68rem">Admin</span>{% endif %}
+        </p>
     </div>
-    <div class="d-flex gap-2 flex-wrap">
-        {% if current_user.is_admin %}
-        <a href="{{ url_for('admin_reports.reportes') }}" class="btn btn-warning btn-sm">
-            <i class="bi bi-shield-fill me-1"></i>Panel Admin
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-circle me-1"></i>Agregar Módulo
         </a>
-        {% endif %}
-        <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-plus-circle me-1"></i>Agregar Módulos
-        </a>
-        <a href="{{ url_for('auth.logout') }}" class="btn btn-danger btn-sm">
-            <i class="bi bi-box-arrow-right me-1"></i>Cerrar Sesión
+        <a href="{{ url_for('payments.mis_modulos') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-grid me-1"></i>Mis Módulos
         </a>
     </div>
 </div>
 
-<!-- Estado de módulos -->
-{% if modulos_activos %}
-<div class="alert alert-success py-2 small mb-3">
-    <i class="bi bi-check-circle-fill me-1"></i>
-    <strong>Módulos activos:</strong>
-    {% for m in modulos_activos %}
-    <span class="badge bg-success ms-1">{{ m }}</span>
-    {% endfor %}
+<!-- KPI cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card h-100" style="border:none;background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff">
+            <div class="card-body d-flex align-items-center gap-3 py-3">
+                <div style="width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">
+                    <i class="bi bi-receipt"></i>
+                </div>
+                <div>
+                    <div style="font-size:1.6rem;font-weight:800;line-height:1">{{ total_facturas }}</div>
+                    <div style="font-size:.73rem;opacity:.8;margin-top:2px">Facturas cargadas</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100" style="border:none;background:linear-gradient(135deg,#065f46,#10b981);color:#fff">
+            <div class="card-body d-flex align-items-center gap-3 py-3">
+                <div style="width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">
+                    <i class="bi bi-grid-fill"></i>
+                </div>
+                <div>
+                    <div style="font-size:1.6rem;font-weight:800;line-height:1">{{ modulos_activos|length }}</div>
+                    <div style="font-size:.73rem;opacity:.8;margin-top:2px">Módulos activos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100" style="border:none;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff">
+            <div class="card-body d-flex align-items-center gap-3 py-3">
+                <div style="width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">
+                    <i class="bi bi-calculator-fill"></i>
+                </div>
+                <div>
+                    <div style="font-size:1rem;font-weight:700;line-height:1.2">ICE 2026</div>
+                    <div style="font-size:.73rem;opacity:.8;margin-top:2px">$10.41 / litro</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100" style="border:none;background:linear-gradient(135deg,#92400e,#f59e0b);color:#fff">
+            <div class="card-body d-flex align-items-center gap-3 py-3">
+                <div style="width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">
+                    <i class="bi bi-percent"></i>
+                </div>
+                <div>
+                    <div style="font-size:1rem;font-weight:700;line-height:1.2">IVA 15%</div>
+                    <div style="font-size:.73rem;opacity:.8;margin-top:2px">Tarifa vigente</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-{% else %}
-<div class="alert alert-warning py-2 small mb-3">
-    <i class="bi bi-exclamation-triangle me-1"></i>
-    No tienes módulos activos.
-    <a href="{{ url_for('payments.ver_planes') }}" class="fw-bold">Contrata un módulo aquí</a> para comenzar a usar el sistema.
+
+<!-- Módulos activos alert -->
+{% if not modulos_activos %}
+<div class="alert alert-warning d-flex align-items-center gap-3 mb-4" style="border-left:4px solid #f59e0b">
+    <i class="bi bi-exclamation-triangle-fill" style="font-size:1.2rem;color:#d97706;flex-shrink:0"></i>
+    <div>
+        <strong>Sin módulos activos.</strong>
+        <a href="{{ url_for('payments.ver_planes') }}" class="ms-1 fw-bold" style="color:#92400e">Contrata un módulo aquí</a> para comenzar.
+    </div>
 </div>
 {% endif %}
 
-<!-- Accesos rápidos por módulo -->
+<!-- Module grid -->
+<h2 style="font-size:.75rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px">Módulos del sistema</h2>
+
 <div class="row g-3">
 
-    <!-- FACTURAS ILIMITADAS -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100 {% if 'facturas' in modulos_activos %}border-danger{% else %}border-secondary opacity-75{% endif %}">
-            <div class="card-header {% if 'facturas' in modulos_activos %}bg-danger text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
-                <span><i class="bi bi-receipt me-1"></i>Facturas Ilimitadas</span>
-                {% if 'facturas' not in modulos_activos %}<span class="badge bg-light text-dark">No activo</span>{% endif %}
-            </div>
-            <div class="card-body">
-                <div class="row text-center mb-2">
-                    <div class="col">
-                        <div class="fw-bold text-danger fs-4">{{ total_facturas }}</div>
-                        <div class="text-muted" style="font-size:0.75rem;">facturas cargadas</div>
+    <!-- FACTURAS -->
+    {% set activo = 'facturas' in modulos_activos %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100" style="{% if not activo %}opacity:.7{% endif %}">
+            <div class="card-body p-0">
+                <div class="d-flex align-items-center gap-3 p-3 border-bottom">
+                    <div style="width:42px;height:42px;border-radius:10px;background:{% if activo %}#fef2f2{% else %}#f1f5f9{% endif %};display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:{% if activo %}#dc2626{% else %}#94a3b8{% endif %};flex-shrink:0">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div style="font-weight:700;font-size:.86rem;color:#0f172a">Facturas Ilimitadas</div>
+                        <div style="font-size:.73rem;color:#64748b">Gastos e ingresos + catálogo</div>
+                    </div>
+                    {% if activo %}
+                    <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.65rem">Activo</span>
+                    {% else %}
+                    <span class="badge" style="background:#f1f5f9;color:#94a3b8;font-size:.65rem">No activo</span>
+                    {% endif %}
+                </div>
+                <div class="p-3">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('invoices.pagina_carga') }}" class="btn btn-sm {% if activo %}btn-danger{% else %}btn-outline-secondary disabled{% endif %}">
+                            <i class="bi bi-cloud-upload me-1"></i>Subir Facturas Gastos
+                        </a>
+                        <a href="{{ url_for('invoices.cargar_ingresos') }}" class="btn btn-sm {% if activo %}btn-outline-danger{% else %}btn-outline-secondary disabled{% endif %}">
+                            <i class="bi bi-cloud-upload me-1"></i>Subir Facturas Ingresos
+                        </a>
+                        <a href="{{ url_for('invoices.ver_facturas') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-list-ul me-1"></i>Ver Todas las Facturas
+                        </a>
                     </div>
                 </div>
-                <div class="d-grid gap-1">
-                    <a href="{{ url_for('invoices.pagina_carga') }}" class="btn btn-sm {% if 'facturas' in modulos_activos %}btn-danger{% else %}btn-outline-secondary disabled{% endif %}">
-                        <i class="bi bi-cloud-upload me-1"></i>Subir Facturas Gastos
-                    </a>
-                    <a href="{{ url_for('invoices.cargar_ingresos') }}" class="btn btn-sm {% if 'facturas' in modulos_activos %}btn-outline-danger{% else %}btn-outline-secondary disabled{% endif %}">
-                        <i class="bi bi-cloud-upload me-1"></i>Subir Facturas Ingresos
-                    </a>
-                    <a href="{{ url_for('invoices.ver_facturas') }}" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-list-ul me-1"></i>Ver Todas
-                    </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ICE SIMPLE -->
+    {% set activo = 'ice_simple' in modulos_activos %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100" style="{% if not activo %}opacity:.7{% endif %}">
+            <div class="card-body p-0">
+                <div class="d-flex align-items-center gap-3 p-3 border-bottom">
+                    <div style="width:42px;height:42px;border-radius:10px;background:{% if activo %}#f0fdf4{% else %}#f1f5f9{% endif %};display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:{% if activo %}#16a34a{% else %}#94a3b8{% endif %};flex-shrink:0">
+                        <i class="bi bi-calculator"></i>
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div style="font-weight:700;font-size:.86rem;color:#0f172a">Cálculo ICE Simple</div>
+                        <div style="font-size:.73rem;color:#64748b">Un producto a la vez</div>
+                    </div>
+                    {% if activo %}
+                    <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.65rem">Activo</span>
+                    {% else %}
+                    <span class="badge" style="background:#f1f5f9;color:#94a3b8;font-size:.65rem">No activo</span>
+                    {% endif %}
+                </div>
+                <div class="p-3">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('ice.calculadora') }}" class="btn btn-sm {% if activo %}btn-success{% else %}btn-outline-secondary disabled{% endif %}">
+                            <i class="bi bi-calculator me-1"></i>Calcular ICE
+                        </a>
+                        <a href="{{ url_for('ice.ver_tarifas') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-table me-1"></i>Ver Tarifas Vigentes
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- CATÁLOGO (incluido con facturas) -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100 {% if 'facturas' in modulos_activos %}border-primary{% else %}border-secondary opacity-75{% endif %}">
-            <div class="card-header {% if 'facturas' in modulos_activos %}bg-primary text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
-                <span><i class="bi bi-box-seam me-1"></i>Catálogo de Productos</span>
-                {% if 'facturas' in modulos_activos %}
-                <span class="badge bg-light text-success">Incluido gratis</span>
-                {% else %}
-                <span class="badge bg-light text-dark">Con Facturas</span>
-                {% endif %}
-            </div>
-            <div class="card-body">
-                <p class="text-muted small mb-2">Gestiona tus productos de licores y la clasificación de gastos personales.</p>
-                <div class="d-grid gap-1">
-                    <a href="{{ url_for('catalog.ver_catalogo') }}" class="btn btn-sm {% if 'facturas' in modulos_activos %}btn-primary{% else %}btn-outline-secondary disabled{% endif %}">
-                        <i class="bi bi-list-check me-1"></i>Catálogo Licores
-                    </a>
-                    <a href="{{ url_for('catalog.gastos_catalogo') }}" class="btn btn-sm {% if 'facturas' in modulos_activos %}btn-outline-primary{% else %}btn-outline-secondary disabled{% endif %}">
-                        <i class="bi bi-wallet2 me-1"></i>Catálogo Gastos
-                    </a>
+    <!-- ICE MÚLTIPLE -->
+    {% set activo = 'ice_multiple' in modulos_activos %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100" style="{% if not activo %}opacity:.7{% endif %}">
+            <div class="card-body p-0">
+                <div class="d-flex align-items-center gap-3 p-3 border-bottom">
+                    <div style="width:42px;height:42px;border-radius:10px;background:{% if activo %}#eff6ff{% else %}#f1f5f9{% endif %};display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:{% if activo %}#2563eb{% else %}#94a3b8{% endif %};flex-shrink:0">
+                        <i class="bi bi-layers"></i>
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div style="font-weight:700;font-size:.86rem;color:#0f172a">ICE Múltiple + Mezcla</div>
+                        <div style="font-size:.73rem;color:#64748b">Multi-producto y mezcla total</div>
+                    </div>
+                    {% if activo %}
+                    <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.65rem">Activo</span>
+                    {% else %}
+                    <span class="badge" style="background:#f1f5f9;color:#94a3b8;font-size:.65rem">No activo</span>
+                    {% endif %}
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- CÁLCULO ICE SIMPLE -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100 {% if 'ice_simple' in modulos_activos %}border-success{% else %}border-secondary opacity-75{% endif %}">
-            <div class="card-header {% if 'ice_simple' in modulos_activos %}bg-success text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
-                <span><i class="bi bi-calculator me-1"></i>Cálculo ICE Simple</span>
-                {% if 'ice_simple' not in modulos_activos %}<span class="badge bg-light text-dark">No activo</span>{% endif %}
-            </div>
-            <div class="card-body">
-                <p class="text-muted small mb-2">Calcula el ICE de un producto individual.</p>
-                <div class="d-grid gap-1">
-                    <a href="{{ url_for('ice.calculadora') }}" class="btn btn-sm {% if 'ice_simple' in modulos_activos %}btn-success{% else %}btn-outline-secondary disabled{% endif %}">
-                        <i class="bi bi-calculator me-1"></i>Calcular ICE
-                    </a>
-                    <a href="{{ url_for('ice.ver_tarifas') }}" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-table me-1"></i>Ver Tarifas
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- CÁLCULO ICE MÚLTIPLE + MEZCLA -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100 {% if 'ice_multiple' in modulos_activos %}border-primary{% else %}border-secondary opacity-75{% endif %}">
-            <div class="card-header {% if 'ice_multiple' in modulos_activos %}bg-primary text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
-                <span><i class="bi bi-calculator-fill me-1"></i>ICE Múltiple + Mezcla</span>
-                {% if 'ice_multiple' not in modulos_activos %}<span class="badge bg-light text-dark">No activo</span>{% endif %}
-            </div>
-            <div class="card-body">
-                <p class="text-muted small mb-2">Multi-producto y cálculo de mezcla total.</p>
-                <div class="d-grid gap-1">
-                    <a href="{{ url_for('ice.multiple') }}" class="btn btn-sm {% if 'ice_multiple' in modulos_activos %}btn-primary{% else %}btn-outline-secondary disabled{% endif %}">
-                        <i class="bi bi-layers me-1"></i>Multi-Producto
-                    </a>
-                    <a href="{{ url_for('ice.mezcla') }}" class="btn btn-sm {% if 'ice_multiple' in modulos_activos %}btn-outline-primary{% else %}btn-outline-secondary disabled{% endif %}">
-                        <i class="bi bi-shuffle me-1"></i>Mezcla Total
-                    </a>
+                <div class="p-3">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('ice.multiple') }}" class="btn btn-sm {% if activo %}btn-primary{% else %}btn-outline-secondary disabled{% endif %}">
+                            <i class="bi bi-layers me-1"></i>Multi-Producto
+                        </a>
+                        <a href="{{ url_for('ice.mezcla') }}" class="btn btn-sm {% if activo %}btn-outline-primary{% else %}btn-outline-secondary disabled{% endif %}">
+                            <i class="bi bi-shuffle me-1"></i>Mezcla Total
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ANEXOS SRI -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100 {% if 'anexos' in modulos_activos %}border-warning{% else %}border-secondary opacity-75{% endif %}">
-            <div class="card-header {% if 'anexos' in modulos_activos %}bg-warning text-dark{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
-                <span><i class="bi bi-file-earmark-zip me-1"></i>Anexos SRI</span>
-                {% if 'anexos' not in modulos_activos %}<span class="badge bg-light text-dark">No activo</span>{% endif %}
-            </div>
-            <div class="card-body">
-                <p class="text-muted small mb-2">Genera los anexos XML (PVP e ICE) para el SRI.</p>
-                <div class="d-grid gap-1">
-                    <a href="{{ url_for('annexes.pagina_generar') }}" class="btn btn-sm {% if 'anexos' in modulos_activos %}btn-warning text-dark{% else %}btn-outline-secondary disabled{% endif %}">
-                        <i class="bi bi-file-earmark-code me-1"></i>Generar Anexo
-                    </a>
-                    <a href="{{ url_for('annexes.historial') }}" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-clock-history me-1"></i>Historial
-                    </a>
+    {% set activo = 'anexos' in modulos_activos %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100" style="{% if not activo %}opacity:.7{% endif %}">
+            <div class="card-body p-0">
+                <div class="d-flex align-items-center gap-3 p-3 border-bottom">
+                    <div style="width:42px;height:42px;border-radius:10px;background:{% if activo %}#fffbeb{% else %}#f1f5f9{% endif %};display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:{% if activo %}#d97706{% else %}#94a3b8{% endif %};flex-shrink:0">
+                        <i class="bi bi-file-earmark-zip"></i>
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div style="font-weight:700;font-size:.86rem;color:#0f172a">Anexos SRI</div>
+                        <div style="font-size:.73rem;color:#64748b">Genera XML PVP e ICE</div>
+                    </div>
+                    {% if activo %}
+                    <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.65rem">Activo</span>
+                    {% else %}
+                    <span class="badge" style="background:#f1f5f9;color:#94a3b8;font-size:.65rem">No activo</span>
+                    {% endif %}
+                </div>
+                <div class="p-3">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('annexes.pagina_generar') }}" class="btn btn-sm {% if activo %}btn-warning text-dark{% else %}btn-outline-secondary disabled{% endif %}">
+                            <i class="bi bi-file-earmark-code me-1"></i>Generar Anexo
+                        </a>
+                        <a href="{{ url_for('annexes.historial') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-clock-history me-1"></i>Historial
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- EXPORTACIÓN EXCEL -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100 {% if 'exportacion' in modulos_activos %}border-info{% else %}border-secondary opacity-75{% endif %}">
-            <div class="card-header {% if 'exportacion' in modulos_activos %}bg-info text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
-                <span><i class="bi bi-file-earmark-excel me-1"></i>Exportación Excel</span>
-                {% if 'exportacion' not in modulos_activos %}<span class="badge bg-light text-dark">No activo</span>{% endif %}
-            </div>
-            <div class="card-body">
-                <p class="text-muted small mb-2">Exporta reportes de todos los módulos a Excel.</p>
-                <div class="d-grid gap-1">
-                    <a href="{{ url_for('exports.exportar_declaracion') }}" class="btn btn-sm {% if 'exportacion' in modulos_activos %}btn-info text-white{% else %}btn-outline-secondary disabled{% endif %}">
-                        <i class="bi bi-download me-1"></i>Exportar Declaración
-                    </a>
-                    <a href="{{ url_for('gastos.exportar_excel') }}" class="btn btn-sm {% if 'exportacion' in modulos_activos %}btn-outline-info{% else %}btn-outline-secondary disabled{% endif %}">
-                        <i class="bi bi-download me-1"></i>Exportar Gastos
-                    </a>
+    <!-- EXPORTACIÓN -->
+    {% set activo = 'exportacion' in modulos_activos %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100" style="{% if not activo %}opacity:.7{% endif %}">
+            <div class="card-body p-0">
+                <div class="d-flex align-items-center gap-3 p-3 border-bottom">
+                    <div style="width:42px;height:42px;border-radius:10px;background:{% if activo %}#f0f9ff{% else %}#f1f5f9{% endif %};display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:{% if activo %}#0284c7{% else %}#94a3b8{% endif %};flex-shrink:0">
+                        <i class="bi bi-file-earmark-excel"></i>
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div style="font-weight:700;font-size:.86rem;color:#0f172a">Exportación Excel</div>
+                        <div style="font-size:.73rem;color:#64748b">Reportes de todos los módulos</div>
+                    </div>
+                    {% if activo %}
+                    <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.65rem">Activo</span>
+                    {% else %}
+                    <span class="badge" style="background:#f1f5f9;color:#94a3b8;font-size:.65rem">No activo</span>
+                    {% endif %}
+                </div>
+                <div class="p-3">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('exports.exportar_declaracion') }}" class="btn btn-sm {% if activo %}btn-info text-white{% else %}btn-outline-secondary disabled{% endif %}">
+                            <i class="bi bi-download me-1"></i>Exportar Declaración
+                        </a>
+                        <a href="{{ url_for('gastos.exportar_excel') }}" class="btn btn-sm {% if activo %}btn-outline-info{% else %}btn-outline-secondary disabled{% endif %}">
+                            <i class="bi bi-download me-1"></i>Exportar Gastos
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- DESCARGA MASIVA SRI -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100 {% if 'descarga_sri' in modulos_activos %}border-secondary{% else %}border-secondary opacity-75{% endif %}">
-            <div class="card-header {% if 'descarga_sri' in modulos_activos %}bg-secondary text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
-                <span><i class="bi bi-cloud-download me-1"></i>Descarga Masiva SRI</span>
-                {% if 'descarga_sri' not in modulos_activos %}
-                <span class="badge bg-warning text-dark">Pago único</span>
-                {% else %}
-                <span class="badge bg-light text-success">Activo</span>
-                {% endif %}
-            </div>
-            <div class="card-body">
-                <p class="text-muted small mb-2">Descarga masivamente tus facturas del portal SRI. Pago único.</p>
-                <div class="d-grid">
-                    <a href="{{ url_for('downloader.pagina_descarga') }}" class="btn btn-sm {% if 'descarga_sri' in modulos_activos %}btn-secondary{% else %}btn-outline-secondary disabled{% endif %}">
-                        <i class="bi bi-cloud-download me-1"></i>Abrir Herramienta
-                    </a>
+    <!-- DESCARGA MASIVA -->
+    {% set activo = 'descarga_sri' in modulos_activos %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100" style="{% if not activo %}opacity:.7{% endif %}">
+            <div class="card-body p-0">
+                <div class="d-flex align-items-center gap-3 p-3 border-bottom">
+                    <div style="width:42px;height:42px;border-radius:10px;background:{% if activo %}#f8fafc{% else %}#f1f5f9{% endif %};display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:{% if activo %}#475569{% else %}#94a3b8{% endif %};flex-shrink:0">
+                        <i class="bi bi-cloud-download"></i>
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div style="font-weight:700;font-size:.86rem;color:#0f172a">Descarga Masiva SRI</div>
+                        <div style="font-size:.73rem;color:#64748b">Pago único — acceso permanente</div>
+                    </div>
+                    {% if activo %}
+                    <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.65rem">Activo</span>
+                    {% else %}
+                    <span class="badge" style="background:#fef3c7;color:#92400e;font-size:.65rem">Pago único</span>
+                    {% endif %}
+                </div>
+                <div class="p-3">
+                    <div class="d-grid">
+                        <a href="{{ url_for('downloader.pagina_descarga') }}" class="btn btn-sm {% if activo %}btn-secondary{% else %}btn-outline-secondary disabled{% endif %}">
+                            <i class="bi bi-cloud-download me-1"></i>Abrir Herramienta
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- SOPORTE PRIORITARIO -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100 {% if 'soporte' in modulos_activos %}border-dark{% else %}border-secondary opacity-75{% endif %}">
-            <div class="card-header {% if 'soporte' in modulos_activos %}bg-dark text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-between">
-                <span><i class="bi bi-headset me-1"></i>Soporte Prioritario</span>
-                {% if 'soporte' not in modulos_activos %}<span class="badge bg-light text-dark">No activo</span>{% endif %}
-            </div>
-            <div class="card-body">
-                <p class="text-muted small mb-2">Atención preferencial por WhatsApp y correo.</p>
-                {% if 'soporte' in modulos_activos %}
-                <div class="d-grid gap-1">
-                    <a href="https://wa.me/593963511411" target="_blank" class="btn btn-sm btn-success">
-                        <i class="bi bi-whatsapp me-1"></i>WhatsApp
-                    </a>
-                    <a href="mailto:jomapconsultores@outlook.com" class="btn btn-sm btn-outline-dark">
-                        <i class="bi bi-envelope me-1"></i>Correo
-                    </a>
+    <!-- SOPORTE -->
+    {% set activo = 'soporte' in modulos_activos %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100" style="{% if not activo %}opacity:.7{% endif %}">
+            <div class="card-body p-0">
+                <div class="d-flex align-items-center gap-3 p-3 border-bottom">
+                    <div style="width:42px;height:42px;border-radius:10px;background:{% if activo %}#f8fafc{% else %}#f1f5f9{% endif %};display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:{% if activo %}#1e293b{% else %}#94a3b8{% endif %};flex-shrink:0">
+                        <i class="bi bi-headset"></i>
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div style="font-weight:700;font-size:.86rem;color:#0f172a">Soporte Prioritario</div>
+                        <div style="font-size:.73rem;color:#64748b">WhatsApp + correo &lt;24h</div>
+                    </div>
+                    {% if activo %}
+                    <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.65rem">Activo</span>
+                    {% else %}
+                    <span class="badge" style="background:#f1f5f9;color:#94a3b8;font-size:.65rem">No activo</span>
+                    {% endif %}
                 </div>
-                {% else %}
-                <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-sm btn-outline-secondary w-100">
-                    <i class="bi bi-plus-circle me-1"></i>Contratar
-                </a>
-                {% endif %}
+                <div class="p-3">
+                    {% if activo %}
+                    <div class="d-grid gap-2">
+                        <a href="https://wa.me/593963511411" target="_blank" class="btn btn-sm btn-success">
+                            <i class="bi bi-whatsapp me-1"></i>Contactar por WhatsApp
+                        </a>
+                        <a href="mailto:jomapconsultores@outlook.com" class="btn btn-sm btn-outline-dark">
+                            <i class="bi bi-envelope me-1"></i>Enviar Correo
+                        </a>
+                    </div>
+                    {% else %}
+                    <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-sm btn-outline-secondary w-100">
+                        <i class="bi bi-plus-circle me-1"></i>Contratar Soporte
+                    </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- MIS MÓDULOS / RESUMEN -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100 border-light">
-            <div class="card-header bg-light text-dark">
-                <i class="bi bi-grid me-1"></i>Mi Cuenta
-            </div>
-            <div class="card-body">
-                <p class="text-muted small mb-2">Gestiona tus módulos y suscripciones.</p>
-                <div class="d-grid gap-1">
-                    <a href="{{ url_for('payments.mis_modulos') }}" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-grid me-1"></i>Mis Módulos
-                    </a>
-                    <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-sm btn-outline-success">
-                        <i class="bi bi-plus-circle me-1"></i>Agregar Módulos
-                    </a>
-                    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">
-                        <i class="bi bi-box-arrow-right me-1"></i>Cerrar Sesión
+    <!-- PRO TOOLS -->
+    <div class="col-12">
+        <div class="divider-text">Herramientas Pro</div>
+    </div>
+
+    {% for mod_key, mod_icon, mod_name, mod_desc, mod_url in [
+        ('ice_auditoria', 'bi-fire',              'Auditoría ICE Completa',   'Tarifas 2021–2026, packs, anexo XML',       safe_url_for('ice_auditoria.index')),
+        ('anexos',        'bi-file-earmark-code', 'Editor Anexos ICE/PVP',    'Editor XML directo para el SRI',            safe_url_for('ats.editor')),
+        ('sri_pro',       'bi-cloud-arrow-down',  'Gestor SRI Pro',           'Descarga masiva desde claves de acceso',    safe_url_for('sri_processor.index')),
+        ('retenciones',   'bi-file-earmark-minus','Retenciones XML',          'Procesa comprobantes, exporta con fórmulas',safe_url_for('retenciones.index')),
+        ('conciliacion',  'bi-bank',              'Conciliación Bancaria',    'PDF → transacciones con IA → Odoo Excel',   safe_url_for('conciliacion.index')),
+    ] %}
+    {% set activo = mod_key in modulos_activos %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100" style="border:1px solid {% if activo %}#c7d2fe{% else %}#e2e8f0{% endif %};{% if not activo %}opacity:.7{% endif %}">
+            <div class="card-body p-0">
+                <div class="d-flex align-items-center gap-3 p-3 border-bottom" style="border-color:{% if activo %}#e0e7ff{% else %}#f1f5f9{% endif %}!important">
+                    <div style="width:42px;height:42px;border-radius:10px;background:{% if activo %}#eef2ff{% else %}#f1f5f9{% endif %};display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:{% if activo %}#4f46e5{% else %}#94a3b8{% endif %};flex-shrink:0">
+                        <i class="bi {{ mod_icon }}"></i>
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div style="font-weight:700;font-size:.86rem;color:#0f172a">{{ mod_name }}</div>
+                        <div style="font-size:.73rem;color:#64748b">{{ mod_desc }}</div>
+                    </div>
+                    <span class="badge" style="background:#eef2ff;color:#4338ca;font-size:.63rem;font-weight:700">PRO</span>
+                </div>
+                <div class="p-3">
+                    <a href="{{ mod_url }}" class="btn btn-sm w-100 {% if activo %}btn-primary{% else %}btn-outline-secondary disabled{% endif %}">
+                        {% if activo %}<i class="bi bi-arrow-right-circle me-1"></i>Abrir{% else %}<i class="bi bi-lock me-1"></i>Requiere módulo{% endif %}
                     </a>
                 </div>
             </div>
         </div>
     </div>
+    {% endfor %}
 
 </div>
 {% endblock %}

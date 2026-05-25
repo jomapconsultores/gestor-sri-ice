@@ -1,47 +1,349 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor SRI + ICE — CMAJ Asociados</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; }
 
-{% block title %}Bienvenido - Gestor SRI + ICE{% endblock %}
+        /* NAV */
+        .top-nav {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 32px;
+            display: flex; align-items: center;
+            height: 60px; gap: 16px;
+        }
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none;
+        }
+        .nav-brand-icon {
+            width: 34px; height: 34px;
+            background: #2563eb;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; color: #fff;
+        }
+        .nav-brand-name { font-weight: 700; font-size: 0.9rem; color: #0f172a; }
+        .nav-links { display: flex; gap: 4px; margin-left: auto; }
+        .btn-nav { font-size: 0.83rem; font-weight: 500; border-radius: 7px; padding: 7px 16px; }
 
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 text-center">
-        <h1 class="display-4 mb-4">Gestor SRI + ICE</h1>
-        <p class="lead">Sistema completo de gestión tributaria ecuatoriana</p>
-        
-        <div class="row mt-5">
-            <div class="col-md-4 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <i class="bi bi-download text-primary" style="font-size: 2rem;"></i>
-                        <h5>Descarga Facturas</h5>
-                        <p class="text-muted">Del portal SRI directamente</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <i class="bi bi-calculator text-success" style="font-size: 2rem;"></i>
-                        <h5>Cálculo ICE</h5>
-                        <p class="text-muted">Automático y preciso</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <i class="bi bi-file-earmark-xml text-danger" style="font-size: 2rem;"></i>
-                        <h5>Anexos SRI</h5>
-                        <p class="text-muted">Formato oficial XML</p>
-                    </div>
-                </div>
+        /* HERO */
+        .hero {
+            background: linear-gradient(135deg, #0d1b2e 0%, #1e3a5f 100%);
+            padding: 80px 32px 90px;
+            text-align: center;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(96,165,250,0.15);
+            border: 1px solid rgba(96,165,250,0.3);
+            color: #93c5fd;
+            font-size: 0.75rem; font-weight: 600;
+            padding: 5px 14px; border-radius: 20px;
+            margin-bottom: 24px;
+        }
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.15;
+            letter-spacing: -0.8px;
+            max-width: 700px;
+            margin: 0 auto 16px;
+        }
+        .hero h1 span { color: #60a5fa; }
+        .hero p {
+            color: rgba(255,255,255,0.6);
+            font-size: 1rem;
+            max-width: 520px;
+            margin: 0 auto 36px;
+            line-height: 1.6;
+        }
+        .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .btn-hero-primary {
+            background: #2563eb; color: #fff; border: none;
+            border-radius: 9px; padding: 13px 28px;
+            font-size: 0.9rem; font-weight: 600;
+            text-decoration: none; transition: background .15s;
+            display: inline-flex; align-items: center; gap: 7px;
+        }
+        .btn-hero-primary:hover { background: #1d4ed8; color: #fff; }
+        .btn-hero-secondary {
+            background: rgba(255,255,255,0.1); color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 9px; padding: 13px 28px;
+            font-size: 0.9rem; font-weight: 500;
+            text-decoration: none; transition: background .15s;
+            display: inline-flex; align-items: center; gap: 7px;
+        }
+        .btn-hero-secondary:hover { background: rgba(255,255,255,0.17); color: #fff; }
+
+        /* STATS ROW */
+        .stats-row {
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 20px 32px;
+            display: flex; justify-content: center; gap: 0; flex-wrap: wrap;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 8px 36px;
+            border-right: 1px solid #e2e8f0;
+        }
+        .stat-item:last-child { border-right: none; }
+        .stat-val { font-size: 1.5rem; font-weight: 800; color: #0f172a; }
+        .stat-lbl { font-size: 0.73rem; color: #64748b; margin-top: 2px; }
+
+        /* FEATURES */
+        .section { padding: 72px 32px; }
+        .section-title {
+            font-size: 0.72rem; font-weight: 700; color: #2563eb;
+            text-transform: uppercase; letter-spacing: 0.1em;
+            margin-bottom: 10px; text-align: center;
+        }
+        .section-h2 {
+            font-size: 1.8rem; font-weight: 800; color: #0f172a;
+            text-align: center; letter-spacing: -0.5px; margin-bottom: 8px;
+        }
+        .section-sub { text-align: center; color: #64748b; font-size: 0.9rem; margin-bottom: 48px; }
+
+        .feat-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            height: 100%;
+            transition: box-shadow .2s, transform .2s;
+        }
+        .feat-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
+        .feat-icon {
+            width: 46px; height: 46px;
+            border-radius: 11px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; margin-bottom: 14px;
+        }
+        .feat-card h3 { font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+        .feat-card p { font-size: 0.81rem; color: #64748b; line-height: 1.55; margin: 0; }
+
+        /* PRICING TEASER */
+        .pricing-section { background: #0d1b2e; padding: 72px 32px; }
+        .pricing-section .section-h2 { color: #fff; }
+        .pricing-section .section-sub { color: rgba(255,255,255,0.5); }
+        .price-card {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px; padding: 28px;
+            text-align: center; height: 100%;
+            transition: background .2s;
+        }
+        .price-card:hover { background: rgba(255,255,255,0.1); }
+        .price-card.featured {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+        .price-card .price-name { color: rgba(255,255,255,0.7); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; }
+        .price-card.featured .price-name { color: rgba(255,255,255,0.9); }
+        .price-card .price-val { font-size: 2rem; font-weight: 800; color: #fff; margin: 8px 0 2px; }
+        .price-card .price-period { font-size: 0.73rem; color: rgba(255,255,255,0.45); margin-bottom: 16px; }
+        .price-card ul { list-style: none; padding: 0; margin: 0 0 20px; text-align: left; }
+        .price-card ul li { font-size: 0.8rem; color: rgba(255,255,255,0.7); padding: 5px 0; display: flex; align-items: center; gap: 8px; }
+        .price-card ul li i { color: #60a5fa; flex-shrink: 0; }
+        .price-card.featured ul li i { color: #bfdbfe; }
+
+        /* CTA */
+        .cta-section { padding: 72px 32px; text-align: center; background: #fff; border-top: 1px solid #e2e8f0; }
+
+        /* FOOTER */
+        footer { background: #0f172a; color: rgba(255,255,255,0.4); text-align: center; padding: 24px 32px; font-size: 0.78rem; }
+        footer a { color: rgba(255,255,255,0.5); text-decoration: none; }
+        footer a:hover { color: #fff; }
+
+        @media (max-width: 575px) {
+            .stat-item { border-right: none; border-bottom: 1px solid #e2e8f0; padding: 10px 20px; }
+            .stat-item:last-child { border-bottom: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="top-nav">
+    <a class="nav-brand" href="{{ url_for('bienvenido') }}">
+        <div class="nav-brand-icon"><i class="bi bi-calculator-fill"></i></div>
+        <div class="nav-brand-name">Gestor SRI + ICE</div>
+    </a>
+    <div class="nav-links">
+        <a href="{{ url_for('auth.login') }}" class="btn btn-nav btn-outline-secondary">Iniciar sesión</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-nav btn-primary ms-1">Registrarse</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-badge"><i class="bi bi-patch-check-fill"></i>Sistema oficial para Ecuador</div>
+    <h1>Gestión tributaria<br><span>SRI + ICE</span> sin fricciones</h1>
+    <p>Calcula el ICE, genera anexos XML, procesa facturas y descarga del SRI — todo en un solo sistema diseñado para contadores y empresas ecuatorianas.</p>
+    <div class="hero-actions">
+        <a href="{{ url_for('auth.register') }}" class="btn-hero-primary">
+            <i class="bi bi-person-plus"></i>Crear cuenta gratis
+        </a>
+        <a href="{{ url_for('auth.login') }}" class="btn-hero-secondary">
+            <i class="bi bi-box-arrow-in-right"></i>Ya tengo cuenta
+        </a>
+    </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-row">
+    <div class="stat-item"><div class="stat-val">2021–2026</div><div class="stat-lbl">Tarifas ICE cubiertas</div></div>
+    <div class="stat-item"><div class="stat-val">10+</div><div class="stat-lbl">Módulos disponibles</div></div>
+    <div class="stat-item"><div class="stat-val">XML</div><div class="stat-lbl">Formato oficial SRI</div></div>
+    <div class="stat-item"><div class="stat-val">IA</div><div class="stat-lbl">Conciliación bancaria</div></div>
+</div>
+
+<!-- FEATURES -->
+<section class="section" style="background:#f8fafc">
+    <div class="section-title">Funcionalidades</div>
+    <h2 class="section-h2">Todo lo que necesitas para el SRI</h2>
+    <p class="section-sub">Módulos independientes — contrata solo lo que usas</p>
+
+    <div class="row g-3 justify-content-center" style="max-width:1100px;margin:0 auto">
+        <div class="col-sm-6 col-lg-4">
+            <div class="feat-card">
+                <div class="feat-icon" style="background:#eff6ff;color:#2563eb"><i class="bi bi-calculator-fill"></i></div>
+                <h3>Cálculo ICE Automático</h3>
+                <p>ICE específico y ad-valorem con tarifas actualizadas 2021–2026. Soporte para packs y mezclas de productos.</p>
             </div>
         </div>
-        
-        <div class="mt-4">
-            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-2">Registrarse</a>
-            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg">Iniciar Sesión</a>
+        <div class="col-sm-6 col-lg-4">
+            <div class="feat-card">
+                <div class="feat-icon" style="background:#fef9c3;color:#ca8a04"><i class="bi bi-file-earmark-code"></i></div>
+                <h3>Anexos XML para el SRI</h3>
+                <p>Genera el Anexo PVP e ICE en formato XML oficial. Editor visual con carga de archivos existentes.</p>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <div class="feat-card">
+                <div class="feat-icon" style="background:#f0fdf4;color:#16a34a"><i class="bi bi-cloud-download"></i></div>
+                <h3>Descarga Masiva SRI</h3>
+                <p>Descarga XMLs del SRI usando claves de acceso. Hasta 10 descargas en paralelo con clasificación automática.</p>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <div class="feat-card">
+                <div class="feat-icon" style="background:#fef2f2;color:#dc2626"><i class="bi bi-receipt"></i></div>
+                <h3>Facturas Ilimitadas</h3>
+                <p>Procesa facturas de gastos e ingresos en XML. Clasificación automática con catálogo personalizable.</p>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <div class="feat-card">
+                <div class="feat-icon" style="background:#f0f9ff;color:#0284c7"><i class="bi bi-bank"></i></div>
+                <h3>Conciliación Bancaria IA</h3>
+                <p>Sube estados de cuenta PDF y extrae transacciones automáticamente con Mistral AI. Exporta para Odoo.</p>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <div class="feat-card">
+                <div class="feat-icon" style="background:#faf5ff;color:#7c3aed"><i class="bi bi-file-earmark-excel"></i></div>
+                <h3>Exportación Excel</h3>
+                <p>Reportes completos con fórmulas, resúmenes por agente, totales y formato profesional listo para presentar.</p>
+            </div>
         </div>
     </div>
-</div>
-{% endblock %}
+</section>
+
+<!-- PRICING TEASER -->
+<section class="pricing-section">
+    <div class="section-title" style="color:#60a5fa">Precios</div>
+    <h2 class="section-h2">Módulos desde <span style="color:#60a5fa">$5 / mes</span></h2>
+    <p class="section-sub">Sin planes fijos — elige exactamente los módulos que necesitas</p>
+
+    <div class="row g-3 justify-content-center" style="max-width:900px;margin:0 auto">
+        <div class="col-md-4">
+            <div class="price-card">
+                <div class="price-name">ICE Simple</div>
+                <div class="price-val">$5</div>
+                <div class="price-period">por mes</div>
+                <ul>
+                    <li><i class="bi bi-check2"></i>Cálculo individual ICE</li>
+                    <li><i class="bi bi-check2"></i>Tarifas 2021–2026</li>
+                    <li><i class="bi bi-check2"></i>Vista de tarifas</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="price-card featured">
+                <div class="price-name">Facturas</div>
+                <div class="price-val">$10</div>
+                <div class="price-period">por mes</div>
+                <ul>
+                    <li><i class="bi bi-check2"></i>Facturas ilimitadas</li>
+                    <li><i class="bi bi-check2"></i>Gastos e ingresos</li>
+                    <li><i class="bi bi-check2"></i>Catálogo incluido</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="price-card">
+                <div class="price-name">Herramientas Pro</div>
+                <div class="price-val">$15–20</div>
+                <div class="price-period">por módulo / mes</div>
+                <ul>
+                    <li><i class="bi bi-check2"></i>Auditoría ICE completa</li>
+                    <li><i class="bi bi-check2"></i>Conciliación bancaria IA</li>
+                    <li><i class="bi bi-check2"></i>Retenciones XML</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-nav btn-primary" style="padding:11px 28px;font-size:.88rem;border-radius:9px">
+            Ver todos los módulos y precios →
+        </a>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+    <h2 style="font-size:1.7rem;font-weight:800;color:#0f172a;letter-spacing:-.5px;margin-bottom:10px">
+        ¿Listo para simplificar tu contabilidad?
+    </h2>
+    <p style="color:#64748b;font-size:.9rem;margin-bottom:28px">
+        Crea tu cuenta gratis y comienza a usar el sistema en minutos.
+    </p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary" style="padding:12px 28px;font-size:.9rem;border-radius:9px;font-weight:600">
+            <i class="bi bi-person-plus me-1"></i>Crear cuenta gratis
+        </a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary" style="padding:12px 28px;font-size:.9rem;border-radius:9px">
+            Iniciar sesión
+        </a>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div>© 2026 CMAJ Asociados SAS ·
+        <a href="mailto:jomapconsultores@outlook.com">jomapconsultores@outlook.com</a> ·
+        <a href="https://wa.me/593963511411">WhatsApp</a>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
