@@ -82,15 +82,15 @@
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-tools me-1"></i>Pro</a>
                     <ul class="dropdown-menu">
                         <li><h6 class="dropdown-header">ICE</h6></li>
-                        <li><a class="dropdown-item" href="{{ url_for('ats.editor') }}"><i class="bi bi-file-earmark-code me-1"></i>Editor Anexos ICE/PVP</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('ice_auditoria.index') }}"><i class="bi bi-fire me-1"></i>Auditoría ICE Completa</a></li>
+                        <li><a class="dropdown-item" href="{{ safe_url_for('ats.editor') }}"><i class="bi bi-file-earmark-code me-1"></i>Editor Anexos ICE/PVP</a></li>
+                        <li><a class="dropdown-item" href="{{ safe_url_for('ice_auditoria.index') }}"><i class="bi bi-fire me-1"></i>Auditoría ICE Completa</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">Facturas y Retenciones</h6></li>
-                        <li><a class="dropdown-item" href="{{ url_for('sri_processor.index') }}"><i class="bi bi-cloud-download me-1"></i>Gestor SRI Pro</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('retenciones.index') }}"><i class="bi bi-file-earmark-minus me-1"></i>Retenciones XML</a></li>
+                        <li><a class="dropdown-item" href="{{ safe_url_for('sri_processor.index') }}"><i class="bi bi-cloud-download me-1"></i>Gestor SRI Pro</a></li>
+                        <li><a class="dropdown-item" href="{{ safe_url_for('retenciones.index') }}"><i class="bi bi-file-earmark-minus me-1"></i>Retenciones XML</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">Contabilidad</h6></li>
-                        <li><a class="dropdown-item" href="{{ url_for('conciliacion.index') }}"><i class="bi bi-bank me-1"></i>Conciliación Bancaria</a></li>
+                        <li><a class="dropdown-item" href="{{ safe_url_for('conciliacion.index') }}"><i class="bi bi-bank me-1"></i>Conciliación Bancaria</a></li>
                     </ul>
                 </li>
                 {% if current_user.is_admin %}

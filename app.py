@@ -14,11 +14,6 @@ from routes.admin_reports import admin_reports
 from routes.gastos import gastos
 from routes.empresas import empresas
 from routes.security import security, obtener_ip
-from routes.ats import ats
-from routes.conciliacion import conciliacion
-from routes.sri_processor import sri_processor
-from routes.ice_auditoria import ice_auditoria
-from routes.retenciones import retenciones
 from flask_login import login_required, current_user
 
 RUTAS_LIBRES = {
@@ -47,11 +42,23 @@ def create_app():
     app.register_blueprint(gastos, url_prefix='/gastos')
     app.register_blueprint(empresas, url_prefix='/empresas')
     app.register_blueprint(security, url_prefix='/security')
-    app.register_blueprint(ats, url_prefix='/ats')
-    app.register_blueprint(conciliacion, url_prefix='/conciliacion')
-    app.register_blueprint(sri_processor, url_prefix='/sri_processor')
-    app.register_blueprint(ice_auditoria, url_prefix='/ice_auditoria')
-    app.register_blueprint(retenciones, url_prefix='/retenciones')
+
+    # Módulos Pro – importados aquí para capturar cualquier error de importación
+    _pro_modules = [
+        ('routes.ats',          'ats',           '/ats'),
+        ('routes.conciliacion', 'conciliacion',   '/conciliacion'),
+        ('routes.sri_processor','sri_processor',  '/sri_processor'),
+        ('routes.ice_auditoria','ice_auditoria',  '/ice_auditoria'),
+        ('routes.retenciones',  'retenciones',    '/retenciones'),
+    ]
+    for _mod, _attr, _prefix in _pro_modules:
+        try:
+            import importlib
+            _bp = getattr(importlib.import_module(_mod), _attr)
+            app.register_blueprint(_bp, url_prefix=_prefix)
+            print(f'  [OK] Blueprint {_attr} registrado en {_prefix}')
+        except Exception as _e:
+            print(f'  [ERROR] No se pudo registrar {_attr}: {_e}')
 
     # Filtros Jinja2 personalizados
     @app.template_filter('from_json')
@@ -60,6 +67,17 @@ def create_app():
             return _json.loads(value)
         except Exception:
             return []
+
+    from werkzeug.routing import BuildError as _BuildError
+
+    @app.context_processor
+    def inject_safe_url_for():
+        def safe_url_for(endpoint, **kwargs):
+            try:
+                return url_for(endpoint, **kwargs)
+            except _BuildError:
+                return '#'
+        return dict(safe_url_for=safe_url_for)
 
     with app.app_context():
         db.create_all()
