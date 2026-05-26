@@ -5,8 +5,13 @@ load_dotenv()
 
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'clave-super-secreta-cambiar-en-produccion')
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///sistema_ice.db')
+    # Supabase/Render: postgres:// → postgresql:// (SQLAlchemy lo requiere)
+    _db_url = os.getenv('DATABASE_URL', 'sqlite:///sistema_ice.db')
+    if _db_url.startswith('postgres://'):
+        _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+    SQLALCHEMY_DATABASE_URI = _db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {'pool_pre_ping': True, 'pool_recycle': 300}
 
     BASE_URL = os.getenv('BASE_URL', 'http://localhost:5000')
 
