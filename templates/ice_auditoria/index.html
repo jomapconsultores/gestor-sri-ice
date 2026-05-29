@@ -70,6 +70,14 @@
                 <label class="form-label small fw-bold">Mes</label>
                 <input type="text" class="form-control form-control-sm" id="emisorMes" value="01" maxlength="2">
             </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Actividad (actImport)</label>
+                <select class="form-select form-select-sm" id="actImport">
+                    <option value="01">01 - Fabricante Nacional</option>
+                    <option value="02" selected>02 - Distribuidor</option>
+                    <option value="03">03 - Importador</option>
+                </select>
+            </div>
         </div>
     </div>
 </div>
@@ -279,9 +287,10 @@ async function generarXMLAnexo() {
 
     mostrarSpinner('Generando XML Anexo...');
     try {
+        const actImport = document.getElementById('actImport').value;
         const resp = await fetch('{{ url_for("ice_auditoria.generar_xml_anexo") }}', {
             method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({tipo: getTipo(), ruc, razon, anio, mes, datos})
+            body: JSON.stringify({tipo: getTipo(), ruc, razon, anio, mes, actImport, datos})
         });
         if (!resp.ok) { const e = await resp.json(); alert(e.error); return; }
         const blob = await resp.blob();

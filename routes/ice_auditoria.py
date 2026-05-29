@@ -1,4 +1,4 @@
-"""Sistema Integrado ICE – Auditoría + Anexo SRI (basado en ICEcompleto.py)"""
+"""Sistema Integrado ICE – Auditoría + Anexo SRI (sincronizado con ICEcompleto.py)"""
 import io, os, json
 from collections import defaultdict
 from flask import Blueprint, render_template, request, Response, redirect, url_for, flash
@@ -19,15 +19,45 @@ TAX_DB = {
     "2026": {"esp": 10.41, "art": 1.56, "ind": 13.62, "umb": 4.72, "iva": 0.15},
 }
 
+# ── Catálogo con códigos SRI reales ──────────────────────────────────────────
 CATALOGO = {
-    'LICOR ORO': {'codMarca': '000001', 'presentacion': '13', 'capacidad': '750', 'unidad': '66', 'grado': '15', 'codImpuesto': '3031', 'tipo': 'Licor', 'botellas_por_caja': 12},
-    'LICOR SECO BLANCO': {'codMarca': '000002', 'presentacion': '13', 'capacidad': '750', 'unidad': '66', 'grado': '15', 'codImpuesto': '3031', 'tipo': 'Licor', 'botellas_por_caja': 12},
-    'AGUARDIENTE DE CAÑA': {'codMarca': '000003', 'presentacion': '13', 'capacidad': '750', 'unidad': '66', 'grado': '15', 'codImpuesto': '3031', 'tipo': 'Licor', 'botellas_por_caja': 12},
-    'VODKA SECO GLACIAL': {'codMarca': '000004', 'presentacion': '13', 'capacidad': '750', 'unidad': '66', 'grado': '15', 'codImpuesto': '3031', 'tipo': 'Licor', 'botellas_por_caja': 12},
-    'COCKTAIL CON VODKA SABOR A MARACUYA': {'codMarca': '000005', 'presentacion': '13', 'capacidad': '800', 'unidad': '66', 'grado': '5', 'codImpuesto': '3031', 'tipo': 'Cocktail', 'botellas_por_caja': 12},
-    'COCKTAIL CON BAJO GRADO ALCOHOLICO SABOR A DURAZNO': {'codMarca': '000006', 'presentacion': '13', 'capacidad': '800', 'unidad': '66', 'grado': '5', 'codImpuesto': '3031', 'tipo': 'Cocktail', 'botellas_por_caja': 12},
-    'COCKTAIL CON VODKA SABOR A GUARANA': {'codMarca': '000007', 'presentacion': '13', 'capacidad': '750', 'unidad': '66', 'grado': '5', 'codImpuesto': '3031', 'tipo': 'Cocktail', 'botellas_por_caja': 12},
+    'LICOR ORO': {
+        'codMarca': '019167', 'codProdSRI': '19167', 'presentacion': '13',
+        'capacidad': '750', 'unidad': '66', 'grado': '15',
+        'codImpuesto': '3031', 'tipo': 'Licor', 'botellas_por_caja': 12
+    },
+    'LICOR SECO BLANCO': {
+        'codMarca': '039919', 'codProdSRI': '39919', 'presentacion': '13',
+        'capacidad': '750', 'unidad': '66', 'grado': '15',
+        'codImpuesto': '3031', 'tipo': 'Licor', 'botellas_por_caja': 12
+    },
+    'AGUARDIENTE DE CAÑA': {
+        'codMarca': '036886', 'codProdSRI': '36886', 'presentacion': '13',
+        'capacidad': '750', 'unidad': '66', 'grado': '15',
+        'codImpuesto': '3031', 'tipo': 'Licor', 'botellas_por_caja': 12
+    },
+    'VODKA SECO GLACIAL': {
+        'codMarca': '027298', 'codProdSRI': '27298', 'presentacion': '13',
+        'capacidad': '750', 'unidad': '66', 'grado': '15',
+        'codImpuesto': '3031', 'tipo': 'Licor', 'botellas_por_caja': 12
+    },
+    'COCKTAIL CON VODKA SABOR A MARACUYA': {
+        'codMarca': '022744', 'codProdSRI': '22744', 'presentacion': '13',
+        'capacidad': '800', 'unidad': '66', 'grado': '5',
+        'codImpuesto': '3031', 'tipo': 'Cocktail', 'botellas_por_caja': 12
+    },
+    'COCKTAIL CON BAJO GRADO ALCOHOLICO SABOR A DURAZNO': {
+        'codMarca': '006868', 'codProdSRI': '6868', 'presentacion': '13',
+        'capacidad': '800', 'unidad': '66', 'grado': '5',
+        'codImpuesto': '3031', 'tipo': 'Cocktail', 'botellas_por_caja': 12
+    },
+    'COCKTAIL CON VODKA SABOR A GUARANA': {
+        'codMarca': '039912', 'codProdSRI': '39912', 'presentacion': '13',
+        'capacidad': '750', 'unidad': '66', 'grado': '5',
+        'codImpuesto': '3031', 'tipo': 'Cocktail', 'botellas_por_caja': 12
+    },
 }
+
 PALABRAS_CLAVE = {
     'LICOR ORO': ['LICOR ORO'],
     'LICOR SECO BLANCO': ['LICOR SECO BLANCO'],
@@ -37,9 +67,25 @@ PALABRAS_CLAVE = {
     'COCKTAIL CON BAJO GRADO ALCOHOLICO SABOR A DURAZNO': ['DURAZNO'],
     'COCKTAIL CON VODKA SABOR A GUARANA': ['GUARANA', 'GUARANÁ'],
 }
-CATALOGO_DEFAULT = {'codMarca': '000000', 'presentacion': '13', 'capacidad': '750',
-                    'unidad': '66', 'grado': '15', 'codImpuesto': '3031',
-                    'tipo': 'Licor', 'botellas_por_caja': 12}
+
+CATALOGO_DEFAULT = {
+    'codMarca': '000000', 'codProdSRI': '', 'presentacion': '13',
+    'capacidad': '750', 'unidad': '66', 'grado': '15',
+    'codImpuesto': '3031', 'tipo': 'Licor', 'botellas_por_caja': 12
+}
+
+# ── Mapeo tipoIdentificacion factura → tipoIdCliente ICE (XSD acepta letras) ─
+_TIPO_ID_ICE = {
+    '04': 'R',   # RUC
+    '05': 'C',   # Cédula de Identidad
+    '06': 'P',   # Pasaporte
+    '07': 'F',   # Consumidor Final
+    '08': 'F',   # Identificación exterior → Consumidor Final
+}
+
+
+def _mapear_tipo_id(tipo_id_factura):
+    return _TIPO_ID_ICE.get(str(tipo_id_factura).strip(), 'F')
 
 
 def buscar_catalogo(descripcion):
@@ -48,6 +94,21 @@ def buscar_catalogo(descripcion):
         if any(c in desc_u for c in claves) and nombre in CATALOGO:
             return CATALOGO[nombre].copy()
     return CATALOGO_DEFAULT.copy()
+
+
+def _construir_cod_prod_ice(info_cat):
+    """Construye el código completo codProdICE para el anexo XML del SRI."""
+    cod_sri = info_cat.get('codProdSRI', '').strip()
+    if not cod_sri:
+        return info_cat.get('codImpuesto', '3031')
+    if '-' in cod_sri:
+        return cod_sri
+    pres = info_cat.get('presentacion', '13').zfill(3)
+    cap = info_cat.get('capacidad', '750').zfill(6)
+    und = info_cat.get('unidad', '66')
+    grad = info_cat.get('grado', '15').zfill(6)
+    cimp = info_cat.get('codImpuesto', '3031')
+    return f"{cimp}-057-{cod_sri.zfill(6)}-{pres}-{cap}-{und}-593-{grad}"
 
 
 def es_pack(desc):
@@ -86,18 +147,18 @@ def ice_advalorem(precio_bot, vol_cc, umbral):
 def _requiere_modulo():
     if current_user.is_admin:
         return None
-    if not usuario_tiene_modulo('ice_multiple'):
-        flash('Requieres el módulo Cálculo ICE Múltiple para usar la Auditoría ICE.', 'warning')
+    if not usuario_tiene_modulo('ice_auditoria'):
+        flash('Requieres el módulo Auditoría ICE Completa para usar esta herramienta.', 'warning')
         return redirect(url_for('payments.ver_planes'))
     return None
 
 
 # ── Parseo XML de facturas ICE ───────────────────────────────────────────────
 
-def parsear_xml_ice(ruta):
+def parsear_xml_ice(contenido_bytes):
+    """Parsea un XML de factura desde bytes (en memoria, sin guardar a disco)."""
     try:
-        tree = ET.parse(ruta)
-        root = tree.getroot()
+        root = ET.fromstring(contenido_bytes)
         if root.tag != 'factura':
             return [], []
 
@@ -160,7 +221,9 @@ def parsear_xml_ice(ruta):
                 'tipo_id_cliente': tipo_id, 'id_cliente': id_cli,
                 'razon_social_cliente': razon,
                 'codigo_producto': cod, 'nombre_producto': desc[:80],
-                'codMarca': info_cat['codMarca'], 'presentacion': info_cat['presentacion'],
+                'codMarca': info_cat['codMarca'],
+                'codProdSRI': info_cat.get('codProdSRI', ''),
+                'presentacion': info_cat['presentacion'],
                 'capacidad': info_cat['capacidad'], 'unidad': info_cat['unidad'],
                 'grado_alcoholico': info_cat['grado'], 'codImpuesto': info_cat['codImpuesto'],
                 'tipo_producto': info_cat['tipo'],
@@ -171,7 +234,6 @@ def parsear_xml_ice(ruta):
                 'base_ice': base_ice, 'valor_ice': ice_val,
                 'base_iva': base_iva, 'valor_iva': iva_val,
                 'importe_total': importe_total,
-                'archivo': os.path.basename(ruta)
             }
 
             if ice_val > 0:
@@ -181,7 +243,7 @@ def parsear_xml_ice(ruta):
 
         return registros_ice, registros_pvp
     except Exception as e:
-        print(f'Error parseando {ruta}: {e}')
+        print(f'Error parseando XML: {e}')
         return [], []
 
 
@@ -207,31 +269,26 @@ def procesar():
     if not archivos:
         return {'error': 'Sube archivos XML de facturas'}, 400
 
-    carpeta = os.path.join('uploads', str(current_user.id), 'ice_audit')
-    os.makedirs(carpeta, exist_ok=True)
-
     datos_ice = []
     datos_pvp = []
-    archivos_proc = set()
+    archivos_ok = 0
 
     for arch in archivos:
         if not arch.filename.lower().endswith('.xml'):
             continue
-        ruta = os.path.join(carpeta, arch.filename)
-        if ruta in archivos_proc:
-            continue
-        arch.save(ruta)
-        archivos_proc.add(ruta)
-        ice, pvp = parsear_xml_ice(ruta)
+        contenido = arch.read()
+        ice, pvp = parsear_xml_ice(contenido)
         datos_ice.extend(ice)
         datos_pvp.extend(pvp)
+        if ice or pvp:
+            archivos_ok += 1
 
     return {
         'datos_ice': datos_ice,
         'datos_pvp': datos_pvp,
         'total_ice': len(datos_ice),
         'total_pvp': len(datos_pvp),
-        'archivos': len(archivos_proc)
+        'archivos': archivos_ok
     }
 
 
@@ -248,52 +305,79 @@ def generar_xml_anexo():
     razon = data.get('razon', '')
     anio = data.get('anio', '')
     mes = data.get('mes', '')
+    act_import = data.get('actImport', '02')[:2]
     datos = data.get('datos', [])
 
-    root = ET.Element(tipo.lower())
-    ET.SubElement(root, 'TipoIDInformante').text = 'R'
-    ET.SubElement(root, 'IdInformante').text = ruc
-    ET.SubElement(root, 'razonSocial').text = razon
-    ET.SubElement(root, 'Anio').text = anio
-    ET.SubElement(root, 'Mes').text = mes
-    ET.SubElement(root, 'codigoOperativo').text = tipo
-    if tipo == 'ICE':
-        ET.SubElement(root, 'actImport').text = '0'
-
-    ventas = ET.SubElement(root, 'ventas')
-    ag = defaultdict(lambda: defaultdict(lambda: {'bot': 0, 'datos': {}}))
+    # ── Construir entradas con codProdICE resuelto y deduplicar ──────────
+    entradas_raw = []
     for reg in datos:
-        ag[reg['id_cliente']][reg['codigo_producto']]['bot'] += reg['unidades_botellas']
-        ag[reg['id_cliente']][reg['codigo_producto']]['datos'] = reg
+        info_cat = buscar_catalogo(reg.get('nombre_producto', ''))
+        cod_prod_ice = _construir_cod_prod_ice(info_cat)
+        tipo_id_mapped = _mapear_tipo_id(reg.get('tipo_id_cliente', '07'))
 
-    for id_cli, prods in sorted(ag.items()):
-        for cod_p, vals in sorted(prods.items()):
-            reg = vals['datos']
+        entradas_raw.append({
+            'codProdICE': cod_prod_ice,
+            'gramoAzucar': '0.00',
+            'tipoIdCliente': tipo_id_mapped,
+            'idCliente': reg.get('id_cliente', ''),
+            'tipoVentaICE': '1',
+            'ventaICE': reg.get('unidades_botellas', 0),
+            'devICE': '0',
+            'cantProdBajaICE': '0',
+        })
+
+    # Deduplicar: combinar filas con mismo idCliente + codProdICE
+    dedup = {}
+    for e in entradas_raw:
+        clave = (e['idCliente'], e['codProdICE'])
+        if clave in dedup:
+            dedup[clave]['ventaICE'] += e['ventaICE']
+        else:
+            dedup[clave] = dict(e)
+
+    # ── Construir XML ────────────────────────────────────────────────────
+    root_el = ET.Element(tipo.lower())
+    ET.SubElement(root_el, 'TipoIDInformante').text = 'R'
+    ET.SubElement(root_el, 'IdInformante').text = ruc
+    ET.SubElement(root_el, 'razonSocial').text = razon
+    ET.SubElement(root_el, 'Anio').text = anio
+    ET.SubElement(root_el, 'Mes').text = mes
+    # Orden XSD correcto: actImport ANTES de codigoOperativo
+    if tipo == 'ICE':
+        ET.SubElement(root_el, 'actImport').text = act_import
+    ET.SubElement(root_el, 'codigoOperativo').text = tipo
+
+    ventas = ET.SubElement(root_el, 'ventas')
+
+    if tipo == 'ICE':
+        for e in dedup.values():
             vta = ET.SubElement(ventas, 'vta')
-            if tipo == 'ICE':
-                campos = [
-                    ('codProdICE', reg.get('codImpuesto', '3031')),
-                    ('gramoAzucar', '0.00'),
-                    ('tipoIdCliente', reg.get('tipo_id_cliente', '04')),
-                    ('idCliente', id_cli),
-                    ('tipoVentaICE', '1'),
-                    ('ventaICE', f"{vals['bot']:.2f}"),
-                    ('devICE', '0'),
-                    ('cantProdBajaICE', str(vals['bot'])),
-                ]
-            else:
-                campos = [
-                    ('codProdPVP', reg.get('codMarca', '000001')),
-                    ('gramoAzucar', '0.00'),
-                    ('precioExPVP', f"{reg.get('precio_por_botella', 0):.2f}"),
-                    ('precioPVP', f"{reg.get('precio_por_botella', 0):.2f}"),
-                    ('fechaInPVP', f"01/{mes}/{anio}"),
-                    ('fechaFinPVP', f"31/{mes}/{anio}"),
-                ]
-            for campo, valor in campos:
-                ET.SubElement(vta, campo).text = str(valor)
+            ET.SubElement(vta, 'codProdICE').text = e['codProdICE']
+            ET.SubElement(vta, 'gramoAzucar').text = e['gramoAzucar']
+            ET.SubElement(vta, 'tipoIdCliente').text = e['tipoIdCliente']
+            ET.SubElement(vta, 'idCliente').text = e['idCliente']
+            ET.SubElement(vta, 'tipoVentaICE').text = e['tipoVentaICE']
+            ET.SubElement(vta, 'ventaICE').text = str(int(e['ventaICE']))
+            ET.SubElement(vta, 'devICE').text = e['devICE']
+            ET.SubElement(vta, 'cantProdBajaICE').text = e['cantProdBajaICE']
+    else:
+        # PVP: agrupar por id_cliente + codigo_producto
+        ag = defaultdict(lambda: defaultdict(lambda: {'bot': 0, 'datos': {}}))
+        for reg in datos:
+            ag[reg.get('id_cliente', '')][reg.get('codigo_producto', '')]['bot'] += reg.get('unidades_botellas', 0)
+            ag[reg.get('id_cliente', '')][reg.get('codigo_producto', '')]['datos'] = reg
+        for id_cli, prods in sorted(ag.items()):
+            for cod_p, vals in sorted(prods.items()):
+                reg = vals['datos']
+                vta = ET.SubElement(ventas, 'vta')
+                ET.SubElement(vta, 'codProdPVP').text = reg.get('codMarca', '000001')
+                ET.SubElement(vta, 'gramoAzucar').text = '0.00'
+                ET.SubElement(vta, 'precioExPVP').text = f"{reg.get('precio_por_botella', 0):.2f}"
+                ET.SubElement(vta, 'precioPVP').text = f"{reg.get('precio_por_botella', 0):.2f}"
+                ET.SubElement(vta, 'fechaInPVP').text = f"01/{mes}/{anio}"
+                ET.SubElement(vta, 'fechaFinPVP').text = f"31/{mes}/{anio}"
 
-    xml_str = minidom.parseString(ET.tostring(root, encoding='utf-8')).toprettyxml(indent='  ')
+    xml_str = minidom.parseString(ET.tostring(root_el, encoding='utf-8')).toprettyxml(indent='  ')
 
     return Response(
         xml_str.encode('utf-8'),
@@ -327,98 +411,185 @@ def exportar_auditoria():
         from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
         from openpyxl.utils import get_column_letter
 
-        def estyle(h_color='FF1a5276', font_color='FFFFFFFF', bold=True):
-            return {
-                'fill': PatternFill(start_color=h_color, end_color=h_color, fill_type='solid'),
-                'font': Font(name='Arial', size=9, bold=bold, color=font_color),
-                'border': Border(
-                    left=Side(style='thin'), right=Side(style='thin'),
-                    top=Side(style='thin'), bottom=Side(style='thin')
-                )
-            }
-
-        def cel(ws, row, col, val, style=None, fmt=None):
-            c = ws.cell(row=row, column=col, value=val)
-            if style:
-                c.fill = style['fill']
-                c.font = style['font']
-                c.border = style['border']
-            if fmt:
-                c.number_format = fmt
-            return c
-
-        wb = Workbook()
-        s_head = estyle()
-        s_norm = estyle('FFFFFFFF', 'FF000000', False)
-        s_norm['fill'] = PatternFill(fill_type=None)
-        s_total = estyle('FF27ae60')
-        brd = s_head['border']
+        # ── Estilos ──────────────────────────────────────────────────────
+        brd = Border(
+            left=Side(style='thin', color='FF000000'),
+            right=Side(style='thin', color='FF000000'),
+            top=Side(style='thin', color='FF000000'),
+            bottom=Side(style='thin', color='FF000000')
+        )
+        title_font = Font(name='Arial', size=14, bold=True, color='001a5276')
+        h_fill = PatternFill(start_color='FF1a5276', end_color='FF1a5276', fill_type='solid')
+        h_font = Font(name='Arial', size=9, bold=True, color='FFFFFFFF')
+        sub_fill = PatternFill(start_color='FF2980b9', end_color='FF2980b9', fill_type='solid')
+        total_fill = PatternFill(start_color='FF27ae60', end_color='FF27ae60', fill_type='solid')
+        total_font = Font(name='Arial', size=10, bold=True, color='FFFFFFFF')
+        nfont = Font(name='Arial', size=9, color='FF000000')
+        bfont = Font(name='Arial', size=9, bold=True, color='FF000000')
+        num_fmt = '#,##0.0000'
+        mon_fmt = '#,##0.00'
+        pct_fmt = '0.00%'
 
         def write_headers(ws, row, headers):
             for j, h in enumerate(headers, 1):
                 c = ws.cell(row=row, column=j, value=h)
-                c.fill = s_head['fill']
-                c.font = s_head['font']
+                c.fill = h_fill
+                c.font = h_font
                 c.border = brd
                 c.alignment = Alignment(horizontal='center', wrap_text=True)
 
-        # ── Hoja 1: Detalle Completo ──────────────────────────────────────────
+        def apply_borders(ws, row, col_start, col_end):
+            for j in range(col_start, col_end + 1):
+                ws.cell(row=row, column=j).border = brd
+                ws.cell(row=row, column=j).font = nfont
+
+        wb = Workbook()
+
+        # ================================================================
+        # HOJA 1: AUDITORÍA POR PRODUCTO (con fórmulas Excel)
+        # ================================================================
         ws = wb.active
-        ws.title = 'Detalle Completo'
+        ws.title = 'Auditoría por Producto'
 
-        enc = ['Fecha', 'Archivo', 'Tipo ID', 'ID Cliente', 'Razón Social',
-               'Cód. Prod.', 'Nombre Producto', 'Cód. Marca', 'Es Pack',
-               'Presentación', 'Capacidad', 'Unidad', 'Grado Alc.',
-               'Bot/Caja', 'Cajas', 'Botellas',
-               'Precio/Caja', 'Precio/Botella', 'Subtotal',
-               'Base ICE', 'ICE', 'Base IVA', f'IVA {int(iva_tasa*100)}%', 'Importe Total']
+        ws.cell(row=1, column=1, value=f'AUDITORÍA ICE {anio} - CÁLCULO POR PRODUCTO').font = title_font
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=20)
 
-        write_headers(ws, 1, enc)
-
-        fila = 2
-        for reg in datos:
-            fijos = [
-                reg.get('fecha_emision', ''), reg.get('archivo', ''),
-                reg.get('tipo_id_cliente', ''), reg.get('id_cliente', ''),
-                reg.get('razon_social_cliente', '')[:40],
-                reg.get('codigo_producto', ''), reg.get('nombre_producto', '')[:40],
-                reg.get('codMarca', ''), 'SÍ' if reg.get('es_pack') else 'NO',
-                reg.get('presentacion', ''), reg.get('capacidad', ''),
-                reg.get('unidad', ''), reg.get('grado_alcoholico', ''),
-                reg.get('botellas_por_caja', 12), reg.get('cantidad_cajas', 0),
-                reg.get('unidades_botellas', 0)
-            ]
-            for j, val in enumerate(fijos, 1):
-                c = ws.cell(row=fila, column=j, value=val)
-                c.border = brd
-            for j, val in enumerate([
-                reg.get('precio_por_caja', 0), reg.get('precio_por_botella', 0),
-                reg.get('precio_total_sin_impuesto', 0),
-                reg.get('base_ice', 0), reg.get('valor_ice', 0),
-                reg.get('base_iva', 0), reg.get('valor_iva', 0),
-                reg.get('importe_total', 0)
-            ], 17):
-                c = ws.cell(row=fila, column=j, value=val)
-                c.number_format = '#,##0.00'
-                c.border = brd
-            fila += 1
-
-        tot_row = fila
-        ws.cell(row=tot_row, column=1, value='TOTALES').fill = s_total['fill']
-        ws.cell(row=tot_row, column=1).font = s_total['font']
-        for col in [15, 16, 17, 18, 19, 20, 21, 22, 23, 24]:
-            letra = get_column_letter(col)
-            c = ws.cell(row=tot_row, column=col, value=f'=SUM({letra}2:{letra}{tot_row-1})')
-            c.fill = s_total['fill']
-            c.font = s_total['font']
-            c.number_format = '#,##0.00'
+        # Parámetros tributarios (referenciados en fórmulas)
+        ws.cell(row=3, column=1, value='PARÁMETROS TRIBUTARIOS').font = Font(
+            name='Arial', size=11, bold=True, color='00c65911')
+        params = [
+            ('Tarifa ICE Específica (T.Esp)', info_tax['esp']),   # B4
+            ('% Ad-Valorem', 0.75),                                # B5
+            ('Umbral Ad-Valorem (Umb)', info_tax['umb']),          # B6
+            (f'Tasa IVA ({int(iva_tasa*100)}%)', iva_tasa),        # B7
+        ]
+        for i, (label, val) in enumerate(params):
+            r_fila = 4 + i
+            ws.cell(row=r_fila, column=1, value=label).font = bfont
+            ws.cell(row=r_fila, column=1).border = brd
+            c = ws.cell(row=r_fila, column=2, value=val)
+            c.font = nfont
+            c.number_format = num_fmt
             c.border = brd
 
-        # ── Hoja 2: Resumen ICE por Producto ─────────────────────────────────
+        # Encabezados tabla
+        fila = 9
+        enc = [
+            '#', 'Fecha', 'Cliente', 'Producto Original', 'Es Pack',
+            'Producto Individual', 'Bot/Caja', 'Cajas',
+            'Precio/Caja', 'Precio/Botella', 'Volumen (cc)',
+            'Grado Alc. (%)', 'Precio/Litro',
+            '¿Aplica AdV?', 'ICE Específico', 'ICE Ad-Valorem',
+            'Total ICE', 'Base IVA', 'IVA', 'PVP Final'
+        ]
+        write_headers(ws, fila, enc)
+
+        fila += 1
+        fila_ini = fila
+        contador = 0
+
+        for reg in datos:
+            if reg.get('es_pack'):
+                productos = descomponer_pack(reg.get('nombre_producto', ''))
+                num_prods = len(productos)
+
+                for prod_nombre, prod_cap in productos:
+                    info_prod = buscar_catalogo(prod_nombre)
+                    cajas = float(reg.get('cantidad_cajas', 0))
+                    precio_por_bot = float(reg.get('precio_total_sin_impuesto', 0)) / (num_prods * cajas) if cajas > 0 else 0
+                    grado = float(info_prod.get('grado', 15))
+                    vol = float(prod_cap)
+
+                    contador += 1
+                    for j, val in enumerate([
+                        contador, reg.get('fecha_emision', ''),
+                        (reg.get('razon_social_cliente', '') or '')[:35],
+                        (reg.get('nombre_producto', '') or '')[:40], 'SÍ (PACK)',
+                        f"{prod_nombre} {prod_cap}ml", 1, cajas
+                    ], 1):
+                        ws.cell(row=fila, column=j, value=val).font = nfont
+
+                    ws.cell(row=fila, column=9, value=precio_por_bot).number_format = mon_fmt
+                    ws.cell(row=fila, column=10, value=precio_por_bot).number_format = mon_fmt
+                    ws.cell(row=fila, column=11, value=vol).font = nfont
+                    ws.cell(row=fila, column=12, value=grado).font = nfont
+
+                    # Fórmulas Excel (referencias a parámetros en B4..B7)
+                    ws.cell(row=fila, column=13, value=f'=ROUND(J{fila}*1000/K{fila},4)').number_format = num_fmt
+                    ws.cell(row=fila, column=14, value=f'=IF(M{fila}>$B$6,"SÍ","NO")')
+                    ws.cell(row=fila, column=15, value=f'=ROUND($B$4*(L{fila}/100)*(K{fila}/1000)*G{fila}*H{fila},4)').number_format = num_fmt
+                    ws.cell(row=fila, column=16, value=f'=ROUND(IF(M{fila}>$B$6,(M{fila}-$B$6)*$B$5*(K{fila}/1000)*G{fila}*H{fila},0),4)').number_format = num_fmt
+                    ws.cell(row=fila, column=17, value=f'=O{fila}+P{fila}').number_format = num_fmt
+                    ws.cell(row=fila, column=18, value=f'=J{fila}*G{fila}*H{fila}+Q{fila}').number_format = mon_fmt
+                    ws.cell(row=fila, column=19, value=f'=ROUND(R{fila}*$B$7,4)').number_format = mon_fmt
+                    ws.cell(row=fila, column=20, value=f'=R{fila}+S{fila}').number_format = mon_fmt
+
+                    apply_borders(ws, fila, 1, 20)
+                    fila += 1
+            else:
+                contador += 1
+                vol = float(reg.get('capacidad', 750))
+                grado = float(reg.get('grado_alcoholico', 15))
+                cajas = float(reg.get('cantidad_cajas', 0))
+
+                for j, val in enumerate([
+                    contador, reg.get('fecha_emision', ''),
+                    (reg.get('razon_social_cliente', '') or '')[:35],
+                    (reg.get('nombre_producto', '') or '')[:40], 'NO',
+                    (reg.get('nombre_producto', '') or '')[:40],
+                    reg.get('botellas_por_caja', 12), cajas
+                ], 1):
+                    ws.cell(row=fila, column=j, value=val).font = nfont
+
+                ws.cell(row=fila, column=9, value=float(reg.get('precio_por_caja', 0))).number_format = mon_fmt
+                ws.cell(row=fila, column=10, value=f'=ROUND(I{fila}/G{fila},4)').number_format = mon_fmt
+                ws.cell(row=fila, column=11, value=vol).font = nfont
+                ws.cell(row=fila, column=12, value=grado).font = nfont
+
+                ws.cell(row=fila, column=13, value=f'=ROUND(J{fila}*1000/K{fila},4)').number_format = num_fmt
+                ws.cell(row=fila, column=14, value=f'=IF(M{fila}>$B$6,"SÍ","NO")')
+                ws.cell(row=fila, column=15, value=f'=ROUND($B$4*(L{fila}/100)*(K{fila}/1000)*G{fila}*H{fila},4)').number_format = num_fmt
+                ws.cell(row=fila, column=16, value=f'=ROUND(IF(M{fila}>$B$6,(M{fila}-$B$6)*$B$5*(K{fila}/1000)*G{fila}*H{fila},0),4)').number_format = num_fmt
+                ws.cell(row=fila, column=17, value=f'=O{fila}+P{fila}').number_format = num_fmt
+                ws.cell(row=fila, column=18, value=f'=J{fila}*G{fila}*H{fila}+Q{fila}').number_format = mon_fmt
+                ws.cell(row=fila, column=19, value=f'=ROUND(R{fila}*$B$7,4)').number_format = mon_fmt
+                ws.cell(row=fila, column=20, value=f'=R{fila}+S{fila}').number_format = mon_fmt
+
+                apply_borders(ws, fila, 1, 20)
+                fila += 1
+
+        fila_fin = fila - 1
+
+        # Fila totales
+        for j in range(1, 21):
+            cell = ws.cell(row=fila, column=j)
+            cell.fill = total_fill
+            cell.font = total_font
+            cell.border = brd
+        ws.cell(row=fila, column=1, value='TOTALES')
+        for col in [12, 15, 16, 17, 18, 19, 20]:
+            letra = get_column_letter(col)
+            ws.cell(row=fila, column=col, value=f'=SUM({letra}{fila_ini}:{letra}{fila_fin})')
+            ws.cell(row=fila, column=col).number_format = mon_fmt
+
+        # Anchos
+        for j, w in enumerate([5, 12, 22, 30, 10, 30, 8, 8, 12, 12, 10, 10, 12, 12, 14, 14, 12, 12, 10, 12], 1):
+            ws.column_dimensions[get_column_letter(j)].width = w
+
+        # ================================================================
+        # HOJA 2: RESUMEN ICE POR PRODUCTO
+        # ================================================================
         ws2 = wb.create_sheet('Resumen ICE')
-        enc2 = ['Producto', 'Botellas', 'Precio Total', 'ICE Específico',
-                'ICE Ad-Valorem', 'Total ICE', 'Aplica AdV?']
-        write_headers(ws2, 1, enc2)
+        ws2.cell(row=1, column=1, value=f'RESUMEN ICE {anio}').font = title_font
+        ws2.merge_cells('A1:I1')
+
+        fila_r = 5
+        enc_r = ['Producto', 'Botellas', 'Precio Total', 'ICE Específico',
+                 'ICE Ad-Valorem', 'Total ICE', 'Aplica AdV?', '% ICE Esp.', '% ICE AdV.']
+        write_headers(ws2, fila_r, enc_r)
+
+        fila_r += 1
+        fila_ini_r = fila_r
 
         prod_ag = defaultdict(lambda: {'bot': 0, 'precio': 0.0, 'ice_esp': 0.0, 'ice_adv': 0.0, 'aplica': False})
         for reg in datos:
@@ -438,7 +609,7 @@ def exportar_auditoria():
                     i_esp = ice_especifico(info_tax['esp'], grado_p, vol_p) * cajas
                     i_adv = ice_advalorem(pbot, vol_p, info_tax['umb']) * cajas
                     k = f"{pnom} {pcap}ml (PACK)"
-                    prod_ag[k]['bot'] += cajas
+                    prod_ag[k]['bot'] += int(cajas)
                     prod_ag[k]['precio'] += pbot * cajas
                     prod_ag[k]['ice_esp'] += i_esp
                     prod_ag[k]['ice_adv'] += i_adv
@@ -447,7 +618,7 @@ def exportar_auditoria():
             else:
                 i_esp = ice_especifico(info_tax['esp'], grado, vol) * cajas
                 i_adv = ice_advalorem(precio_bot, vol, info_tax['umb']) * cajas
-                k = reg.get('nombre_producto', '')[:50]
+                k = (reg.get('nombre_producto', '') or '')[:50]
                 p_litro = (precio_bot * 1000.0) / vol if vol > 0 else 0
                 prod_ag[k]['bot'] += int(reg.get('unidades_botellas', 0))
                 prod_ag[k]['precio'] += float(reg.get('precio_total_sin_impuesto', 0))
@@ -455,62 +626,74 @@ def exportar_auditoria():
                 prod_ag[k]['ice_adv'] += i_adv
                 prod_ag[k]['aplica'] = p_litro > info_tax['umb']
 
-        fila2 = 2
         for nombre, vals in sorted(prod_ag.items()):
-            ice_tot = vals['ice_esp'] + vals['ice_adv']
-            datos_fila = [nombre, vals['bot'], vals['precio'],
-                          vals['ice_esp'], vals['ice_adv'], ice_tot,
-                          'SÍ' if vals['aplica'] else 'NO']
-            for j, val in enumerate(datos_fila, 1):
-                c = ws2.cell(row=fila2, column=j, value=val)
-                c.border = brd
-                if j in (2, 3, 4, 5, 6):
-                    c.number_format = '#,##0.00'
-            fila2 += 1
+            ice_total = vals['ice_esp'] + vals['ice_adv']
+            pct_esp = vals['ice_esp'] / ice_total if ice_total > 0 else 0
+            pct_adv = vals['ice_adv'] / ice_total if ice_total > 0 else 0
 
-        tot2 = fila2
-        ws2.cell(row=tot2, column=1, value='TOTAL GENERAL').fill = s_total['fill']
-        ws2.cell(row=tot2, column=1).font = s_total['font']
+            for j, val in enumerate([
+                nombre, vals['bot'], vals['precio'], vals['ice_esp'], vals['ice_adv'],
+                ice_total, 'SÍ' if vals['aplica'] else 'NO', pct_esp, pct_adv
+            ], 1):
+                cell = ws2.cell(row=fila_r, column=j, value=val)
+                cell.font = nfont
+                cell.border = brd
+                if j >= 3:
+                    cell.number_format = pct_fmt if j in (8, 9) else mon_fmt
+            fila_r += 1
+
+        fila_fin_r = fila_r - 1
+        for j in range(1, 10):
+            cell = ws2.cell(row=fila_r, column=j)
+            cell.fill = total_fill
+            cell.font = total_font
+            cell.border = brd
+        ws2.cell(row=fila_r, column=1, value='TOTAL GENERAL')
         for col in (2, 3, 4, 5, 6):
             letra = get_column_letter(col)
-            c = ws2.cell(row=tot2, column=col, value=f'=SUM({letra}2:{letra}{tot2-1})')
-            c.fill = s_total['fill']
-            c.font = s_total['font']
-            c.number_format = '#,##0.00'
+            ws2.cell(row=fila_r, column=col, value=f'=SUM({letra}{fila_ini_r}:{letra}{fila_fin_r})')
+            ws2.cell(row=fila_r, column=col).number_format = mon_fmt
 
-        # ── Hoja 3: Resumen General ───────────────────────────────────────────
+        ws2.column_dimensions['A'].width = 45
+        for j in range(2, 10):
+            ws2.column_dimensions[get_column_letter(j)].width = 16
+
+        # ================================================================
+        # HOJA 3: RESUMEN GENERAL AGLUTINADO
+        # ================================================================
         ws3 = wb.create_sheet('Resumen General')
-        enc3 = ['Concepto', 'Subtotal', 'ICE Específico', 'ICE Ad-Valorem',
-                'Total ICE', 'Base IVA', f'IVA {int(iva_tasa*100)}%', 'Total General']
-        write_headers(ws3, 1, enc3)
+        ws3.cell(row=1, column=1, value=f'RESUMEN GENERAL AGLUTINADO - ICE {anio}').font = title_font
+        ws3.merge_cells('A1:H1')
+
+        fila_g = 5
+        enc_g = ['Concepto', 'Subtotal', 'ICE Específico', 'ICE Ad-Valorem',
+                 'Total ICE', 'Base IVA', f'IVA {int(iva_tasa*100)}%', 'Total General']
+        write_headers(ws3, fila_g, enc_g)
+        fila_g += 1
 
         t_sub = sum(float(r.get('precio_total_sin_impuesto', 0)) for r in datos)
         t_ice_esp = sum(v['ice_esp'] for v in prod_ag.values())
         t_ice_adv = sum(v['ice_adv'] for v in prod_ag.values())
         t_ice = t_ice_esp + t_ice_adv
-        base_iva = t_sub + t_ice
-        iva = base_iva * iva_tasa
-        total_gen = base_iva + iva
+        b_iva = t_sub + t_ice
+        iva_val = b_iva * iva_tasa
+        total_gen = b_iva + iva_val
 
         for j, val in enumerate([
             'TOTAL VENTAS BEBIDAS ALCOHÓLICAS', t_sub, t_ice_esp,
-            t_ice_adv, t_ice, base_iva, iva, total_gen
+            t_ice_adv, t_ice, b_iva, iva_val, total_gen
         ], 1):
-            c = ws3.cell(row=2, column=j, value=val)
-            c.border = brd
+            cell = ws3.cell(row=fila_g, column=j, value=val)
+            cell.font = bfont
+            cell.border = brd
             if j >= 2:
-                c.number_format = '#,##0.00'
+                cell.number_format = mon_fmt
 
-        # Ajustar anchos
-        for j, w in enumerate([8, 12, 22, 30, 10, 30, 8, 8, 12, 12, 10,
-                                10, 12, 8, 10, 12, 12, 12, 12, 12, 12, 12, 10, 12], 1):
-            ws.column_dimensions[get_column_letter(j)].width = w
-        ws2.column_dimensions['A'].width = 40
-        ws3.column_dimensions['A'].width = 40
+        ws3.column_dimensions['A'].width = 35
         for j in range(2, 9):
-            ws2.column_dimensions[get_column_letter(j)].width = 16
-            ws3.column_dimensions[get_column_letter(j)].width = 16
+            ws3.column_dimensions[get_column_letter(j)].width = 18
 
+        # ── Guardar ──────────────────────────────────────────────────────
         output = io.BytesIO()
         wb.save(output)
         output.seek(0)
