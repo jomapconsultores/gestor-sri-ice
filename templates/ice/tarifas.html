@@ -184,25 +184,69 @@
         <div class="col-lg-4">
             <div class="art-card h-100">
                 <div class="art-ref"><i class="bi bi-shop me-1"></i>Cadena de comercialización</div>
-                <div class="art-title">¿Dónde se aplica?</div>
+                <div class="art-title">¿Dónde se aplica el ICE?</div>
                 <div class="art-body">
-                    <div class="d-flex align-items-center gap-2 mt-1" style="font-size:.8rem">
-                        <div class="text-center rounded p-2" style="background:#eff6ff;border:1px solid #bfdbfe;flex:1">
-                            <i class="bi bi-factory" style="color:#2563eb;font-size:1.1rem"></i>
-                            <div class="fw-bold" style="color:#1d4ed8">Productor</div>
-                            <div class="text-success fw-bold" style="font-size:.68rem">ICE aquí ✓</div>
+                    <!-- Nodos en columna vertical, siempre visibles -->
+                    <div class="mt-2" style="font-size:.8rem">
+
+                        <!-- Nodo 1: Productor -->
+                        <div class="d-flex align-items-center gap-3 rounded p-2"
+                             style="background:#eff6ff;border:1.5px solid #2563eb">
+                            <div style="width:36px;height:36px;background:#2563eb;border-radius:8px;
+                                        display:flex;align-items:center;justify-content:center;
+                                        color:#fff;font-size:1rem;flex-shrink:0">
+                                <i class="bi bi-factory"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold" style="color:#1d4ed8">Productor / Importador</div>
+                                <div class="fw-bold" style="color:#16a34a;font-size:.72rem">
+                                    <i class="bi bi-check-circle-fill me-1"></i>ICE se calcula aquí
+                                </div>
+                            </div>
                         </div>
-                        <i class="bi bi-arrow-right" style="color:#94a3b8"></i>
-                        <div class="text-center rounded p-2" style="background:#f8fafc;border:1px solid #e2e8f0;flex:1">
-                            <i class="bi bi-truck" style="color:#94a3b8;font-size:1.1rem"></i>
-                            <div class="fw-bold" style="color:#94a3b8">Distribuidor</div>
-                            <div style="font-size:.68rem;color:#94a3b8">Ya incluido</div>
+
+                        <!-- Flecha -->
+                        <div class="text-center py-1" style="color:#94a3b8;font-size:1.2rem;line-height:1">
+                            <i class="bi bi-arrow-down"></i>
                         </div>
-                        <i class="bi bi-arrow-right" style="color:#94a3b8"></i>
-                        <div class="text-center rounded p-2" style="background:#f8fafc;border:1px solid #e2e8f0;flex:1">
-                            <i class="bi bi-person" style="color:#94a3b8;font-size:1.1rem"></i>
-                            <div class="fw-bold" style="color:#94a3b8">Consumidor</div>
-                            <div style="font-size:.68rem;color:#94a3b8">Paga PVP</div>
+
+                        <!-- Nodo 2: Distribuidor -->
+                        <div class="d-flex align-items-center gap-3 rounded p-2"
+                             style="background:#f8fafc;border:1px solid #e2e8f0">
+                            <div style="width:36px;height:36px;background:#e2e8f0;border-radius:8px;
+                                        display:flex;align-items:center;justify-content:center;
+                                        color:#64748b;font-size:1rem;flex-shrink:0">
+                                <i class="bi bi-truck"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold" style="color:#475569">Distribuidor</div>
+                                <div style="color:#94a3b8;font-size:.72rem">ICE ya incluido en precio</div>
+                            </div>
+                        </div>
+
+                        <!-- Flecha -->
+                        <div class="text-center py-1" style="color:#94a3b8;font-size:1.2rem;line-height:1">
+                            <i class="bi bi-arrow-down"></i>
+                        </div>
+
+                        <!-- Nodo 3: Consumidor -->
+                        <div class="d-flex align-items-center gap-3 rounded p-2"
+                             style="background:#f8fafc;border:1px solid #e2e8f0">
+                            <div style="width:36px;height:36px;background:#e2e8f0;border-radius:8px;
+                                        display:flex;align-items:center;justify-content:center;
+                                        color:#64748b;font-size:1rem;flex-shrink:0">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold" style="color:#475569">Consumidor Final</div>
+                                <div style="color:#94a3b8;font-size:.72rem">Paga el PVP (incluye ICE + IVA)</div>
+                            </div>
+                        </div>
+
+                        <div class="mt-2 rounded px-2 py-1"
+                             style="background:#f0fdf4;border:1px solid #bbf7d0;font-size:.72rem;color:#15803d">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <strong>Monofásico:</strong> se aplica una sola vez, en la primera etapa.
                         </div>
                     </div>
                 </div>

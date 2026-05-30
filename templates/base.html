@@ -338,57 +338,58 @@
             <i class="bi bi-house-door"></i>Dashboard
         </a>
 
-        <!-- ── MÓDULOS ICE ─────────────────────────────── -->
-        <div class="sb-section">Impuesto ICE</div>
-
+        <!-- ══ SECCIÓN 1: ICE ════════════════════════════ -->
+        <div class="sb-section" style="color:#60a5fa">
+            <i class="bi bi-fire me-1"></i>ICE
+        </div>
         <a href="{{ url_for('ice.ver_tarifas') }}" class="sb-link">
             <i class="bi bi-book"></i>Tarifas ICE 2021–2026
             <span class="sb-badge" style="background:rgba(34,197,94,.2);color:#4ade80">GRATIS</span>
         </a>
-
         <a href="{{ url_for('ice.calculadora') }}" class="sb-link">
-            <i class="bi bi-calculator"></i>Cálculo ICE Simple
-            <span class="sb-badge">$10/mes</span>
+            <i class="bi bi-calculator"></i>ICE Simple
+            <span class="sb-badge">$10</span>
         </a>
-
         <a href="{{ url_for('ice.multiple') }}" class="sb-link">
             <i class="bi bi-calculator-fill"></i>ICE Múltiple
-            <span class="sb-badge">$15/mes</span>
+            <span class="sb-badge">$15</span>
         </a>
-
         <a href="{{ safe_url_for('ats.editor') }}" class="sb-link">
             <i class="bi bi-file-earmark-code"></i>Anexos ICE / PVP
-            <span class="sb-badge">$10/mes</span>
+            <span class="sb-badge">$10</span>
         </a>
-
         <a href="{{ safe_url_for('ice_auditoria.index') }}" class="sb-link">
-            <i class="bi bi-file-earmark-arrow-up"></i>Procesamiento Facturas ICE
-            <span class="sb-badge">$15/mes</span>
+            <i class="bi bi-file-earmark-arrow-up"></i>Facturas ICE
+            <span class="sb-badge">$15</span>
         </a>
 
-        <!-- ── HERRAMIENTAS GENERALES ──────────────────── -->
-        <div class="sb-section">Herramientas</div>
+        <!-- ══ SECCIÓN 2: TRIBUTARIA ══════════════════════ -->
+        <div class="sb-section" style="color:#a78bfa">
+            <i class="bi bi-journal-text me-1"></i>Tributaria
+        </div>
         <a href="{{ url_for('invoices.pagina_carga') }}" class="sb-link">
             <i class="bi bi-receipt"></i>Facturas Gastos/Ingresos
         </a>
         <a href="{{ url_for('gastos.panel') }}" class="sb-link">
             <i class="bi bi-wallet2"></i>Gastos Personales
         </a>
-        <a href="{{ url_for('annexes.pagina_generar') }}" class="sb-link">
-            <i class="bi bi-file-earmark-zip"></i>Generar Anexos SRI
-        </a>
-        <a href="{{ url_for('exports.exportar_declaracion') }}" class="sb-link">
-            <i class="bi bi-file-earmark-excel"></i>Exportar Excel
-        </a>
-        <a href="{{ url_for('downloader.pagina_descarga') }}" class="sb-link">
-            <i class="bi bi-cloud-download"></i>Descarga Masiva SRI
+        <a href="{{ safe_url_for('retenciones.index') }}" class="sb-link">
+            <i class="bi bi-file-earmark-minus"></i>Retenciones XML
         </a>
         <a href="{{ safe_url_for('sri_processor.index') }}" class="sb-link">
             <i class="bi bi-cloud-arrow-down"></i>Gestor SRI Pro
         </a>
-        <a href="{{ safe_url_for('retenciones.index') }}" class="sb-link">
-            <i class="bi bi-file-earmark-minus"></i>Retenciones XML
+        <a href="{{ url_for('downloader.pagina_descarga') }}" class="sb-link">
+            <i class="bi bi-cloud-download"></i>Descarga Masiva SRI
         </a>
+        <a href="{{ url_for('exports.exportar_declaracion') }}" class="sb-link">
+            <i class="bi bi-file-earmark-excel"></i>Exportar Excel
+        </a>
+
+        <!-- ══ SECCIÓN 3: ODOO ════════════════════════════ -->
+        <div class="sb-section" style="color:#34d399">
+            <i class="bi bi-box-seam me-1"></i>Odoo
+        </div>
         <a href="{{ safe_url_for('conciliacion.index') }}" class="sb-link">
             <i class="bi bi-bank"></i>Conciliación Bancaria IA
         </a>

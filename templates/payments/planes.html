@@ -83,17 +83,17 @@
             {% endfor %}
         </div>
 
-        <!-- SECCIÓN GENERAL -->
+        <!-- SECCIÓN TRIBUTARIA -->
         <div class="mb-2 d-flex align-items-center gap-2">
-            <span style="font-size:.65rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.1em">
-                <i class="bi bi-tools me-1"></i>Herramientas Generales
+            <span style="font-size:.65rem;font-weight:800;color:#7c3aed;text-transform:uppercase;letter-spacing:.1em">
+                <i class="bi bi-journal-text me-1"></i>Tributaria
             </span>
             <hr class="flex-grow-1 my-0" style="border-color:#e2e8f0">
         </div>
 
         <div class="row g-2 mb-4">
             {% for id, m in modulos.items() %}
-            {% if m.get('categoria') == 'general' %}
+            {% if m.get('categoria') == 'tributaria' %}
             <div class="col-sm-6">
                 <div class="modulo-card p-0 {% if id in modulos_activos %}border-success{% elif id in solicitudes_pendientes %}border-warning{% endif %}"
                      style="border-radius:10px;border:1.5px solid {% if id in modulos_activos %}#4ade80{% elif id in solicitudes_pendientes %}#fbbf24{% else %}#e2e8f0{% endif %};background:{% if id in modulos_activos %}#f0fdf4{% elif id in solicitudes_pendientes %}#fffbeb{% else %}#fff{% endif %};height:100%;transition:all .15s;cursor:{% if id in modulos_activos or id in solicitudes_pendientes %}default{% else %}pointer{% endif %}"
@@ -124,6 +124,52 @@
                                name="modulos" value="{{ id }}" id="mod_{{ id }}"
                                onchange="actualizarPrecio()" onclick="event.stopPropagation()"
                                style="width:16px;height:16px;cursor:pointer">
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- SECCIÓN ODOO -->
+        <div class="mb-2 d-flex align-items-center gap-2">
+            <span style="font-size:.65rem;font-weight:800;color:#059669;text-transform:uppercase;letter-spacing:.1em">
+                <i class="bi bi-box-seam me-1"></i>Odoo
+            </span>
+            <hr class="flex-grow-1 my-0" style="border-color:#e2e8f0">
+        </div>
+
+        <div class="row g-2 mb-4">
+            {% for id, m in modulos.items() %}
+            {% if m.get('categoria') == 'odoo' %}
+            <div class="col-12">
+                <div class="modulo-card p-0 {% if id in modulos_activos %}border-success{% elif id in solicitudes_pendientes %}border-warning{% endif %}"
+                     style="border-radius:10px;border:1.5px solid {% if id in modulos_activos %}#4ade80{% elif id in solicitudes_pendientes %}#fbbf24{% else %}#d1fae5{% endif %};background:{% if id in modulos_activos %}#f0fdf4{% elif id in solicitudes_pendientes %}#fffbeb{% else %}#f0fdf4{% endif %};transition:all .15s;cursor:{% if id in modulos_activos or id in solicitudes_pendientes %}default{% else %}pointer{% endif %}"
+                     {% if not id in modulos_activos and not id in solicitudes_pendientes %}onclick="toggleModulo('{{ id }}', this)"{% endif %}>
+                    <div class="d-flex align-items-start gap-3 p-3">
+                        <div style="width:42px;height:42px;border-radius:10px;background:#d1fae5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">
+                            <i class="bi bi-{{ m.icono }}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                <span style="font-size:.88rem;font-weight:700;color:#0f172a">{{ m.nombre }}</span>
+                                {% if id in modulos_activos %}
+                                    <span class="badge bg-success">ACTIVO</span>
+                                {% elif id in solicitudes_pendientes %}
+                                    <span class="badge bg-warning text-dark">PENDIENTE</span>
+                                {% endif %}
+                            </div>
+                            <p style="font-size:.77rem;color:#64748b;margin:0 0 8px;line-height:1.55">{{ m.descripcion }}</p>
+                            <span style="font-size:.82rem;font-weight:700;color:#059669">${{ "%.2f"|format(m.precio) }} + IVA / mes</span>
+                        </div>
+                        {% if not id in modulos_activos and not id in solicitudes_pendientes %}
+                        <div class="flex-shrink-0 pt-1">
+                            <input class="form-check-input" type="checkbox"
+                                   name="modulos" value="{{ id }}" id="mod_{{ id }}"
+                                   onchange="actualizarPrecio()" onclick="event.stopPropagation()"
+                                   style="width:18px;height:18px;cursor:pointer">
+                        </div>
                         {% endif %}
                     </div>
                 </div>

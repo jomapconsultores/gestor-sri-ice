@@ -232,7 +232,9 @@
         <div class="nav-brand-name">Gestor SRI + ICE</div>
     </a>
     <div class="nav-links">
-        <a href="#modulos" class="btn btn-nav btn-outline-secondary d-none d-md-inline-flex">Ver módulos</a>
+        <a href="#modulos" class="btn btn-nav btn-outline-secondary d-none d-md-inline-flex">ICE</a>
+        <a href="#tributaria" class="btn btn-nav btn-outline-secondary d-none d-md-inline-flex">Tributaria</a>
+        <a href="#odoo" class="btn btn-nav btn-outline-secondary d-none d-md-inline-flex">Odoo</a>
         <a href="{{ url_for('auth.login') }}" class="btn btn-nav btn-outline-secondary">Iniciar sesión</a>
         <a href="{{ url_for('auth.register') }}" class="btn btn-nav btn-primary ms-1">Registrarse</a>
     </div>
@@ -336,7 +338,7 @@
                     <div class="ice-icon" style="background:#fffbeb;color:#d97706">
                         <i class="bi bi-calculator-fill"></i>
                     </div>
-                    <h3>ICE Múltiple + Mezcla</h3>
+                    <h3>ICE Múltiple</h3>
                     <p>
                         Calcula ICE para múltiples productos (licores, cerveza artesanal e industrial)
                         en una sola sesión. Obtén ICE específico, ad-valorem, IVA y PVP por botella
@@ -409,23 +411,149 @@
                 </div>
             </div>
 
-            <!-- Card "más módulos" -->
+            <!-- Card enlace a otras secciones -->
             <div class="col-md-6 col-lg-4">
-                <div class="ice-card" style="background:#f8fafc;border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;min-height:320px">
-                    <div class="ice-icon" style="background:#e2e8f0;color:#94a3b8;margin-bottom:0">
-                        <i class="bi bi-grid-3x3-gap"></i>
+                <div class="ice-card" style="background:#f8fafc;border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;min-height:320px">
+                    <div style="display:flex;gap:10px;justify-content:center">
+                        <div class="ice-icon" style="background:#f3e8ff;color:#7c3aed;width:44px;height:44px;font-size:1.1rem;margin-bottom:0">
+                            <i class="bi bi-journal-text"></i>
+                        </div>
+                        <div class="ice-icon" style="background:#d1fae5;color:#059669;width:44px;height:44px;font-size:1.1rem;margin-bottom:0">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
                     </div>
-                    <h3 style="color:#94a3b8">Más módulos próximamente</h3>
-                    <p style="color:#94a3b8;font-size:.8rem">
-                        Facturas, Retenciones, Conciliación Bancaria IA, Gestor SRI Pro y más
-                        herramientas estarán disponibles en breve.
+                    <h3 style="color:#475569;font-size:.92rem">Más secciones disponibles</h3>
+                    <p style="color:#94a3b8;font-size:.78rem">
+                        <strong style="color:#7c3aed">Tributaria:</strong> Facturas, Retenciones, Gestor SRI Pro<br>
+                        <strong style="color:#059669">Odoo:</strong> Conciliación Bancaria con IA
                     </p>
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-sm btn-outline-secondary" style="font-size:.78rem">
-                        Registrarse para notificaciones
+                    <a href="#tributaria" class="btn btn-sm btn-outline-secondary" style="font-size:.75rem">
+                        Ver todas las secciones ↓
                     </a>
                 </div>
             </div>
 
+        </div>
+    </div>
+</section>
+
+<!-- ══ SECCIÓN TRIBUTARIA ══════════════════════════════════════════════════════ -->
+<section class="section" id="tributaria" style="background:#f8fafc;border-top:1px solid #e2e8f0">
+    <div style="max-width:1120px;margin:0 auto">
+        <div class="section-eyebrow" style="color:#7c3aed">
+            <i class="bi bi-journal-text me-1"></i>Gestión Tributaria
+        </div>
+        <h2 class="section-h2">Sección Tributaria</h2>
+        <p class="section-sub">
+            Herramientas para procesar facturas, retenciones y cumplimiento con el SRI.
+        </p>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="ice-card">
+                    <span class="ice-card-badge badge-price">$10 + IVA / mes</span>
+                    <div class="ice-icon" style="background:#f5f3ff;color:#7c3aed"><i class="bi bi-receipt"></i></div>
+                    <h3>Facturas Ilimitadas</h3>
+                    <p>Procesa facturas XML de gastos e ingresos ilimitadas. Clasificación automática con catálogo personalizable incluido.</p>
+                    <div class="card-price"><span class="amount">$10.00</span><span>+ IVA / mes</span></div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="ice-card">
+                    <span class="ice-card-badge badge-price">$10 + IVA / mes</span>
+                    <div class="ice-icon" style="background:#f5f3ff;color:#7c3aed"><i class="bi bi-file-earmark-minus"></i></div>
+                    <h3>Procesador de Retenciones</h3>
+                    <p>Procesa XMLs de comprobantes de retención SRI. Detecta Renta, IVA e ISD automáticamente. Exporta a Excel con resumen por agente.</p>
+                    <div class="card-price"><span class="amount">$10.00</span><span>+ IVA / mes</span></div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="ice-card">
+                    <span class="ice-card-badge badge-price">$15 + IVA / mes</span>
+                    <div class="ice-icon" style="background:#f5f3ff;color:#7c3aed"><i class="bi bi-cloud-arrow-down"></i></div>
+                    <h3>Gestor SRI Pro</h3>
+                    <p>Descarga XMLs del SRI desde claves de acceso (hasta 10 en paralelo). Clasifica y exporta a Excel por categoría.</p>
+                    <div class="card-price"><span class="amount">$15.00</span><span>+ IVA / mes</span></div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="ice-card">
+                    <span class="ice-card-badge badge-price">$15 + IVA pago único</span>
+                    <div class="ice-icon" style="background:#f5f3ff;color:#7c3aed"><i class="bi bi-cloud-download"></i></div>
+                    <h3>Descarga Masiva SRI</h3>
+                    <p>Herramienta permanente para descargar masivamente tus comprobantes del portal del SRI. Pago único, acceso permanente.</p>
+                    <div class="card-price"><span class="amount">$15.00</span><span style="color:#d97706;font-size:.72rem">pago único</span></div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="ice-card">
+                    <span class="ice-card-badge badge-price">$5 + IVA / mes</span>
+                    <div class="ice-icon" style="background:#f5f3ff;color:#7c3aed"><i class="bi bi-file-earmark-excel"></i></div>
+                    <h3>Exportación Excel</h3>
+                    <p>Exporta todos tus reportes a Excel con valores calculados y formato profesional. Compatible con todos los módulos del sistema.</p>
+                    <div class="card-price"><span class="amount">$5.00</span><span>+ IVA / mes</span></div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="ice-card">
+                    <span class="ice-card-badge badge-price">$5 + IVA / mes</span>
+                    <div class="ice-icon" style="background:#f5f3ff;color:#7c3aed"><i class="bi bi-headset"></i></div>
+                    <h3>Soporte Prioritario</h3>
+                    <p>Atención preferencial por WhatsApp y correo. Respuesta garantizada en menos de 24 horas hábiles.</p>
+                    <div class="card-price"><span class="amount">$5.00</span><span>+ IVA / mes</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══ SECCIÓN ODOO ═══════════════════════════════════════════════════════════ -->
+<section class="section" id="odoo" style="background:#fff;border-top:1px solid #e2e8f0">
+    <div style="max-width:1120px;margin:0 auto">
+        <div class="section-eyebrow" style="color:#059669">
+            <i class="bi bi-box-seam me-1"></i>Integración Odoo
+        </div>
+        <h2 class="section-h2">Sección Odoo</h2>
+        <p class="section-sub">
+            Herramientas de integración directa con Odoo ERP.
+        </p>
+
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="ice-card">
+                    <span class="ice-card-badge badge-price">$10 + IVA / mes</span>
+                    <div class="ice-icon" style="background:#d1fae5;color:#059669">
+                        <i class="bi bi-bank"></i>
+                    </div>
+                    <h3>Conciliación Bancaria IA</h3>
+                    <p>
+                        Sube estados de cuenta bancarios en PDF. La Inteligencia Artificial extrae
+                        automáticamente todas las transacciones y genera un Excel compatible con Odoo
+                        para importación directa — sin trabajo manual.
+                    </p>
+                    <div class="mb-3">
+                        <span class="legal-tag"><i class="bi bi-robot"></i>IA extracción</span>
+                        <span class="legal-tag"><i class="bi bi-file-earmark-excel"></i>Excel Odoo</span>
+                        <span class="legal-tag"><i class="bi bi-upload"></i>Import directo</span>
+                    </div>
+                    <div class="card-price">
+                        <span class="amount">$10.00</span>
+                        <span>+ IVA / mes</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-5">
+                <div class="ice-card" style="background:#f8fafc;border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px">
+                    <div class="ice-icon" style="background:#d1fae5;color:#059669;margin-bottom:0">
+                        <i class="bi bi-plus-circle-dotted"></i>
+                    </div>
+                    <h3 style="color:#475569">Próximos módulos Odoo</h3>
+                    <p style="color:#94a3b8;font-size:.8rem">
+                        Importación de facturas · Gestión de proveedores<br>
+                        Integración contable directa y más
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 </section>

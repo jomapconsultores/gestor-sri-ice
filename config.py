@@ -111,7 +111,7 @@ class Config:
             'tooltip': 'Procesa XMLs de ingresos y genera Anexo ICE/PVP automáticamente',
         },
 
-        # ── Módulos Generales (próxima tanda) ──────────────────────────────────
+        # ── Módulos Tributaria ──────────────────────────────────────────────────
         'facturas': {
             'nombre': 'Facturas Ilimitadas',
             'descripcion': (
@@ -122,7 +122,7 @@ class Config:
             'precio': 10.00,
             'precio_unico': False,
             'gratuito': False,
-            'categoria': 'general',
+            'categoria': 'tributaria',
             'color': 'secondary',
             'icono': 'receipt',
             'tooltip': 'Facturas ilimitadas de gastos e ingresos + catálogo incluido',
@@ -130,13 +130,13 @@ class Config:
         'exportacion': {
             'nombre': 'Exportación Excel',
             'descripcion': (
-                'Exporta todos tus reportes a Excel con fórmulas, resúmenes por período y '
+                'Exporta todos tus reportes a Excel con valores calculados, resúmenes por período y '
                 'formato profesional. Compatible con todos los módulos del sistema.'
             ),
             'precio': 5.00,
             'precio_unico': False,
             'gratuito': False,
-            'categoria': 'general',
+            'categoria': 'tributaria',
             'color': 'success',
             'icono': 'file-earmark-excel',
             'tooltip': 'Exporta reportes de todos los módulos a Excel',
@@ -150,35 +150,21 @@ class Config:
             'precio': 15.00,
             'precio_unico': True,
             'gratuito': False,
-            'categoria': 'general',
+            'categoria': 'tributaria',
             'color': 'secondary',
             'icono': 'cloud-download',
             'tooltip': 'Descarga masiva desde el SRI — pago único $15',
-        },
-        'conciliacion': {
-            'nombre': 'Conciliación Bancaria IA',
-            'descripcion': (
-                'Sube estados de cuenta en PDF y extrae transacciones automáticamente con IA. '
-                'Exporta en formato Excel compatible con Odoo.'
-            ),
-            'precio': 10.00,
-            'precio_unico': False,
-            'gratuito': False,
-            'categoria': 'general',
-            'color': 'primary',
-            'icono': 'bank',
-            'tooltip': 'Extrae transacciones bancarias de PDFs con IA y exporta a Odoo',
         },
         'retenciones': {
             'nombre': 'Procesador de Retenciones',
             'descripcion': (
                 'Procesa XMLs de comprobantes de retención. Detecta automáticamente Renta, IVA e ISD. '
-                'Exporta a Excel con fórmulas y resumen por agente de retención.'
+                'Exporta a Excel con resumen por agente de retención.'
             ),
             'precio': 10.00,
             'precio_unico': False,
             'gratuito': False,
-            'categoria': 'general',
+            'categoria': 'tributaria',
             'color': 'info',
             'icono': 'file-earmark-minus',
             'tooltip': 'Procesa XMLs de retenciones y exporta a Excel',
@@ -187,12 +173,12 @@ class Config:
             'nombre': 'Gestor SRI Pro',
             'descripcion': (
                 'Descarga XMLs del SRI desde un TXT de claves de acceso (hasta 10 en paralelo) '
-                'o importa XMLs locales. Clasifica y exporta a Excel con SUMIF por categoría.'
+                'o importa XMLs locales. Clasifica y exporta a Excel por categoría.'
             ),
             'precio': 15.00,
             'precio_unico': False,
             'gratuito': False,
-            'categoria': 'general',
+            'categoria': 'tributaria',
             'color': 'secondary',
             'icono': 'cloud-arrow-down',
             'tooltip': 'Descarga y clasifica XMLs del SRI masivamente',
@@ -206,10 +192,27 @@ class Config:
             'precio': 5.00,
             'precio_unico': False,
             'gratuito': False,
-            'categoria': 'general',
+            'categoria': 'tributaria',
             'color': 'dark',
             'icono': 'headset',
             'tooltip': 'Soporte prioritario por WhatsApp y email',
+        },
+
+        # ── Módulos Odoo ────────────────────────────────────────────────────────
+        'conciliacion': {
+            'nombre': 'Conciliación Bancaria IA',
+            'descripcion': (
+                'Sube estados de cuenta bancarios en PDF y extrae transacciones automáticamente '
+                'con Inteligencia Artificial. Exporta en formato Excel compatible con Odoo '
+                'para importación directa sin trabajo manual.'
+            ),
+            'precio': 10.00,
+            'precio_unico': False,
+            'gratuito': False,
+            'categoria': 'odoo',
+            'color': 'primary',
+            'icono': 'bank',
+            'tooltip': 'Extrae transacciones bancarias de PDFs con IA y exporta a Odoo',
         },
     }
 
