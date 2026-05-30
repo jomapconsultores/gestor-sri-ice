@@ -1,164 +1,240 @@
 {% extends "base.html" %}
-
-{% block title %}Calculadora ICE{% endblock %}
+{% block title %}Cálculo ICE Simple{% endblock %}
+{% block topbar_title %}Cálculo ICE Simple{% endblock %}
 
 {% block content %}
-<h2 class="mb-4"><i class="bi bi-calculator"></i> Calculadora ICE</h2>
+<div class="page-header mb-4">
+    <div>
+        <h1 class="page-title"><i class="bi bi-calculator"></i>Cálculo ICE Simple</h1>
+        <p class="page-subtitle">Calcula el ICE de un producto individual con base legal incluida</p>
+    </div>
+</div>
 
-<div class="row">
-    <div class="col-md-7">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Datos del Producto</h5>
+<div class="row g-4">
+
+    {# ── Formulario ─────────────────────────────────────────────────────────── #}
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header" style="background:#0d1b2e;color:#fff">
+                <i class="bi bi-sliders me-2"></i>Datos del Producto
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('ice.calcular') }}" id="formIce">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Precio Ex-Fabrica ($)</label>
-                            <input type="number" class="form-control" name="precio" value="4.50" step="0.01" required>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Costos Totales ($)</label>
+                            <input type="number" class="form-control" id="costos" name="costos"
+                                   value="3.00" step="0.01" min="0" oninput="calcularPrecio()">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Volumen (cc)</label>
+                        <div class="col-6">
+                            <label class="form-label">Utilidad ($)</label>
+                            <input type="number" class="form-control" id="utilidad" name="utilidad"
+                                   value="1.50" step="0.01" min="0" oninput="calcularPrecio()">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label d-flex justify-content-between">
+                            Precio Ex-Fábrica ($)
+                            <small class="text-muted fw-normal">= Costos + Utilidad</small>
+                        </label>
+                        <input type="number" class="form-control" id="precio" name="precio"
+                               value="4.50" step="0.01" required
+                               style="background:#f8fafc;font-weight:700">
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Capacidad (cc / ml)</label>
                             <input type="number" class="form-control" name="volumen" value="750" required>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Grado Alcoholico (%)</label>
+                        <div class="col-6">
+                            <label class="form-label">Grado Alcohólico (%)</label>
                             <input type="number" class="form-control" name="grado" value="35" step="0.1" required>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Cantidad</label>
-                            <input type="number" class="form-control" name="cantidad" value="1" required>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Cantidad de Botellas</label>
+                            <input type="number" class="form-control" name="cantidad" value="1" min="1" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Tipo de Producto</label>
+                            <select class="form-select" name="tipo" id="tipoProducto" onchange="toggleRango()">
+                                <option value="Licor">Ron / Vino / Licor</option>
+                                <option value="Cerveza Industrial">Cerveza Industrial</option>
+                                <option value="Cerveza Artesanal">Cerveza Artesanal</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Tipo de Producto</label>
-                        <select class="form-select" name="tipo" id="tipoProducto">
-                            <option value="Licor">Ron/Vino/Licor</option>
-                            <option value="Cerveza Industrial">Cerveza Industrial</option>
-                            <option value="Cerveza Artesanal">Cerveza Artesanal</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Rango de produccion (solo para Cerveza Industrial) -->
-                    <div class="mb-3" id="divRango" style="display:none;">
-                        <label class="form-label">Rango de Produccion (hl)</label>
+
+                    {# Rango producción solo Cerveza Industrial #}
+                    <div class="mb-3 d-none" id="divRango">
+                        <label class="form-label">Rango de Producción (hl) <small class="text-muted">— solo año 2021</small></label>
                         <select class="form-select" name="escala">
                             <option value="Rango 1: Hasta 730.000 hl">Rango 1: Hasta 730.000 hl</option>
-                            <option value="Rango 2: >730k a 1.4M hl">Rango 2: >730k a 1.4M hl</option>
-                            <option value="Rango 3: >1.4M hl" selected>Rango 3: >1.4M hl</option>
+                            <option value="Rango 2: >730k a 1.4M hl">Rango 2: &gt;730k a 1.4M hl</option>
+                            <option value="Rango 3: >1.4M hl" selected>Rango 3: &gt;1.4M hl</option>
                         </select>
-                        <small class="text-muted">Aplica solo para ano 2021. Desde 2022 tarifa unica.</small>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Anios a Calcular</label>
-                        <div class="row">
-                            <div class="col-6 col-md-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="anios" value="2021" id="a2021">
-                                    <label class="form-check-label" for="a2021">2021</label>
+
+                    {# ── Selección de años ──────────────────────────────────── #}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Períodos a Calcular</label>
+                        <div class="rounded p-3" style="background:#f8fafc;border:1px solid #e2e8f0">
+
+                            {# 2021–2023 #}
+                            <div class="row g-2 mb-2">
+                                {% for anio in ['2021','2022','2023'] %}
+                                <div class="col-4 col-md-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="anios"
+                                               value="{{ anio }}" id="a{{ anio }}">
+                                        <label class="form-check-label" for="a{{ anio }}">{{ anio }}</label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            {# 2024 con sub-períodos #}
+                            <div class="mb-2">
+                                <div class="form-check mb-1">
+                                    <input class="form-check-input" type="checkbox" id="toggle2024"
+                                           onchange="togglePeriodos2024()">
+                                    <label class="form-check-label fw-bold" for="toggle2024">
+                                        2024 <span class="badge" style="background:#fef3c7;color:#92400e;font-size:.62rem">IVA mixto</span>
+                                    </label>
+                                </div>
+                                <div class="ms-4 d-none" id="periodos2024">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="anios"
+                                               value="2024_q1" id="a2024q1">
+                                        <label class="form-check-label small" for="a2024q1">
+                                            Enero – Marzo <span class="text-muted">(IVA 12%)</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="anios"
+                                               value="2024_q2" id="a2024q2">
+                                        <label class="form-check-label small" for="a2024q2">
+                                            Abril – Diciembre <span class="text-muted">(IVA 15%)</span>
+                                        </label>
+                                    </div>
+                                    <div class="mt-1">
+                                        <button type="button" class="btn btn-xs btn-outline-secondary"
+                                                style="font-size:.7rem;padding:1px 8px"
+                                                onclick="seleccionarAmbos2024()">Seleccionar ambos períodos</button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-6 col-md-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="anios" value="2022" id="a2022">
-                                    <label class="form-check-label" for="a2022">2022</label>
+
+                            {# 2025–2026 #}
+                            <div class="row g-2">
+                                {% for anio in ['2025','2026'] %}
+                                <div class="col-4 col-md-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="anios"
+                                               value="{{ anio }}" id="a{{ anio }}"
+                                               {{ 'checked' if anio == '2026' else '' }}>
+                                        <label class="form-check-label" for="a{{ anio }}">{{ anio }}</label>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="anios" value="2023" id="a2023">
-                                    <label class="form-check-label" for="a2023">2023</label>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="anios" value="2024" id="a2024" onchange="mostrarIVA2024()">
-                                    <label class="form-check-label" for="a2024">2024</label>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="anios" value="2025" id="a2025">
-                                    <label class="form-check-label" for="a2025">2025</label>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="anios" value="2026" id="a2026" checked>
-                                    <label class="form-check-label" for="a2026">2026</label>
-                                </div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- IVA para 2024 -->
-                    <div class="mb-3" id="divIVA2024" style="display:none;">
-                        <label class="form-label">Periodo IVA 2024</label>
-                        <select class="form-select" name="iva_2024">
-                            <option value="12">Enero - Marzo (IVA 12%)</option>
-                            <option value="15" selected>Abril - Diciembre (IVA 15%)</option>
-                        </select>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary btn-lg w-100">
-                        <i class="bi bi-calculator-fill"></i> Calcular ICE
+
+                    <button type="submit" class="btn btn-primary w-100 py-2" style="font-weight:700">
+                        <i class="bi bi-calculator-fill me-2"></i>Calcular ICE
                     </button>
                 </form>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-5">
-        <div class="card shadow mb-3">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">Formulas</h5>
+
+    {# ── Panel lateral ──────────────────────────────────────────────────────── #}
+    <div class="col-lg-5 d-flex flex-column gap-3">
+
+        <div class="card">
+            <div class="card-header fw-bold" style="background:#eff6ff;color:#1d4ed8">
+                <i class="bi bi-journal-text me-2"></i>Fórmulas de Cálculo
             </div>
-            <div class="card-body">
-                <h6>ICE Especifico:</h6>
-                <p class="text-muted small">Tarifa x (%Alcohol / 100) x (Volumen / 1000)</p>
-                <h6>ICE Ad-Valorem:</h6>
-                <p class="text-muted small">((Precio/Litro) - Umbral) x 75% x (Volumen/1000)</p>
-                <small class="text-muted">Aplica si Precio/Litro > Umbral</small>
+            <div class="card-body" style="font-size:.82rem">
+                <div class="mb-3">
+                    <div class="fw-bold mb-1" style="color:#0f172a">ICE Específico (por botella):</div>
+                    <div class="rounded px-3 py-2" style="background:#f8fafc;font-family:monospace;font-size:.78rem;border:1px solid #e2e8f0">
+                        Tarifa × (Grado% ÷ 100) × (Capacidad ÷ 1000)
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="fw-bold mb-1" style="color:#0f172a">ICE Ad-Valorem (por botella):</div>
+                    <div class="rounded px-3 py-2" style="background:#f8fafc;font-family:monospace;font-size:.78rem;border:1px solid #e2e8f0">
+                        ((Precio÷Litro) − Umbral) × 75% × (Capacidad÷1000)<br>
+                        <small class="text-muted">Solo aplica si Precio/Litro &gt; Umbral</small>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <div class="fw-bold mb-1" style="color:#0f172a">Precio Ex-Fábrica:</div>
+                    <div class="rounded px-3 py-2" style="background:#f8fafc;font-family:monospace;font-size:.78rem;border:1px solid #e2e8f0">
+                        Costos Totales + Utilidad
+                    </div>
+                </div>
             </div>
         </div>
-        
-        <div class="card shadow">
-            <div class="card-header bg-warning">
-                <h5 class="mb-0">Notas 2024</h5>
+
+        <div class="card">
+            <div class="card-header fw-bold" style="background:#fffbeb;color:#92400e">
+                <i class="bi bi-info-circle me-2"></i>Tarifas ICE Vigentes
             </div>
-            <div class="card-body small">
-                <p>El ano 2024 tiene IVA diferenciado:</p>
-                <ul>
-                    <li><strong>12%</strong> Enero a Marzo</li>
-                    <li><strong>15%</strong> Abril a Diciembre</li>
-                </ul>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0" style="font-size:.77rem">
+                    <thead>
+                        <tr style="background:#fef9c3">
+                            <th>Año</th><th>Esp. ($/LA)</th><th>Umbral</th><th>IVA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for anio, t in tax_db.items() %}
+                        <tr {% if anio == '2026' %}style="font-weight:700;background:#f0fdf4"{% endif %}>
+                            <td>{{ anio }}</td>
+                            <td>${{ t.esp }}</td>
+                            <td>${{ t.umb }}</td>
+                            <td>{% if t.iva == 'MIXTO' %}12% / 15%{% else %}{{ (t.iva*100)|int }}%{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-document.getElementById('tipoProducto').addEventListener('change', function() {
-    var divRango = document.getElementById('divRango');
-    if (this.value === 'Cerveza Industrial') {
-        divRango.style.display = 'block';
-    } else {
-        divRango.style.display = 'none';
-    }
-});
+function calcularPrecio() {
+    var c = parseFloat(document.getElementById('costos').value) || 0;
+    var u = parseFloat(document.getElementById('utilidad').value) || 0;
+    document.getElementById('precio').value = (c + u).toFixed(2);
+}
 
-function mostrarIVA2024() {
-    var check2024 = document.getElementById('a2024');
-    var divIVA = document.getElementById('divIVA2024');
-    if (check2024.checked) {
-        divIVA.style.display = 'block';
-    } else {
-        divIVA.style.display = 'none';
+function toggleRango() {
+    var tipo = document.getElementById('tipoProducto').value;
+    document.getElementById('divRango').classList.toggle('d-none', tipo !== 'Cerveza Industrial');
+}
+
+function togglePeriodos2024() {
+    var checked = document.getElementById('toggle2024').checked;
+    document.getElementById('periodos2024').classList.toggle('d-none', !checked);
+    if (!checked) {
+        document.getElementById('a2024q1').checked = false;
+        document.getElementById('a2024q2').checked = false;
     }
+}
+
+function seleccionarAmbos2024() {
+    document.getElementById('a2024q1').checked = true;
+    document.getElementById('a2024q2').checked = true;
 }
 </script>
 {% endblock %}

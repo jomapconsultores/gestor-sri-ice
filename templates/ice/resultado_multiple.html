@@ -1,61 +1,181 @@
 {% extends "base.html" %}
-
-{% block title %}Resultado Multiple{% endblock %}
+{% block title %}Resultado ICE Múltiple{% endblock %}
+{% block topbar_title %}Resultado ICE Múltiple{% endblock %}
 
 {% block content %}
-<h2 class="mb-4"><i class="bi bi-grid-3x3-gap"></i> Resultado Multi-Producto</h2>
-
-<div class="card shadow mb-4">
-    <div class="card-header bg-light">
-        <strong>{{ productos|length }} productos calculados</strong>
+<div class="page-header mb-4">
+    <div>
+        <h1 class="page-title"><i class="bi bi-calculator-fill"></i>Resultado ICE Múltiple</h1>
+        <p class="page-subtitle">{{ productos|length }} producto(s) · {{ periodos|length }} período(s)</p>
     </div>
+    <a href="{{ url_for('ice.multiple') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Nuevo cálculo
+    </a>
 </div>
 
-{% for anio, items in resultados.items() %}
-<div class="card shadow mb-4">
-    <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">{{ anio }}</h5>
+{% for periodo in periodos %}
+{% set items = resultados[periodo] %}
+{% set tot   = totales[periodo] %}
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center"
+         style="background:#0d1b2e;color:#fff">
+        <span class="fw-bold"><i class="bi bi-calendar3 me-2"></i>{{ periodo }}</span>
+        <span class="badge" style="background:rgba(255,255,255,.15);font-size:.72rem">
+            {{ items|length }} producto(s)
+        </span>
     </div>
-    <div class="card-body table-responsive">
-        <table class="table table-striped table-sm">
-            <thead class="table-dark">
-                <tr>
-                    <th>Producto</th>
-                    <th>Tipo</th>
-                    <th>Cant.</th>
-                    <th>Precio Unit.</th>
-                    <th>ICE Esp.</th>
-                    <th>ICE AdV.</th>
-                    <th>ICE Total</th>
-                    <th>IVA</th>
-                    <th>PVP</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for r in items %}
-                <tr>
-                    <td>{{ r.nombre }}</td>
-                    <td>{{ r.tarifa_especifica }}</td>
-                    <td>{{ r.cantidad }}</td>
-                    <td>${{ '%.2f'|format(r.precio_fabrica_unitario) }}</td>
-                    <td>${{ '%.2f'|format(r.ice_especifico_total) }}</td>
-                    <td>${{ '%.2f'|format(r.ice_advalorem_total) }}</td>
-                    <td class="fw-bold">${{ '%.2f'|format(r.ice_total) }}</td>
-                    <td>${{ '%.2f'|format(r.iva_total) }}</td>
-                    <td class="fw-bold">${{ '%.2f'|format(r.pvp) }}</td>
-                </tr>
-                {% endfor %}
-                <tr class="table-success fw-bold">
-                    <td colspan="6">TOTAL {{ anio }}</td>
-                    <td>${{ '%.2f'|format(totales[anio].ice_total) }}</td>
-                    <td>${{ '%.2f'|format(totales[anio].iva_total) }}</td>
-                    <td>${{ '%.2f'|format(totales[anio].pvp) }}</td>
-                </tr>
-            </tbody>
-        </table>
+
+    {# ── Detalle por producto ─────────────────────────────────────────────── #}
+    {% for r in items %}
+    <div class="px-3 py-3 {% if not loop.last %}border-bottom{% endif %}">
+
+        {# Cabecera del producto #}
+        <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-1">
+            <div>
+                <span class="fw-bold" style="font-size:.9rem;color:#0f172a">
+                    <i class="bi bi-box-seam me-1 text-primary"></i>{{ r.nombre }}
+                </span>
+                <span class="badge ms-2" style="background:#f1f5f9;color:#475569;font-size:.65rem">
+                    {{ r.tipo_producto if r.tipo_producto else '—' }}
+                </span>
+            </div>
+            <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.7rem">
+                {{ r.cantidad }} botella(s) × {{ r.volumen_cc if r.volumen_cc else '750' }} cc
+            </span>
+        </div>
+
+        {# Valores unitarios + por cantidad #}
+        <div class="row g-2">
+
+            {# Columna: base del precio #}
+            <div class="col-12 col-md-3">
+                <div class="rounded p-2" style="background:#f8fafc;border:1px solid #e2e8f0;font-size:.77rem">
+                    <div class="fw-bold mb-1" style="color:#475569;font-size:.65rem;text-transform:uppercase;letter-spacing:.05em">Estructura de precio</div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Costos:</span>
+                        <span>${{ '%.4f'|format(r.costos if r.costos is defined else 0) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Utilidad:</span>
+                        <span>${{ '%.4f'|format(r.utilidad if r.utilidad is defined else 0) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between fw-bold border-top mt-1 pt-1">
+                        <span>Ex-Fábrica:</span>
+                        <span>${{ '%.4f'|format(r.precio_fabrica_unitario) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {# Columna: ICE unitario #}
+            <div class="col-6 col-md-3">
+                <div class="rounded p-2" style="background:#eff6ff;border:1px solid #bfdbfe;font-size:.77rem">
+                    <div class="fw-bold mb-1" style="color:#1d4ed8;font-size:.65rem;text-transform:uppercase;letter-spacing:.05em">ICE por botella</div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Específico:</span>
+                        <span>${{ '%.4f'|format(r.ice_especifico_unitario) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Ad-Valorem:</span>
+                        <span>${{ '%.4f'|format(r.ice_advalorem_unitario) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between fw-bold border-top mt-1 pt-1" style="color:#1d4ed8">
+                        <span>Total ICE:</span>
+                        <span>${{ '%.4f'|format(r.ice_total_unitario) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {# Columna: IVA y PVP unitario #}
+            <div class="col-6 col-md-3">
+                <div class="rounded p-2" style="background:#fffbeb;border:1px solid #fde68a;font-size:.77rem">
+                    <div class="fw-bold mb-1" style="color:#92400e;font-size:.65rem;text-transform:uppercase;letter-spacing:.05em">IVA y PVP unitario</div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Base IVA:</span>
+                        <span>${{ '%.4f'|format(r.base_iva) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">IVA {{ (r.iva_tasa * 100)|int if r.iva_tasa else 15 }}%:</span>
+                        <span>${{ '%.4f'|format(r.iva_unitario if r.iva_unitario is defined else r.iva_total) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between fw-bold border-top mt-1 pt-1" style="color:#d97706">
+                        <span>PVP:</span>
+                        <span>${{ '%.4f'|format(r.pvp_unitario if r.pvp_unitario is defined else r.pvp) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {# Columna: totales por cantidad #}
+            <div class="col-12 col-md-3">
+                <div class="rounded p-2" style="background:#f0fdf4;border:1px solid #bbf7d0;font-size:.77rem">
+                    <div class="fw-bold mb-1" style="color:#15803d;font-size:.65rem;text-transform:uppercase;letter-spacing:.05em">Total × {{ r.cantidad }} bot.</div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">ICE Esp.:</span>
+                        <span>${{ '%.2f'|format(r.ice_especifico_unitario * r.cantidad) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">ICE AdV.:</span>
+                        <span>${{ '%.2f'|format(r.ice_advalorem_unitario * r.cantidad) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">ICE Total:</span>
+                        <span>${{ '%.2f'|format(r.ice_total) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">IVA:</span>
+                        <span>${{ '%.2f'|format(r.iva_total) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between fw-bold border-top mt-1 pt-1" style="color:#15803d">
+                        <span>PVP Total:</span>
+                        <span>${{ '%.2f'|format(r.pvp) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {# ── Resumen del período ───────────────────────────────────────────────── #}
+    <div class="px-3 py-3" style="background:#0d1b2e;border-radius:0 0 9px 9px">
+        <div class="fw-bold mb-2" style="color:#fff;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em">
+            <i class="bi bi-sigma me-1"></i>Resumen General — {{ periodo }}
+        </div>
+        <div class="row g-2">
+            <div class="col-6 col-md-3">
+                <div class="rounded p-2 text-center" style="background:rgba(255,255,255,.07)">
+                    <div style="font-size:.65rem;color:rgba(255,255,255,.5);text-transform:uppercase">ICE Específico</div>
+                    <div style="font-size:1.1rem;font-weight:800;color:#60a5fa">${{ '%.2f'|format(tot.ice_especifico) }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="rounded p-2 text-center" style="background:rgba(255,255,255,.07)">
+                    <div style="font-size:.65rem;color:rgba(255,255,255,.5);text-transform:uppercase">ICE Ad-Valorem</div>
+                    <div style="font-size:1.1rem;font-weight:800;color:#a78bfa">${{ '%.2f'|format(tot.ice_advalorem) }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="rounded p-2 text-center" style="background:rgba(255,255,255,.07)">
+                    <div style="font-size:.65rem;color:rgba(255,255,255,.5);text-transform:uppercase">ICE Total</div>
+                    <div style="font-size:1.1rem;font-weight:800;color:#34d399">${{ '%.2f'|format(tot.ice_total) }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="rounded p-2 text-center" style="background:rgba(255,255,255,.07)">
+                    <div style="font-size:.65rem;color:rgba(255,255,255,.5);text-transform:uppercase">PVP Total</div>
+                    <div style="font-size:1.1rem;font-weight:800;color:#fbbf24">${{ '%.2f'|format(tot.pvp_total) }}</div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endfor %}
 
-<a href="{{ url_for('ice.multiple') }}" class="btn btn-primary">Nuevo Calculo Multiple</a>
+<div class="d-flex gap-2">
+    <a href="{{ url_for('ice.multiple') }}" class="btn btn-primary">
+        <i class="bi bi-arrow-left me-1"></i>Nuevo cálculo
+    </a>
+    <a href="{{ url_for('ice.mezcla') }}" class="btn btn-outline-warning">
+        <i class="bi bi-shuffle me-1"></i>Ir a Mezcla Total
+    </a>
+</div>
 {% endblock %}
