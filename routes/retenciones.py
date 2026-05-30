@@ -231,18 +231,21 @@ def exportar_excel():
             for col_i, col in enumerate(COLS):
                 val = fila.get(col, '')
                 if col == 'Ret. Renta':
-                    b = chr(65 + idx_base_renta) + str(excel_row)
-                    p = chr(65 + idx_porc_renta) + str(excel_row)
-                    ws.write_formula(row_i, col_i, f'={b}*({p}/100)', fmt_curr)
+                    base = float(fila.get('Base Renta', 0) or 0)
+                    porc = float(fila.get('% Renta', 0) or 0)
+                    ws.write(row_i, col_i, round(base * porc / 100, 2), fmt_curr)
                 elif col == 'Ret. IVA':
-                    b = chr(65 + idx_base_iva) + str(excel_row)
-                    p = chr(65 + idx_porc_iva) + str(excel_row)
-                    ws.write_formula(row_i, col_i, f'={b}*({p}/100)', fmt_curr)
+                    base = float(fila.get('Base IVA', 0) or 0)
+                    porc = float(fila.get('% IVA', 0) or 0)
+                    ws.write(row_i, col_i, round(base * porc / 100, 2), fmt_curr)
                 elif col == 'Total Retenido':
-                    cr = chr(65 + idx_ret_renta) + str(excel_row)
-                    ci = chr(65 + idx_ret_iva) + str(excel_row)
-                    cs = chr(65 + idx_ret_isd) + str(excel_row)
-                    ws.write_formula(row_i, col_i, f'={cr}+{ci}+{cs}', fmt_curr)
+                    base_r = float(fila.get('Base Renta', 0) or 0)
+                    porc_r = float(fila.get('% Renta', 0) or 0)
+                    base_v = float(fila.get('Base IVA', 0) or 0)
+                    porc_v = float(fila.get('% IVA', 0) or 0)
+                    isd = float(fila.get('Ret. ISD', 0) or 0)
+                    total = round(base_r * porc_r / 100 + base_v * porc_v / 100 + isd, 2)
+                    ws.write(row_i, col_i, total, fmt_curr)
                 elif col in NUMS:
                     try:
                         ws.write(row_i, col_i, float(val), fmt_curr)
@@ -254,9 +257,14 @@ def exportar_excel():
         # Totales
         last = len(filas) + 1
         ws.write(last, 0, 'TOTALES GENERALES', fmt_total)
-        for ci in (idx_base_renta, idx_ret_renta, idx_base_iva, idx_ret_iva, idx_ret_isd, idx_total):
-            letra = chr(65 + ci)
-            ws.write_formula(last, ci, f'=SUM({letra}2:{letra}{last})', fmt_total)
+        col_keys = {
+            idx_base_renta: 'Base Renta', idx_ret_renta: 'Ret. Renta',
+            idx_base_iva: 'Base IVA', idx_ret_iva: 'Ret. IVA',
+            idx_ret_isd: 'Ret. ISD', idx_total: 'Total Retenido',
+        }
+        for ci, key in col_keys.items():
+            total_val = round(sum(float(f.get(key, 0) or 0) for f in filas), 2)
+            ws.write(last, ci, total_val, fmt_total)
 
         ws.set_column(2, 2, 35)
         ws.set_column(3, 3, 20)
@@ -294,9 +302,14 @@ def exportar_excel():
             res_row += 1
 
         ws_res.write(res_row, 0, 'TOTAL FINAL', fmt_rtotal)
-        for ci in (2, 3, 4, 5):
-            letra = chr(65 + ci)
-            ws_res.write_formula(res_row, ci, f'=SUM({letra}2:{letra}{res_row})', fmt_rtotal)
+        totals_ag = {'renta': 0.0, 'iva': 0.0, 'isd': 0.0, 'total': 0.0}
+        for vals in agentes.values():
+            totals_ag['renta'] += vals['renta']
+            totals_ag['iva'] += vals['iva']
+            totals_ag['isd'] += vals['isd']
+            totals_ag['total'] += vals['total']
+        for ci, key in enumerate(('renta', 'iva', 'isd', 'total'), 2):
+            ws_res.write(res_row, ci, round(totals_ag[key], 2), fmt_rtotal)
 
         ws_res.set_column(0, 0, 35)
         ws_res.set_column(1, 5, 15)

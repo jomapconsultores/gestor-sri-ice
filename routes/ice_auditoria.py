@@ -568,8 +568,12 @@ def exportar_auditoria():
             cell.border = brd
         ws.cell(row=fila, column=1, value='TOTALES')
         for col in [12, 15, 16, 17, 18, 19, 20]:
-            letra = get_column_letter(col)
-            ws.cell(row=fila, column=col, value=f'=SUM({letra}{fila_ini}:{letra}{fila_fin})')
+            total_col = sum(
+                (ws.cell(row=r, column=col).value or 0)
+                for r in range(fila_ini, fila_fin + 1)
+                if isinstance(ws.cell(row=r, column=col).value, (int, float))
+            )
+            ws.cell(row=fila, column=col, value=round(total_col, 4))
             ws.cell(row=fila, column=col).number_format = mon_fmt
 
         # Anchos
@@ -650,8 +654,12 @@ def exportar_auditoria():
             cell.border = brd
         ws2.cell(row=fila_r, column=1, value='TOTAL GENERAL')
         for col in (2, 3, 4, 5, 6):
-            letra = get_column_letter(col)
-            ws2.cell(row=fila_r, column=col, value=f'=SUM({letra}{fila_ini_r}:{letra}{fila_fin_r})')
+            total_col = sum(
+                (ws2.cell(row=r, column=col).value or 0)
+                for r in range(fila_ini_r, fila_fin_r + 1)
+                if isinstance(ws2.cell(row=r, column=col).value, (int, float))
+            )
+            ws2.cell(row=fila_r, column=col, value=round(total_col, 4))
             ws2.cell(row=fila_r, column=col).number_format = mon_fmt
 
         ws2.column_dimensions['A'].width = 45

@@ -84,9 +84,19 @@ class ExcelExporter:
             cell.border = s['border']
         
         ws.cell(row=ult, column=1, value="TOTALES")
+        totales = [0.0] * 11
+        for f in facturas:
+            total = float(f.importe_total or 0)
+            ice = float(f.valor_ice or 0)
+            iva = float(f.valor_iva or 0)
+            totales[5] += round(total - ice - iva, 2)
+            totales[6] += float(f.base_ice or 0)
+            totales[7] += ice
+            totales[8] += float(f.base_iva or 0)
+            totales[9] += iva
+            totales[10] += total
         for col in [5, 6, 7, 8, 9, 10]:
-            letra = get_column_letter(col)
-            ws.cell(row=ult, column=col, value=f"=SUM({letra}2:{letra}{ult-1})")
+            ws.cell(row=ult, column=col, value=round(totales[col], 2))
             ws.cell(row=ult, column=col).number_format = '#,##0.00'
         
         for j, w in enumerate([12, 15, 15, 30, 12, 12, 12, 12, 12, 12], 1):
@@ -156,9 +166,14 @@ class ExcelExporter:
             cell.font = s['total_font']
             cell.border = s['border']
         ws.cell(row=ult, column=1, value="TOTALES")
+        _sum = {8: 0.0, 9: 0.0, 10: 0.0}
+        for r in range(4, ult):
+            for col in (8, 9, 10):
+                v = ws.cell(row=r, column=col).value
+                if isinstance(v, (int, float)):
+                    _sum[col] += v
         for col in [8, 9, 10]:
-            letra = get_column_letter(col)
-            ws.cell(row=ult, column=col, value=f"=SUM({letra}4:{letra}{ult - 1})")
+            ws.cell(row=ult, column=col, value=round(_sum[col], 2))
             ws.cell(row=ult, column=col).number_format = '#,##0.00'
 
         for j in range(1, 11):

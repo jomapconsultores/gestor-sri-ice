@@ -22,8 +22,8 @@ DEFAULTS_NUMERICOS = {
 def _requiere_modulo():
     if current_user.is_admin:
         return None
-    if not usuario_tiene_modulo('anexos'):
-        flash('Requieres el módulo Generación Anexos SRI para usar el editor XML.', 'warning')
+    if not usuario_tiene_modulo('anexos_ice'):
+        flash('Requieres el módulo Anexos ICE / PVP para usar el editor XML.', 'warning')
         return redirect(url_for('payments.ver_planes'))
     return None
 

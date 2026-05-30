@@ -1,19 +1,44 @@
-from flask import Blueprint, render_template, request, flash
+from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from services.ice_calculator import IceCalculator, TAX_DB
+from routes.payments import usuario_tiene_modulo
 
 ice = Blueprint('ice', __name__)
+
+
+def _requiere_ice_simple():
+    if current_user.is_admin:
+        return None
+    if not usuario_tiene_modulo('ice_simple'):
+        flash('Requieres el módulo Cálculo ICE Simple ($10/mes) para acceder.', 'warning')
+        return redirect(url_for('payments.ver_planes'))
+    return None
+
+
+def _requiere_ice_multiple():
+    if current_user.is_admin:
+        return None
+    if not usuario_tiene_modulo('ice_multiple'):
+        flash('Requieres el módulo ICE Múltiple + Mezcla ($15/mes) para acceder.', 'warning')
+        return redirect(url_for('payments.ver_planes'))
+    return None
 
 
 @ice.route('/calculadora')
 @login_required
 def calculadora():
+    r = _requiere_ice_simple()
+    if r:
+        return r
     return render_template('ice/calculadora.html', tax_db=TAX_DB)
 
 
 @ice.route('/calcular', methods=['POST'])
 @login_required
 def calcular():
+    r = _requiere_ice_simple()
+    if r:
+        return r
     try:
         precio = float(request.form.get('precio', 0))
         volumen = float(request.form.get('volumen', 750))
@@ -22,11 +47,11 @@ def calcular():
         cantidad = int(request.form.get('cantidad', 1))
         escala = request.form.get('escala', '')
         anios = request.form.getlist('anios')
-        
+
         if not anios:
             flash('Selecciona al menos un ano.', 'warning')
             return render_template('ice/calculadora.html', tax_db=TAX_DB)
-        
+
         datos = {
             'precio_fabrica': precio,
             'volumen_cc': volumen,
@@ -36,11 +61,10 @@ def calcular():
         }
         if escala:
             datos['escala'] = escala
-        
+
         resultados = {}
         for anio in anios:
             if anio == '2024':
-                # 2024 con ambos periodos
                 res_12 = IceCalculator.calcular_liquidacion_completa(datos, '2024', iva_tasa=0.12)
                 res_15 = IceCalculator.calcular_liquidacion_completa(datos, '2024', iva_tasa=0.15)
                 resultados['2024 (12%)'] = res_12
@@ -48,12 +72,12 @@ def calcular():
             else:
                 res = IceCalculator.calcular_liquidacion_completa(datos, anio)
                 resultados[anio] = res
-        
-        return render_template('ice/resultado.html', 
-                             resultados=resultados,
-                             datos={'precio': precio, 'volumen': volumen, 
-                                   'grado': grado, 'tipo': tipo, 'cantidad': cantidad})
-    
+
+        return render_template('ice/resultado.html',
+                               resultados=resultados,
+                               datos={'precio': precio, 'volumen': volumen,
+                                      'grado': grado, 'tipo': tipo, 'cantidad': cantidad})
+
     except Exception as e:
         flash(f'Error: {str(e)}', 'danger')
         return render_template('ice/calculadora.html', tax_db=TAX_DB)
@@ -62,25 +86,30 @@ def calcular():
 @ice.route('/multiple')
 @login_required
 def multiple():
+    r = _requiere_ice_multiple()
+    if r:
+        return r
     return render_template('ice/multiple.html', tax_db=TAX_DB)
 
 
 @ice.route('/calcular_multiple', methods=['POST'])
 @login_required
 def calcular_multiple():
+    r = _requiere_ice_multiple()
+    if r:
+        return r
     try:
         anios = request.form.getlist('anios')
         if not anios:
             flash('Selecciona al menos un ano.', 'warning')
             return render_template('ice/multiple.html', tax_db=TAX_DB)
-        
-        # Obtener todos los productos del formulario
+
         productos = []
         indices = set()
         for key in request.form.keys():
             if key.startswith('precio_'):
                 indices.add(key.replace('precio_', ''))
-        
+
         for i in sorted(indices):
             precio = float(request.form.get(f'precio_{i}', 0))
             volumen = float(request.form.get(f'volumen_{i}', 750))
@@ -88,7 +117,7 @@ def calcular_multiple():
             tipo = request.form.get(f'tipo_{i}', 'Licor')
             cantidad = int(request.form.get(f'cantidad_{i}', 1))
             nombre = request.form.get(f'nombre_{i}', f'Producto {i}')
-            
+
             if precio > 0 and cantidad > 0:
                 productos.append({
                     'nombre': nombre,
@@ -100,12 +129,11 @@ def calcular_multiple():
                         'cantidad': cantidad
                     }
                 })
-        
+
         if not productos:
             flash('Agrega al menos un producto.', 'warning')
             return render_template('ice/multiple.html', tax_db=TAX_DB)
-        
-        # Calcular para cada producto y cada año
+
         resultados = {}
         for anio in anios:
             resultados[anio] = []
@@ -123,8 +151,7 @@ def calcular_multiple():
                     res = IceCalculator.calcular_liquidacion_completa(prod['datos'], anio)
                     res['nombre'] = prod['nombre']
                     resultados[anio].append(res)
-        
-        # Calcular totales
+
         totales = {}
         for anio, items in resultados.items():
             totales[anio] = {
@@ -133,12 +160,12 @@ def calcular_multiple():
                 'pvp': sum(r['pvp'] for r in items),
                 'cantidad_productos': len(items)
             }
-        
+
         return render_template('ice/resultado_multiple.html',
-                             resultados=resultados,
-                             totales=totales,
-                             productos=productos)
-    
+                               resultados=resultados,
+                               totales=totales,
+                               productos=productos)
+
     except Exception as e:
         flash(f'Error: {str(e)}', 'danger')
         return render_template('ice/multiple.html', tax_db=TAX_DB)
@@ -147,24 +174,30 @@ def calcular_multiple():
 @ice.route('/mezcla')
 @login_required
 def mezcla():
+    r = _requiere_ice_multiple()
+    if r:
+        return r
     return render_template('ice/mezcla.html', tax_db=TAX_DB)
 
 
 @ice.route('/calcular_mezcla', methods=['POST'])
 @login_required
 def calcular_mezcla():
+    r = _requiere_ice_multiple()
+    if r:
+        return r
     try:
         anios = request.form.getlist('anios')
         if not anios:
             flash('Selecciona al menos un ano.', 'warning')
             return render_template('ice/mezcla.html', tax_db=TAX_DB)
-        
+
         productos = []
         indices = set()
         for key in request.form.keys():
             if key.startswith('precio_'):
                 indices.add(key.replace('precio_', ''))
-        
+
         for i in sorted(indices):
             precio = float(request.form.get(f'precio_{i}', 0))
             volumen = float(request.form.get(f'volumen_{i}', 750))
@@ -172,7 +205,7 @@ def calcular_mezcla():
             tipo = request.form.get(f'tipo_{i}', 'Licor')
             cantidad = int(request.form.get(f'cantidad_{i}', 1))
             nombre = request.form.get(f'nombre_{i}', f'Producto {i}')
-            
+
             if precio > 0 and cantidad > 0:
                 productos.append({
                     'nombre': nombre,
@@ -184,12 +217,11 @@ def calcular_mezcla():
                         'cantidad': cantidad
                     }
                 })
-        
+
         if not productos:
             flash('Agrega al menos un producto.', 'warning')
             return render_template('ice/mezcla.html', tax_db=TAX_DB)
-        
-        # Calcular combinado
+
         resultados = {}
         for anio in anios:
             if anio == '2024':
@@ -215,11 +247,11 @@ def calcular_mezcla():
                     gran_total['iva_total'] += res['iva_total']
                     gran_total['pvp'] += res['pvp']
                 resultados[anio] = {'items': items, 'total': gran_total}
-        
+
         return render_template('ice/resultado_mezcla.html',
-                             resultados=resultados,
-                             productos=productos)
-    
+                               resultados=resultados,
+                               productos=productos)
+
     except Exception as e:
         flash(f'Error: {str(e)}', 'danger')
         return render_template('ice/mezcla.html', tax_db=TAX_DB)
@@ -231,6 +263,7 @@ def comparativa():
     return render_template('ice/comparativa.html', tax_db=TAX_DB)
 
 
+# Tarifas ICE — acceso gratuito para todos los usuarios registrados
 @ice.route('/tarifas')
 @login_required
 def ver_tarifas():

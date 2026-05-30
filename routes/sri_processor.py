@@ -404,18 +404,29 @@ def exportar_excel():
         for i, h in enumerate(headers_res):
             ws_res.write(0, i, h, fmt_rh)
 
+        # Precompute aggregates per category
+        cat_data = {c: {'count': 0, **{k: 0.0 for k in col_map}} for c in categorias}
+        for f in filas_ok:
+            c = f.get('Clasificación', 'SIN CLASIFICAR')
+            if c in cat_data:
+                cat_data[c]['count'] += 1
+                for k in col_map:
+                    try:
+                        cat_data[c][k] += float(f.get(k, 0) or 0)
+                    except (ValueError, TypeError):
+                        pass
+
         for row_i, cat in enumerate(categorias, 1):
-            crit = f'"{cat}"'
             ws_res.write(row_i, 0, cat, fmt_lbl)
-            ws_res.write_formula(row_i, 1, f'=COUNTIF(DATOS!F:F,{crit})', fmt_num)
-            for col_i, (_, letra) in enumerate(col_map.items(), 2):
-                ws_res.write_formula(row_i, col_i, f'=SUMIF(DATOS!F:F,{crit},DATOS!{letra}:{letra})', fmt_num)
+            ws_res.write(row_i, 1, cat_data[cat]['count'], fmt_num)
+            for col_i, k in enumerate(col_map.keys(), 2):
+                ws_res.write(row_i, col_i, round(cat_data[cat][k], 2), fmt_num)
 
         tot_row = len(categorias) + 1
         ws_res.write(tot_row, 0, 'TOTAL GENERAL', fmt_total)
-        for col_i in range(1, 10):
-            letra = chr(65 + col_i)
-            ws_res.write_formula(tot_row, col_i, f'=SUM({letra}2:{letra}{tot_row})', fmt_total)
+        ws_res.write(tot_row, 1, sum(d['count'] for d in cat_data.values()), fmt_total)
+        for col_i, k in enumerate(col_map.keys(), 2):
+            ws_res.write(tot_row, col_i, round(sum(d[k] for d in cat_data.values()), 2), fmt_total)
 
         ws.set_column(0, 0, 10)
         ws.set_column(1, 1, 12)

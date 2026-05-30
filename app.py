@@ -156,12 +156,21 @@ app = create_app()
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    from models.user import Factura
+    from models.user import Factura, ModuloSuscrito
     total_facturas = Factura.query.filter_by(usuario_id=current_user.id).count()
     modulos_activos = get_modulos_activos(current_user.id) if not current_user.is_admin else list(Config.MODULOS.keys())
+    # Mapa modulo_id → registro activo más reciente (para mostrar fecha de vencimiento)
+    modulos_info = {}
+    if not current_user.is_admin:
+        registros = ModuloSuscrito.query.filter_by(
+            usuario_id=current_user.id, estado='activo', verificado=True).all()
+        for r in registros:
+            if r.esta_activo():
+                modulos_info[r.modulo_id] = r
     return render_template('dashboard.html',
                            total_facturas=total_facturas,
-                           modulos_activos=modulos_activos)
+                           modulos_activos=modulos_activos,
+                           modulos_info=modulos_info)
 
 
 @app.route('/bienvenido')
