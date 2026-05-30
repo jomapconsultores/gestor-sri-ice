@@ -147,7 +147,7 @@ def ice_advalorem(precio_bot, vol_cc, umbral):
 def _requiere_modulo():
     if current_user.is_admin:
         return None
-    if not usuario_tiene_modulo('ice_auditoria'):
+    if not usuario_tiene_modulo('facturas_ice'):
         flash('Requieres el módulo Auditoría ICE Completa para usar esta herramienta.', 'warning')
         return redirect(url_for('payments.ver_planes'))
     return None

@@ -28,106 +28,188 @@ class Config:
     BANCO_CORREO = 'jomapconsultores@outlook.com'
     BANCO_CELULAR = '0963511411'
 
-    # Módulos disponibles con sus precios (sin IVA)
+    # ── Módulos ICE ────────────────────────────────────────────────────────────
     MODULOS = {
+        'tarifas_ice': {
+            'nombre': 'Tarifas ICE 2021–2026',
+            'descripcion': (
+                'Consulta completa de tarifas ICE vigentes desde 2021 hasta 2026. '
+                'Incluye toda la reglamentación: artículos de la Ley de Régimen Tributario Interno, '
+                'Reglamento LRTI, NAC y Resoluciones del SRI, con las tarifas y fórmulas de cálculo '
+                'correspondientes a cada período.'
+            ),
+            'precio': 0.00,
+            'precio_unico': False,
+            'gratuito': True,
+            'categoria': 'ice',
+            'color': 'success',
+            'icono': 'book',
+            'tooltip': 'Consulta gratuita de tarifas y reglamentación ICE 2021–2026',
+        },
         'ice_simple': {
             'nombre': 'Cálculo ICE Simple',
-            'descripcion': 'Calcula el ICE de un producto individual: ingresa grado alcohólico, capacidad y cantidad para obtener el impuesto a pagar en tu declaración mensual.',
-            'precio': 5.00,
+            'descripcion': (
+                'Calcula el ICE de un producto individual ingresando grado alcohólico, capacidad '
+                'y cantidad. Genera un reporte en Excel con las fórmulas de cálculo y la base legal '
+                'correspondiente, listo para sustentar tu declaración mensual ante el SRI.'
+            ),
+            'precio': 10.00,
             'precio_unico': False,
-            'color': 'success',
+            'gratuito': False,
+            'categoria': 'ice',
+            'color': 'primary',
             'icono': 'calculator',
-            'tooltip': 'Cálculo ICE para un producto a la vez'
+            'tooltip': 'Cálculo ICE individual con reporte Excel + base legal',
         },
         'ice_multiple': {
-            'nombre': 'Cálculo ICE Múltiple + Mezcla',
-            'descripcion': 'Calcula el ICE de varios productos simultáneamente y realiza cálculos de mezcla total. Ideal para distribuidores con múltiples líneas de producto.',
+            'nombre': 'ICE Múltiple + Mezcla',
+            'descripcion': (
+                'Calcula el ICE de múltiples productos (licores, cerveza artesanal e industrial) '
+                'en una sola sesión. Ingresa costos totales, utilidad y precio ex fábrica; obtén '
+                'ICE específico, ICE ad-valorem, IVA y PVP por unidad y por cantidad de botellas. '
+                'Los productos se guardan en la base de datos. Genera un reporte Excel con resumen '
+                'total de todos los productos.'
+            ),
             'precio': 15.00,
             'precio_unico': False,
-            'color': 'primary',
-            'icono': 'calculator-fill',
-            'tooltip': 'ICE multi-producto y mezcla total'
-        },
-        'anexos': {
-            'nombre': 'Generación Anexos SRI',
-            'descripcion': 'Genera automáticamente el Anexo PVP e ICE en formato XML para presentar al SRI cada mes. Incluye validación de datos y generación del archivo listo para subir.',
-            'precio': 15.00,
-            'precio_unico': False,
+            'gratuito': False,
+            'categoria': 'ice',
             'color': 'warning',
-            'icono': 'file-earmark-zip',
-            'tooltip': 'Genera los anexos XML para el SRI'
+            'icono': 'calculator-fill',
+            'tooltip': 'ICE multi-producto con PVP, costos, utilidad y reporte Excel',
+        },
+        'anexos_ice': {
+            'nombre': 'Anexos ICE / PVP',
+            'descripcion': (
+                'Genera y edita los Anexos ICE y PVP en formato XML oficial del SRI. '
+                'Carga un XML existente desde la base de datos o arrastra uno desde tu computador, '
+                'edita cada campo según tus necesidades, valida la estructura y descarga el XML '
+                'listo para subir. Incluye conversión a ZIP para aquellos casos en que el SRI lo requiera.'
+            ),
+            'precio': 10.00,
+            'precio_unico': False,
+            'gratuito': False,
+            'categoria': 'ice',
+            'color': 'info',
+            'icono': 'file-earmark-code',
+            'tooltip': 'Editor visual de Anexos ICE/PVP + validación + ZIP',
+        },
+        'facturas_ice': {
+            'nombre': 'Procesamiento Facturas ICE',
+            'descripcion': (
+                'Arrastra o importa tus facturas de ingresos en formato XML para generar '
+                'automáticamente el Anexo ICE o PVP según la reglamentación vigente. '
+                'Todos los datos quedan grabados en la base de datos de forma individual por usuario. '
+                'El administrador puede acceder a los datos de cualquier usuario sin que se mezclen.'
+            ),
+            'precio': 15.00,
+            'precio_unico': False,
+            'gratuito': False,
+            'categoria': 'ice',
+            'color': 'danger',
+            'icono': 'file-earmark-arrow-up',
+            'tooltip': 'Procesa XMLs de ingresos y genera Anexo ICE/PVP automáticamente',
+        },
+
+        # ── Módulos Generales (próxima tanda) ──────────────────────────────────
+        'facturas': {
+            'nombre': 'Facturas Ilimitadas',
+            'descripcion': (
+                'Sube y procesa facturas XML ilimitadas de gastos e ingresos. '
+                'Clasificación automática con catálogo personalizable. El catálogo de productos está '
+                'incluido sin costo adicional.'
+            ),
+            'precio': 10.00,
+            'precio_unico': False,
+            'gratuito': False,
+            'categoria': 'general',
+            'color': 'secondary',
+            'icono': 'receipt',
+            'tooltip': 'Facturas ilimitadas de gastos e ingresos + catálogo incluido',
         },
         'exportacion': {
             'nombre': 'Exportación Excel',
-            'descripcion': 'Exporta todos tus reportes a Excel: declaraciones, auditorías ICE, gastos personales clasificados, resúmenes por período y más. Compatible con todos los módulos.',
+            'descripcion': (
+                'Exporta todos tus reportes a Excel con fórmulas, resúmenes por período y '
+                'formato profesional. Compatible con todos los módulos del sistema.'
+            ),
             'precio': 5.00,
             'precio_unico': False,
-            'color': 'info',
+            'gratuito': False,
+            'categoria': 'general',
+            'color': 'success',
             'icono': 'file-earmark-excel',
-            'tooltip': 'Exporta reportes de todos los módulos a Excel'
-        },
-        'facturas': {
-            'nombre': 'Facturas Ilimitadas',
-            'descripcion': 'Sube y procesa facturas XML ilimitadas. Incluye GASTOS (facturas de compra → clasificación de gastos personales con catálogo) e INGRESOS (facturas de venta → reporte + anexo PVP/ICE). El catálogo de productos está incluido sin costo adicional.',
-            'precio': 10.00,
-            'precio_unico': False,
-            'color': 'danger',
-            'icono': 'receipt',
-            'tooltip': 'Facturas ilimitadas de gastos e ingresos + catálogo incluido'
+            'tooltip': 'Exporta reportes de todos los módulos a Excel',
         },
         'descarga_sri': {
             'nombre': 'Descarga Masiva SRI',
-            'descripcion': 'Herramienta para descargar masivamente tus facturas del portal del SRI. Pago único que te da acceso permanente a la herramienta de descarga.',
+            'descripcion': (
+                'Descarga masivamente tus comprobantes del portal del SRI usando claves de acceso. '
+                'Pago único con acceso permanente a la herramienta.'
+            ),
             'precio': 15.00,
             'precio_unico': True,
+            'gratuito': False,
+            'categoria': 'general',
             'color': 'secondary',
             'icono': 'cloud-download',
-            'tooltip': 'Descarga masiva desde el SRI - pago único $15'
-        },
-        'soporte': {
-            'nombre': 'Soporte Prioritario',
-            'descripcion': 'Atención preferencial por WhatsApp y correo electrónico. Respuesta en menos de 24 horas hábiles para resolver dudas técnicas y de uso del sistema.',
-            'precio': 5.00,
-            'precio_unico': False,
-            'color': 'dark',
-            'icono': 'headset',
-            'tooltip': 'Soporte prioritario por WhatsApp y email'
+            'tooltip': 'Descarga masiva desde el SRI — pago único $15',
         },
         'conciliacion': {
-            'nombre': 'Conciliación Bancaria Odoo',
-            'descripcion': 'Sube estados de cuenta en PDF y extrae automáticamente las transacciones con IA (Mistral). Exporta en formato Excel compatible con Odoo para importación directa.',
+            'nombre': 'Conciliación Bancaria IA',
+            'descripcion': (
+                'Sube estados de cuenta en PDF y extrae transacciones automáticamente con IA. '
+                'Exporta en formato Excel compatible con Odoo.'
+            ),
             'precio': 10.00,
             'precio_unico': False,
+            'gratuito': False,
+            'categoria': 'general',
             'color': 'primary',
             'icono': 'bank',
-            'tooltip': 'Extrae transacciones bancarias de PDFs con IA y exporta a Odoo'
+            'tooltip': 'Extrae transacciones bancarias de PDFs con IA y exporta a Odoo',
         },
         'retenciones': {
             'nombre': 'Procesador de Retenciones',
-            'descripcion': 'Procesa XMLs de comprobantes de retención del SRI. Detecta automáticamente Renta, IVA e ISD. Exporta a Excel con fórmulas, resumen por agente de retención y totales.',
+            'descripcion': (
+                'Procesa XMLs de comprobantes de retención. Detecta automáticamente Renta, IVA e ISD. '
+                'Exporta a Excel con fórmulas y resumen por agente de retención.'
+            ),
             'precio': 10.00,
             'precio_unico': False,
+            'gratuito': False,
+            'categoria': 'general',
             'color': 'info',
             'icono': 'file-earmark-minus',
-            'tooltip': 'Procesa XMLs de retenciones y exporta a Excel con resumen'
+            'tooltip': 'Procesa XMLs de retenciones y exporta a Excel',
         },
         'sri_pro': {
             'nombre': 'Gestor SRI Pro',
-            'descripcion': 'Descarga XMLs del SRI desde un TXT de claves de acceso (hasta 10 en paralelo) o importa XMLs locales. Clasifica facturas por proveedor y exporta a Excel con SUMIF por categoría.',
+            'descripcion': (
+                'Descarga XMLs del SRI desde un TXT de claves de acceso (hasta 10 en paralelo) '
+                'o importa XMLs locales. Clasifica y exporta a Excel con SUMIF por categoría.'
+            ),
             'precio': 15.00,
             'precio_unico': False,
+            'gratuito': False,
+            'categoria': 'general',
             'color': 'secondary',
-            'icono': 'cloud-download',
-            'tooltip': 'Descarga y clasifica XMLs del SRI masivamente'
+            'icono': 'cloud-arrow-down',
+            'tooltip': 'Descarga y clasifica XMLs del SRI masivamente',
         },
-        'ice_auditoria': {
-            'nombre': 'Auditoría ICE Completa',
-            'descripcion': 'Auditoría ICE con tarifas 2021–2026. Detecta packs y los descompone, calcula ICE específico y ad-valorem, genera el anexo XML para el SRI y exporta a Excel con 3 hojas de análisis.',
-            'precio': 20.00,
+        'soporte': {
+            'nombre': 'Soporte Prioritario',
+            'descripcion': (
+                'Atención preferencial por WhatsApp y correo electrónico. '
+                'Respuesta en menos de 24 horas hábiles.'
+            ),
+            'precio': 5.00,
             'precio_unico': False,
-            'color': 'danger',
-            'icono': 'fire',
-            'tooltip': 'Auditoría ICE multi-año con generación de anexo XML'
+            'gratuito': False,
+            'categoria': 'general',
+            'color': 'dark',
+            'icono': 'headset',
+            'tooltip': 'Soporte prioritario por WhatsApp y email',
         },
     }
 

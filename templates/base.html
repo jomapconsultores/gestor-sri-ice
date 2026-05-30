@@ -338,74 +338,63 @@
             <i class="bi bi-house-door"></i>Dashboard
         </a>
 
-        <div class="sb-section">Facturación</div>
+        <!-- ── MÓDULOS ICE ─────────────────────────────── -->
+        <div class="sb-section">Impuesto ICE</div>
+
+        <a href="{{ url_for('ice.ver_tarifas') }}" class="sb-link">
+            <i class="bi bi-book"></i>Tarifas ICE 2021–2026
+            <span class="sb-badge" style="background:rgba(34,197,94,.2);color:#4ade80">GRATIS</span>
+        </a>
+
+        <a href="{{ url_for('ice.calculadora') }}" class="sb-link">
+            <i class="bi bi-calculator"></i>Cálculo ICE Simple
+            <span class="sb-badge">$10/mes</span>
+        </a>
+
+        <a href="{{ url_for('ice.multiple') }}" class="sb-link">
+            <i class="bi bi-calculator-fill"></i>ICE Múltiple + Mezcla
+            <span class="sb-badge">$15/mes</span>
+        </a>
+
+        <a href="{{ safe_url_for('ats.editor') }}" class="sb-link">
+            <i class="bi bi-file-earmark-code"></i>Anexos ICE / PVP
+            <span class="sb-badge">$10/mes</span>
+        </a>
+
+        <a href="{{ safe_url_for('ice_auditoria.index') }}" class="sb-link">
+            <i class="bi bi-file-earmark-arrow-up"></i>Procesamiento Facturas ICE
+            <span class="sb-badge">$15/mes</span>
+        </a>
+
+        <!-- ── HERRAMIENTAS GENERALES ──────────────────── -->
+        <div class="sb-section">Herramientas</div>
         <a href="{{ url_for('invoices.pagina_carga') }}" class="sb-link">
-            <i class="bi bi-cloud-upload"></i>Subir Facturas
-        </a>
-        <a href="{{ url_for('invoices.cargar_ingresos') }}" class="sb-link">
-            <i class="bi bi-cloud-upload"></i>Subir Ingresos
-        </a>
-        <a href="{{ url_for('invoices.ver_facturas') }}" class="sb-link">
-            <i class="bi bi-receipt"></i>Ver Facturas
+            <i class="bi bi-receipt"></i>Facturas Gastos/Ingresos
         </a>
         <a href="{{ url_for('gastos.panel') }}" class="sb-link">
             <i class="bi bi-wallet2"></i>Gastos Personales
         </a>
-
-        <div class="sb-section">Cálculo ICE</div>
-        <a href="{{ url_for('ice.calculadora') }}" class="sb-link">
-            <i class="bi bi-calculator"></i>Cálculo Individual
-        </a>
-        <a href="{{ url_for('ice.multiple') }}" class="sb-link">
-            <i class="bi bi-layers"></i>Multi-Producto
-        </a>
-        <a href="{{ url_for('ice.mezcla') }}" class="sb-link">
-            <i class="bi bi-shuffle"></i>Mezcla Total
-        </a>
-        <a href="{{ url_for('ice.ver_tarifas') }}" class="sb-link">
-            <i class="bi bi-table"></i>Tarifas ICE
-        </a>
-
-        <div class="sb-section">SRI</div>
         <a href="{{ url_for('annexes.pagina_generar') }}" class="sb-link">
-            <i class="bi bi-file-earmark-code"></i>Generar Anexos
-        </a>
-        <a href="{{ url_for('annexes.historial') }}" class="sb-link">
-            <i class="bi bi-clock-history"></i>Historial Anexos
-        </a>
-        <a href="{{ url_for('downloader.pagina_descarga') }}" class="sb-link">
-            <i class="bi bi-cloud-download"></i>Descarga Masiva
+            <i class="bi bi-file-earmark-zip"></i>Generar Anexos SRI
         </a>
         <a href="{{ url_for('exports.exportar_declaracion') }}" class="sb-link">
             <i class="bi bi-file-earmark-excel"></i>Exportar Excel
         </a>
-
-        <div class="sb-section">Herramientas Pro</div>
-        <a href="{{ safe_url_for('ats.editor') }}" class="sb-link">
-            <i class="bi bi-file-earmark-code"></i>Editor Anexos ICE/PVP<span class="sb-badge">PRO</span>
-        </a>
-        <a href="{{ safe_url_for('ice_auditoria.index') }}" class="sb-link">
-            <i class="bi bi-fire"></i>Auditoría ICE<span class="sb-badge">PRO</span>
+        <a href="{{ url_for('downloader.pagina_descarga') }}" class="sb-link">
+            <i class="bi bi-cloud-download"></i>Descarga Masiva SRI
         </a>
         <a href="{{ safe_url_for('sri_processor.index') }}" class="sb-link">
-            <i class="bi bi-cloud-arrow-down"></i>Gestor SRI Pro<span class="sb-badge">PRO</span>
+            <i class="bi bi-cloud-arrow-down"></i>Gestor SRI Pro
         </a>
         <a href="{{ safe_url_for('retenciones.index') }}" class="sb-link">
-            <i class="bi bi-file-earmark-minus"></i>Retenciones XML<span class="sb-badge">PRO</span>
+            <i class="bi bi-file-earmark-minus"></i>Retenciones XML
         </a>
         <a href="{{ safe_url_for('conciliacion.index') }}" class="sb-link">
-            <i class="bi bi-bank"></i>Conciliación Bancaria<span class="sb-badge">PRO</span>
-        </a>
-
-        <div class="sb-section">Catálogo</div>
-        <a href="{{ url_for('catalog.ver_catalogo') }}" class="sb-link">
-            <i class="bi bi-list-check"></i>Catálogo Licores
-        </a>
-        <a href="{{ url_for('catalog.gastos_catalogo') }}" class="sb-link">
-            <i class="bi bi-wallet2"></i>Catálogo Gastos
+            <i class="bi bi-bank"></i>Conciliación Bancaria IA
         </a>
 
         {% if current_user.is_admin %}
+        <!-- ── ADMINISTRACIÓN ──────────────────────────── -->
         <div class="sb-section">Administración</div>
         <a href="{{ url_for('admin_reports.reportes') }}" class="sb-link">
             <i class="bi bi-graph-up-arrow"></i>Reportes
@@ -418,12 +407,13 @@
         </a>
         {% endif %}
 
+        <!-- ── MI CUENTA ───────────────────────────────── -->
         <div class="sb-section">Mi Cuenta</div>
         <a href="{{ url_for('payments.mis_modulos') }}" class="sb-link">
             <i class="bi bi-grid"></i>Mis Módulos
         </a>
         <a href="{{ url_for('payments.ver_planes') }}" class="sb-link">
-            <i class="bi bi-plus-circle"></i>Agregar Módulos
+            <i class="bi bi-plus-circle"></i>Contratar Módulos
         </a>
         <a href="{{ url_for('security.solicitar_ip') }}" class="sb-link">
             <i class="bi bi-pc-display"></i>Mis IPs

@@ -15,188 +15,588 @@
         /* NAV */
         .top-nav {
             position: sticky; top: 0; z-index: 100;
-            background: rgba(255,255,255,0.92);
+            background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid #e2e8f0;
-            padding: 0 32px;
+            padding: 0 40px;
             display: flex; align-items: center;
-            height: 60px; gap: 16px;
+            height: 62px; gap: 16px;
         }
-        .nav-brand {
-            display: flex; align-items: center; gap: 10px;
-            text-decoration: none;
-        }
+        .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
         .nav-brand-icon {
-            width: 34px; height: 34px;
-            background: #2563eb;
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1rem; color: #fff;
+            width: 36px; height: 36px; background: #0d1b2e;
+            border-radius: 9px; display: flex; align-items: center;
+            justify-content: center; font-size: 1rem; color: #fff;
         }
-        .nav-brand-name { font-weight: 700; font-size: 0.9rem; color: #0f172a; }
-        .nav-links { display: flex; gap: 4px; margin-left: auto; }
-        .btn-nav { font-size: 0.83rem; font-weight: 500; border-radius: 7px; padding: 7px 16px; }
+        .nav-brand-name { font-weight: 800; font-size: 0.95rem; color: #0f172a; letter-spacing: -.3px; }
+        .nav-links { display: flex; gap: 8px; margin-left: auto; }
+        .btn-nav { font-size: 0.82rem; font-weight: 600; border-radius: 8px; padding: 8px 18px; }
 
         /* HERO */
         .hero {
-            background: linear-gradient(135deg, #0d1b2e 0%, #1e3a5f 100%);
-            padding: 80px 32px 90px;
+            background: linear-gradient(135deg, #0d1b2e 0%, #1a3354 60%, #0f2d52 100%);
+            padding: 90px 40px 100px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(37,99,235,.25) 0%, transparent 70%);
         }
         .hero-badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: rgba(96,165,250,0.15);
-            border: 1px solid rgba(96,165,250,0.3);
-            color: #93c5fd;
-            font-size: 0.75rem; font-weight: 600;
-            padding: 5px 14px; border-radius: 20px;
-            margin-bottom: 24px;
+            display: inline-flex; align-items: center; gap: 7px;
+            background: rgba(96,165,250,0.12);
+            border: 1px solid rgba(96,165,250,0.28);
+            color: #93c5fd; font-size: 0.73rem; font-weight: 700;
+            padding: 6px 16px; border-radius: 20px; margin-bottom: 28px;
+            letter-spacing: .04em; text-transform: uppercase;
         }
         .hero h1 {
-            font-size: clamp(2rem, 5vw, 3rem);
-            font-weight: 800;
-            color: #fff;
-            line-height: 1.15;
-            letter-spacing: -0.8px;
-            max-width: 700px;
-            margin: 0 auto 16px;
+            font-size: clamp(2.1rem, 5vw, 3.2rem); font-weight: 800;
+            color: #fff; line-height: 1.12; letter-spacing: -1px;
+            max-width: 720px; margin: 0 auto 20px;
         }
-        .hero h1 span { color: #60a5fa; }
-        .hero p {
-            color: rgba(255,255,255,0.6);
-            font-size: 1rem;
-            max-width: 520px;
-            margin: 0 auto 36px;
-            line-height: 1.6;
+        .hero h1 .accent { color: #60a5fa; }
+        .hero-sub {
+            color: rgba(255,255,255,0.55); font-size: 1rem;
+            max-width: 540px; margin: 0 auto 40px; line-height: 1.65;
         }
+        .hero-author {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px; padding: 8px 18px;
+            color: rgba(255,255,255,0.6); font-size: 0.78rem;
+            margin-bottom: 36px;
+        }
+        .hero-author strong { color: rgba(255,255,255,0.9); }
         .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
         .btn-hero-primary {
-            background: #2563eb; color: #fff; border: none;
-            border-radius: 9px; padding: 13px 28px;
-            font-size: 0.9rem; font-weight: 600;
+            background: #2563eb; color: #fff; border: none; border-radius: 10px;
+            padding: 14px 30px; font-size: 0.9rem; font-weight: 700;
             text-decoration: none; transition: background .15s;
-            display: inline-flex; align-items: center; gap: 7px;
+            display: inline-flex; align-items: center; gap: 8px;
         }
         .btn-hero-primary:hover { background: #1d4ed8; color: #fff; }
         .btn-hero-secondary {
-            background: rgba(255,255,255,0.1); color: #fff;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 9px; padding: 13px 28px;
-            font-size: 0.9rem; font-weight: 500;
+            background: rgba(255,255,255,0.08); color: #fff;
+            border: 1px solid rgba(255,255,255,0.18); border-radius: 10px;
+            padding: 14px 30px; font-size: 0.9rem; font-weight: 500;
             text-decoration: none; transition: background .15s;
-            display: inline-flex; align-items: center; gap: 7px;
+            display: inline-flex; align-items: center; gap: 8px;
         }
-        .btn-hero-secondary:hover { background: rgba(255,255,255,0.17); color: #fff; }
+        .btn-hero-secondary:hover { background: rgba(255,255,255,0.15); color: #fff; }
 
-        /* STATS ROW */
-        .stats-row {
-            background: #fff;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 20px 32px;
-            display: flex; justify-content: center; gap: 0; flex-wrap: wrap;
-        }
-        .stat-item {
-            text-align: center;
-            padding: 8px 36px;
-            border-right: 1px solid #e2e8f0;
-        }
-        .stat-item:last-child { border-right: none; }
-        .stat-val { font-size: 1.5rem; font-weight: 800; color: #0f172a; }
-        .stat-lbl { font-size: 0.73rem; color: #64748b; margin-top: 2px; }
-
-        /* FEATURES */
-        .section { padding: 72px 32px; }
-        .section-title {
-            font-size: 0.72rem; font-weight: 700; color: #2563eb;
-            text-transform: uppercase; letter-spacing: 0.1em;
+        /* SECTION COMMON */
+        .section { padding: 80px 40px; }
+        .section-eyebrow {
+            font-size: 0.7rem; font-weight: 800; color: #2563eb;
+            text-transform: uppercase; letter-spacing: .12em;
             margin-bottom: 10px; text-align: center;
         }
         .section-h2 {
-            font-size: 1.8rem; font-weight: 800; color: #0f172a;
-            text-align: center; letter-spacing: -0.5px; margin-bottom: 8px;
+            font-size: 1.85rem; font-weight: 800; color: #0f172a;
+            text-align: center; letter-spacing: -.5px; margin-bottom: 10px;
         }
-        .section-sub { text-align: center; color: #64748b; font-size: 0.9rem; margin-bottom: 48px; }
+        .section-sub { text-align: center; color: #64748b; font-size: 0.9rem; margin-bottom: 56px; line-height: 1.6; }
 
-        .feat-card {
+        /* ICE MODULE CARDS */
+        .ice-card {
             background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 24px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 28px 26px;
             height: 100%;
-            transition: box-shadow .2s, transform .2s;
+            transition: box-shadow .2s, transform .2s, border-color .2s;
+            position: relative;
         }
-        .feat-card:hover {
-            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-            transform: translateY(-2px);
+        .ice-card:hover {
+            box-shadow: 0 12px 32px rgba(0,0,0,.09);
+            transform: translateY(-3px);
+            border-color: #bfdbfe;
         }
-        .feat-icon {
-            width: 46px; height: 46px;
-            border-radius: 11px;
+        .ice-card.free-card { border-color: #bbf7d0; }
+        .ice-card.free-card:hover { border-color: #4ade80; }
+        .ice-card-badge {
+            position: absolute; top: 18px; right: 18px;
+            font-size: 0.65rem; font-weight: 800; border-radius: 6px;
+            padding: 3px 9px; text-transform: uppercase; letter-spacing: .04em;
+        }
+        .badge-free { background: #dcfce7; color: #15803d; }
+        .badge-price { background: #eff6ff; color: #1d4ed8; }
+        .ice-icon {
+            width: 50px; height: 50px; border-radius: 13px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; margin-bottom: 14px;
+            font-size: 1.3rem; margin-bottom: 18px;
         }
-        .feat-card h3 { font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
-        .feat-card p { font-size: 0.81rem; color: #64748b; line-height: 1.55; margin: 0; }
+        .ice-card h3 { font-size: 1rem; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+        .ice-card p { font-size: 0.82rem; color: #64748b; line-height: 1.6; margin: 0 0 16px; }
+        .ice-card .card-price {
+            font-size: 0.78rem; font-weight: 700; color: #475569;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .ice-card .card-price .amount { font-size: 1.25rem; color: #0f172a; }
+        .ice-card .card-price .free-amount { font-size: 1.1rem; color: #16a34a; }
 
-        /* PRICING TEASER */
-        .pricing-section { background: #0d1b2e; padding: 72px 32px; }
-        .pricing-section .section-h2 { color: #fff; }
-        .pricing-section .section-sub { color: rgba(255,255,255,0.5); }
-        .price-card {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 14px; padding: 28px;
-            text-align: center; height: 100%;
-            transition: background .2s;
+        .legal-tag {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 6px; padding: 3px 9px;
+            font-size: 0.7rem; color: #64748b; margin: 2px;
         }
-        .price-card:hover { background: rgba(255,255,255,0.1); }
-        .price-card.featured {
-            background: #2563eb;
-            border-color: #2563eb;
+
+        /* LEGAL SECTION */
+        .legal-section { background: #0d1b2e; padding: 72px 40px; }
+        .legal-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 22px;
+            height: 100%; transition: background .2s;
         }
-        .price-card .price-name { color: rgba(255,255,255,0.7); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; }
-        .price-card.featured .price-name { color: rgba(255,255,255,0.9); }
-        .price-card .price-val { font-size: 2rem; font-weight: 800; color: #fff; margin: 8px 0 2px; }
-        .price-card .price-period { font-size: 0.73rem; color: rgba(255,255,255,0.45); margin-bottom: 16px; }
-        .price-card ul { list-style: none; padding: 0; margin: 0 0 20px; text-align: left; }
-        .price-card ul li { font-size: 0.8rem; color: rgba(255,255,255,0.7); padding: 5px 0; display: flex; align-items: center; gap: 8px; }
-        .price-card ul li i { color: #60a5fa; flex-shrink: 0; }
-        .price-card.featured ul li i { color: #bfdbfe; }
+        .legal-card:hover { background: rgba(255,255,255,0.09); }
+        .legal-card .legal-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; margin-bottom: 14px;
+        }
+        .legal-card h4 { font-size: 0.88rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
+        .legal-card p { font-size: 0.78rem; color: rgba(255,255,255,0.5); margin: 0; line-height: 1.55; }
+
+        /* PRICING */
+        .pricing-section { background: #f8fafc; padding: 80px 40px; border-top: 1px solid #e2e8f0; }
+        .price-row-card {
+            background: #fff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px; padding: 20px 24px;
+            display: flex; align-items: center; gap: 18px;
+            transition: box-shadow .15s;
+        }
+        .price-row-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.07); }
+        .price-row-card.free-row { border-color: #bbf7d0; background: #f0fdf4; }
+        .price-row-icon {
+            width: 44px; height: 44px; border-radius: 11px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+        }
+        .price-row-info { flex: 1; }
+        .price-row-info h5 { font-size: 0.9rem; font-weight: 700; color: #0f172a; margin: 0 0 3px; }
+        .price-row-info p { font-size: 0.77rem; color: #64748b; margin: 0; }
+        .price-row-amount { font-size: 1.1rem; font-weight: 800; color: #0f172a; flex-shrink: 0; }
+        .price-row-amount small { font-size: 0.65rem; font-weight: 500; color: #94a3b8; display: block; text-align: right; }
+
+        /* AUTHOR */
+        .author-section { background: #fff; padding: 64px 40px; border-top: 1px solid #e2e8f0; }
+        .author-card {
+            max-width: 680px; margin: 0 auto; text-align: center;
+        }
+        .author-avatar {
+            width: 72px; height: 72px; background: linear-gradient(135deg,#1e3a5f,#2563eb);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 1.6rem; font-weight: 800; margin: 0 auto 20px;
+        }
+        .author-card h3 { font-size: 1.25rem; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
+        .author-card .author-title { font-size: 0.83rem; color: #2563eb; font-weight: 600; margin-bottom: 16px; }
+        .author-card p { font-size: 0.88rem; color: #64748b; line-height: 1.7; margin-bottom: 20px; }
 
         /* CTA */
-        .cta-section { padding: 72px 32px; text-align: center; background: #fff; border-top: 1px solid #e2e8f0; }
+        .cta-section {
+            background: linear-gradient(135deg, #1e3a5f, #0d1b2e);
+            padding: 72px 40px; text-align: center;
+        }
+        .cta-section h2 { font-size: 1.9rem; font-weight: 800; color: #fff; letter-spacing: -.5px; margin-bottom: 12px; }
+        .cta-section p { color: rgba(255,255,255,.5); font-size: .9rem; margin-bottom: 32px; }
 
         /* FOOTER */
-        footer { background: #0f172a; color: rgba(255,255,255,0.4); text-align: center; padding: 24px 32px; font-size: 0.78rem; }
-        footer a { color: rgba(255,255,255,0.5); text-decoration: none; }
+        footer {
+            background: #0a1628; color: rgba(255,255,255,0.35);
+            text-align: center; padding: 28px 40px; font-size: 0.78rem;
+        }
+        footer a { color: rgba(255,255,255,0.45); text-decoration: none; }
         footer a:hover { color: #fff; }
+        .footer-credit { margin-top: 8px; font-size: 0.73rem; color: rgba(255,255,255,.22); }
 
-        @media (max-width: 575px) {
-            .stat-item { border-right: none; border-bottom: 1px solid #e2e8f0; padding: 10px 20px; }
-            .stat-item:last-child { border-bottom: none; }
+        @media (max-width: 767px) {
+            .hero { padding: 60px 20px 70px; }
+            .section { padding: 56px 20px; }
+            .top-nav { padding: 0 20px; }
         }
     </style>
 </head>
 <body>
 
-<!-- NAV -->
+<!-- ══ NAV ══════════════════════════════════════════════════════════════════ -->
 <nav class="top-nav">
     <a class="nav-brand" href="{{ url_for('bienvenido') }}">
         <div class="nav-brand-icon"><i class="bi bi-calculator-fill"></i></div>
         <div class="nav-brand-name">Gestor SRI + ICE</div>
     </a>
     <div class="nav-links">
+        <a href="#modulos" class="btn btn-nav btn-outline-secondary d-none d-md-inline-flex">Ver módulos</a>
         <a href="{{ url_for('auth.login') }}" class="btn btn-nav btn-outline-secondary">Iniciar sesión</a>
         <a href="{{ url_for('auth.register') }}" class="btn btn-nav btn-primary ms-1">Registrarse</a>
     </div>
 </nav>
 
-<!-- HERO -->
+<!-- ══ HERO ══════════════════════════════════════════════════════════════════ -->
 <section class="hero">
-    <div class="hero-badge"><i class="bi bi-patch-check-fill"></i>Sistema oficial para Ecuador</div>
-    <h1>Gestión tributaria<br><span>SRI + ICE</span> sin fricciones</h1>
-    <p>Calcula el ICE, genera anexos XML, procesa facturas y descarga del SRI — todo en un solo sistema diseñado para contadores y empresas ecuatorianas.</p>
-    <div class="hero-actions">
+    <div style="position:relative;z-index:1">
+        <div class="hero-badge"><i class="bi bi-patch-check-fill"></i>Sistema oficial para Ecuador · ICE + SRI</div>
+
+        <h1>Gestión tributaria<br><span class="accent">ICE y SRI</span><br>con precisión legal</h1>
+
+        <p class="hero-sub">
+            Calcula el Impuesto a los Consumos Especiales, genera tus anexos XML,
+            procesa facturas de ingreso y consulta toda la reglamentación vigente —
+            todo en un solo sistema diseñado para Ecuador.
+        </p>
+
+        <div class="hero-author">
+            <i class="bi bi-person-circle"></i>
+            Desarrollado por <strong>Marco Antonio Posligua San Martín</strong> · CMAJ Asociados SAS
+        </div>
+
+        <div class="hero-actions">
+            <a href="{{ url_for('auth.register') }}" class="btn-hero-primary">
+                <i class="bi bi-person-plus"></i>Crear cuenta gratis
+            </a>
+            <a href="#modulos" class="btn-hero-secondary">
+                <i class="bi bi-grid"></i>Ver módulos
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ══ MÓDULOS ICE ════════════════════════════════════════════════════════════ -->
+<section class="section" id="modulos" style="background:#fff">
+    <div style="max-width:1120px;margin:0 auto">
+        <div class="section-eyebrow">Impuesto a los Consumos Especiales</div>
+        <h2 class="section-h2">Módulos ICE</h2>
+        <p class="section-sub">
+            Cinco módulos independientes, ordenados por nivel de complejidad.<br>
+            Contrata únicamente lo que necesitas — sin planes forzados.
+        </p>
+
+        <div class="row g-4">
+
+            <!-- 1. Tarifas -->
+            <div class="col-md-6 col-lg-4">
+                <div class="ice-card free-card">
+                    <span class="ice-card-badge badge-free">Gratuito</span>
+                    <div class="ice-icon" style="background:#f0fdf4;color:#16a34a">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <h3>Tarifas ICE 2021–2026</h3>
+                    <p>
+                        Consulta completa de tarifas y reglamentación ICE vigente desde 2021 hasta 2026.
+                        Incluye artículos de la LRTI, Reglamento, NAC y Resoluciones del SRI con tarifas
+                        y fórmulas de cálculo por período.
+                    </p>
+                    <div class="mb-3">
+                        <span class="legal-tag"><i class="bi bi-journal-text"></i>LRTI</span>
+                        <span class="legal-tag"><i class="bi bi-journal-text"></i>Reglamento</span>
+                        <span class="legal-tag"><i class="bi bi-journal-text"></i>NAC</span>
+                        <span class="legal-tag"><i class="bi bi-journal-text"></i>Resoluciones SRI</span>
+                    </div>
+                    <div class="card-price">
+                        <span class="free-amount">$0.00</span>
+                        <span style="color:#16a34a;font-size:.75rem">· Acceso libre</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. ICE Simple -->
+            <div class="col-md-6 col-lg-4">
+                <div class="ice-card">
+                    <span class="ice-card-badge badge-price">$10 + IVA / mes</span>
+                    <div class="ice-icon" style="background:#eff6ff;color:#2563eb">
+                        <i class="bi bi-calculator"></i>
+                    </div>
+                    <h3>Cálculo ICE Simple</h3>
+                    <p>
+                        Calcula el ICE de un producto individual ingresando grado alcohólico, capacidad
+                        y cantidad. Genera un reporte en Excel con las fórmulas de cálculo y la base
+                        legal correspondiente para sustentar tu declaración mensual.
+                    </p>
+                    <div class="mb-3">
+                        <span class="legal-tag"><i class="bi bi-file-earmark-excel"></i>Reporte Excel</span>
+                        <span class="legal-tag"><i class="bi bi-check-circle"></i>Base legal incluida</span>
+                    </div>
+                    <div class="card-price">
+                        <span class="amount">$10.00</span>
+                        <span>+ IVA / mes</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. ICE Múltiple -->
+            <div class="col-md-6 col-lg-4">
+                <div class="ice-card">
+                    <span class="ice-card-badge badge-price">$15 + IVA / mes</span>
+                    <div class="ice-icon" style="background:#fffbeb;color:#d97706">
+                        <i class="bi bi-calculator-fill"></i>
+                    </div>
+                    <h3>ICE Múltiple + Mezcla</h3>
+                    <p>
+                        Calcula ICE para múltiples productos (licores, cerveza artesanal e industrial)
+                        en una sola sesión. Obtén ICE específico, ad-valorem, IVA y PVP por botella
+                        y por cantidad. Incluye costos, utilidad y precio ex fábrica. Los productos
+                        se guardan en la base de datos.
+                    </p>
+                    <div class="mb-3">
+                        <span class="legal-tag"><i class="bi bi-layers"></i>Multi-producto</span>
+                        <span class="legal-tag"><i class="bi bi-shuffle"></i>Mezcla total</span>
+                        <span class="legal-tag"><i class="bi bi-file-earmark-excel"></i>Excel resumen</span>
+                        <span class="legal-tag"><i class="bi bi-database"></i>Guardado en BD</span>
+                    </div>
+                    <div class="card-price">
+                        <span class="amount">$15.00</span>
+                        <span>+ IVA / mes</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Anexos ICE/PVP -->
+            <div class="col-md-6 col-lg-4">
+                <div class="ice-card">
+                    <span class="ice-card-badge badge-price">$10 + IVA / mes</span>
+                    <div class="ice-icon" style="background:#f0f9ff;color:#0284c7">
+                        <i class="bi bi-file-earmark-code"></i>
+                    </div>
+                    <h3>Anexos ICE / PVP</h3>
+                    <p>
+                        Genera y edita los Anexos ICE y PVP en formato XML oficial del SRI. Carga
+                        un XML existente o arrastra uno desde tu computador, edita cada campo,
+                        valida la estructura y descarga listo para subir. Convierte a ZIP cuando
+                        el SRI lo requiera.
+                    </p>
+                    <div class="mb-3">
+                        <span class="legal-tag"><i class="bi bi-code-slash"></i>XML oficial SRI</span>
+                        <span class="legal-tag"><i class="bi bi-pencil-square"></i>Editor visual</span>
+                        <span class="legal-tag"><i class="bi bi-check2-circle"></i>Validación</span>
+                        <span class="legal-tag"><i class="bi bi-file-zip"></i>Conversión ZIP</span>
+                    </div>
+                    <div class="card-price">
+                        <span class="amount">$10.00</span>
+                        <span>+ IVA / mes</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Procesamiento Facturas ICE -->
+            <div class="col-md-6 col-lg-4">
+                <div class="ice-card">
+                    <span class="ice-card-badge badge-price">$15 + IVA / mes</span>
+                    <div class="ice-icon" style="background:#fef2f2;color:#dc2626">
+                        <i class="bi bi-file-earmark-arrow-up"></i>
+                    </div>
+                    <h3>Procesamiento Facturas ICE</h3>
+                    <p>
+                        Arrastra o importa tus facturas de ingresos en XML para generar automáticamente
+                        el Anexo ICE o PVP. Los datos quedan grabados en la base de datos por usuario.
+                        El administrador puede acceder a los datos de cualquier usuario de forma
+                        individual, sin mezclas.
+                    </p>
+                    <div class="mb-3">
+                        <span class="legal-tag"><i class="bi bi-upload"></i>Drag &amp; drop XML</span>
+                        <span class="legal-tag"><i class="bi bi-database"></i>Por usuario</span>
+                        <span class="legal-tag"><i class="bi bi-shield-check"></i>Acceso admin</span>
+                    </div>
+                    <div class="card-price">
+                        <span class="amount">$15.00</span>
+                        <span>+ IVA / mes</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card "más módulos" -->
+            <div class="col-md-6 col-lg-4">
+                <div class="ice-card" style="background:#f8fafc;border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;min-height:320px">
+                    <div class="ice-icon" style="background:#e2e8f0;color:#94a3b8;margin-bottom:0">
+                        <i class="bi bi-grid-3x3-gap"></i>
+                    </div>
+                    <h3 style="color:#94a3b8">Más módulos próximamente</h3>
+                    <p style="color:#94a3b8;font-size:.8rem">
+                        Facturas, Retenciones, Conciliación Bancaria IA, Gestor SRI Pro y más
+                        herramientas estarán disponibles en breve.
+                    </p>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-sm btn-outline-secondary" style="font-size:.78rem">
+                        Registrarse para notificaciones
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ══ BASE LEGAL ═════════════════════════════════════════════════════════════ -->
+<section class="legal-section">
+    <div style="max-width:1000px;margin:0 auto">
+        <div class="section-eyebrow" style="color:#60a5fa">Reglamentación completa incluida</div>
+        <h2 class="section-h2" style="color:#fff">Sustento legal en cada cálculo</h2>
+        <p class="section-sub" style="color:rgba(255,255,255,.45)">
+            El módulo de Tarifas ICE incluye toda la normativa legal vigente sin costo adicional
+        </p>
+
+        <div class="row g-3">
+            <div class="col-sm-6 col-lg-3">
+                <div class="legal-card">
+                    <div class="legal-icon" style="background:rgba(96,165,250,.12);color:#60a5fa">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                    </div>
+                    <h4>Ley de Régimen Tributario Interno</h4>
+                    <p>Artículos aplicables al ICE para bebidas alcohólicas, cervezas y demás bienes gravados.</p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="legal-card">
+                    <div class="legal-icon" style="background:rgba(167,139,250,.12);color:#a78bfa">
+                        <i class="bi bi-book-fill"></i>
+                    </div>
+                    <h4>Reglamento LRTI</h4>
+                    <p>Disposiciones reglamentarias que desarrollan los artículos del ICE y determinan las bases imponibles.</p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="legal-card">
+                    <div class="legal-icon" style="background:rgba(52,211,153,.12);color:#34d399">
+                        <i class="bi bi-file-earmark-ruled-fill"></i>
+                    </div>
+                    <h4>NAC y Circulares SRI</h4>
+                    <p>Normativas de administración catastral y circulares interpretativas del Servicio de Rentas Internas.</p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="legal-card">
+                    <div class="legal-icon" style="background:rgba(251,191,36,.12);color:#fbbf24">
+                        <i class="bi bi-file-earmark-text-fill"></i>
+                    </div>
+                    <h4>Resoluciones SRI</h4>
+                    <p>Resoluciones que establecen tarifas específicas, ad-valorem y umbrales por período fiscal.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══ RESUMEN DE PRECIOS ═════════════════════════════════════════════════════ -->
+<section class="pricing-section" id="precios">
+    <div style="max-width:780px;margin:0 auto">
+        <div class="section-eyebrow">Precios transparentes</div>
+        <h2 class="section-h2">Solo pagas lo que usas</h2>
+        <p class="section-sub">Sin planes forzados ni costos ocultos. Todos los precios en USD sin IVA.</p>
+
+        <div class="d-flex flex-column gap-3">
+
+            <div class="price-row-card free-row">
+                <div class="price-row-icon" style="background:#dcfce7;color:#16a34a">
+                    <i class="bi bi-book"></i>
+                </div>
+                <div class="price-row-info">
+                    <h5>Tarifas ICE 2021–2026</h5>
+                    <p>Reglamentación completa: LRTI, Reglamento, NAC y Resoluciones</p>
+                </div>
+                <div class="price-row-amount" style="color:#16a34a">
+                    GRATIS
+                    <small>Siempre libre</small>
+                </div>
+            </div>
+
+            <div class="price-row-card">
+                <div class="price-row-icon" style="background:#eff6ff;color:#2563eb">
+                    <i class="bi bi-calculator"></i>
+                </div>
+                <div class="price-row-info">
+                    <h5>Cálculo ICE Simple</h5>
+                    <p>Cálculo individual + reporte Excel con fórmulas y base legal</p>
+                </div>
+                <div class="price-row-amount">
+                    $10.00
+                    <small>+ IVA / mes</small>
+                </div>
+            </div>
+
+            <div class="price-row-card">
+                <div class="price-row-icon" style="background:#fffbeb;color:#d97706">
+                    <i class="bi bi-calculator-fill"></i>
+                </div>
+                <div class="price-row-info">
+                    <h5>ICE Múltiple + Mezcla</h5>
+                    <p>Multi-producto, costos, utilidad, PVP y resumen Excel — datos guardados en BD</p>
+                </div>
+                <div class="price-row-amount">
+                    $15.00
+                    <small>+ IVA / mes</small>
+                </div>
+            </div>
+
+            <div class="price-row-card">
+                <div class="price-row-icon" style="background:#f0f9ff;color:#0284c7">
+                    <i class="bi bi-file-earmark-code"></i>
+                </div>
+                <div class="price-row-info">
+                    <h5>Anexos ICE / PVP</h5>
+                    <p>Editor XML, validación y conversión a ZIP para subir al SRI</p>
+                </div>
+                <div class="price-row-amount">
+                    $10.00
+                    <small>+ IVA / mes</small>
+                </div>
+            </div>
+
+            <div class="price-row-card">
+                <div class="price-row-icon" style="background:#fef2f2;color:#dc2626">
+                    <i class="bi bi-file-earmark-arrow-up"></i>
+                </div>
+                <div class="price-row-info">
+                    <h5>Procesamiento Facturas ICE</h5>
+                    <p>XMLs de ingresos → Anexo ICE/PVP automático con datos guardados por usuario</p>
+                </div>
+                <div class="price-row-amount">
+                    $15.00
+                    <small>+ IVA / mes</small>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="text-center mt-5">
+            <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-primary px-4 py-2" style="border-radius:9px;font-weight:700">
+                <i class="bi bi-grid me-2"></i>Ver todos los módulos y contratar
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ══ AUTOR ══════════════════════════════════════════════════════════════════ -->
+<section class="author-section">
+    <div class="author-card">
+        <div class="author-avatar">M</div>
+        <h3>Marco Antonio Posligua San Martín</h3>
+        <div class="author-title">Creador y desarrollador del sistema · CMAJ Asociados SAS</div>
+        <p>
+            Especialista en tributación ecuatoriana con amplia experiencia en el Impuesto a los
+            Consumos Especiales y en el sistema del SRI. Este sistema fue diseñado con el objetivo
+            de simplificar los procesos tributarios de empresas y contadores, garantizando precisión
+            legal y cumplimiento normativo en cada cálculo.
+        </p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="mailto:jomapconsultores@outlook.com" class="btn btn-sm btn-outline-primary" style="border-radius:8px">
+                <i class="bi bi-envelope me-1"></i>jomapconsultores@outlook.com
+            </a>
+            <a href="https://wa.me/593963511411" target="_blank" class="btn btn-sm btn-outline-success" style="border-radius:8px">
+                <i class="bi bi-whatsapp me-1"></i>WhatsApp
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ══ CTA ════════════════════════════════════════════════════════════════════ -->
+<section class="cta-section">
+    <h2>¿Listo para simplificar<br>tu gestión del ICE?</h2>
+    <p>Crea tu cuenta gratis y accede al módulo de Tarifas ICE 2021–2026 de inmediato.</p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
         <a href="{{ url_for('auth.register') }}" class="btn-hero-primary">
             <i class="bi bi-person-plus"></i>Crear cuenta gratis
         </a>
@@ -206,141 +606,15 @@
     </div>
 </section>
 
-<!-- STATS -->
-<div class="stats-row">
-    <div class="stat-item"><div class="stat-val">2021–2026</div><div class="stat-lbl">Tarifas ICE cubiertas</div></div>
-    <div class="stat-item"><div class="stat-val">10+</div><div class="stat-lbl">Módulos disponibles</div></div>
-    <div class="stat-item"><div class="stat-val">XML</div><div class="stat-lbl">Formato oficial SRI</div></div>
-    <div class="stat-item"><div class="stat-val">IA</div><div class="stat-lbl">Conciliación bancaria</div></div>
-</div>
-
-<!-- FEATURES -->
-<section class="section" style="background:#f8fafc">
-    <div class="section-title">Funcionalidades</div>
-    <h2 class="section-h2">Todo lo que necesitas para el SRI</h2>
-    <p class="section-sub">Módulos independientes — contrata solo lo que usas</p>
-
-    <div class="row g-3 justify-content-center" style="max-width:1100px;margin:0 auto">
-        <div class="col-sm-6 col-lg-4">
-            <div class="feat-card">
-                <div class="feat-icon" style="background:#eff6ff;color:#2563eb"><i class="bi bi-calculator-fill"></i></div>
-                <h3>Cálculo ICE Automático</h3>
-                <p>ICE específico y ad-valorem con tarifas actualizadas 2021–2026. Soporte para packs y mezclas de productos.</p>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-4">
-            <div class="feat-card">
-                <div class="feat-icon" style="background:#fef9c3;color:#ca8a04"><i class="bi bi-file-earmark-code"></i></div>
-                <h3>Anexos XML para el SRI</h3>
-                <p>Genera el Anexo PVP e ICE en formato XML oficial. Editor visual con carga de archivos existentes.</p>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-4">
-            <div class="feat-card">
-                <div class="feat-icon" style="background:#f0fdf4;color:#16a34a"><i class="bi bi-cloud-download"></i></div>
-                <h3>Descarga Masiva SRI</h3>
-                <p>Descarga XMLs del SRI usando claves de acceso. Hasta 10 descargas en paralelo con clasificación automática.</p>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-4">
-            <div class="feat-card">
-                <div class="feat-icon" style="background:#fef2f2;color:#dc2626"><i class="bi bi-receipt"></i></div>
-                <h3>Facturas Ilimitadas</h3>
-                <p>Procesa facturas de gastos e ingresos en XML. Clasificación automática con catálogo personalizable.</p>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-4">
-            <div class="feat-card">
-                <div class="feat-icon" style="background:#f0f9ff;color:#0284c7"><i class="bi bi-bank"></i></div>
-                <h3>Conciliación Bancaria IA</h3>
-                <p>Sube estados de cuenta PDF y extrae transacciones automáticamente con Mistral AI. Exporta para Odoo.</p>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-4">
-            <div class="feat-card">
-                <div class="feat-icon" style="background:#faf5ff;color:#7c3aed"><i class="bi bi-file-earmark-excel"></i></div>
-                <h3>Exportación Excel</h3>
-                <p>Reportes completos con fórmulas, resúmenes por agente, totales y formato profesional listo para presentar.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- PRICING TEASER -->
-<section class="pricing-section">
-    <div class="section-title" style="color:#60a5fa">Precios</div>
-    <h2 class="section-h2">Módulos desde <span style="color:#60a5fa">$5 / mes</span></h2>
-    <p class="section-sub">Sin planes fijos — elige exactamente los módulos que necesitas</p>
-
-    <div class="row g-3 justify-content-center" style="max-width:900px;margin:0 auto">
-        <div class="col-md-4">
-            <div class="price-card">
-                <div class="price-name">ICE Simple</div>
-                <div class="price-val">$5</div>
-                <div class="price-period">por mes</div>
-                <ul>
-                    <li><i class="bi bi-check2"></i>Cálculo individual ICE</li>
-                    <li><i class="bi bi-check2"></i>Tarifas 2021–2026</li>
-                    <li><i class="bi bi-check2"></i>Vista de tarifas</li>
-                </ul>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="price-card featured">
-                <div class="price-name">Facturas</div>
-                <div class="price-val">$10</div>
-                <div class="price-period">por mes</div>
-                <ul>
-                    <li><i class="bi bi-check2"></i>Facturas ilimitadas</li>
-                    <li><i class="bi bi-check2"></i>Gastos e ingresos</li>
-                    <li><i class="bi bi-check2"></i>Catálogo incluido</li>
-                </ul>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="price-card">
-                <div class="price-name">Herramientas Pro</div>
-                <div class="price-val">$15–20</div>
-                <div class="price-period">por módulo / mes</div>
-                <ul>
-                    <li><i class="bi bi-check2"></i>Auditoría ICE completa</li>
-                    <li><i class="bi bi-check2"></i>Conciliación bancaria IA</li>
-                    <li><i class="bi bi-check2"></i>Retenciones XML</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <div class="text-center mt-4">
-        <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-nav btn-primary" style="padding:11px 28px;font-size:.88rem;border-radius:9px">
-            Ver todos los módulos y precios →
-        </a>
-    </div>
-</section>
-
-<!-- CTA -->
-<section class="cta-section">
-    <h2 style="font-size:1.7rem;font-weight:800;color:#0f172a;letter-spacing:-.5px;margin-bottom:10px">
-        ¿Listo para simplificar tu contabilidad?
-    </h2>
-    <p style="color:#64748b;font-size:.9rem;margin-bottom:28px">
-        Crea tu cuenta gratis y comienza a usar el sistema en minutos.
-    </p>
-    <div class="d-flex gap-3 justify-content-center flex-wrap">
-        <a href="{{ url_for('auth.register') }}" class="btn btn-primary" style="padding:12px 28px;font-size:.9rem;border-radius:9px;font-weight:600">
-            <i class="bi bi-person-plus me-1"></i>Crear cuenta gratis
-        </a>
-        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary" style="padding:12px 28px;font-size:.9rem;border-radius:9px">
-            Iniciar sesión
-        </a>
-    </div>
-</section>
-
-<!-- FOOTER -->
+<!-- ══ FOOTER ══════════════════════════════════════════════════════════════════ -->
 <footer>
-    <div>© 2026 CMAJ Asociados SAS ·
+    <div>
+        © 2026 CMAJ Asociados SAS ·
         <a href="mailto:jomapconsultores@outlook.com">jomapconsultores@outlook.com</a> ·
         <a href="https://wa.me/593963511411">WhatsApp</a>
+    </div>
+    <div class="footer-credit">
+        Desarrollado por Marco Antonio Posligua San Martín · RUC 0195146942001
     </div>
 </footer>
 
