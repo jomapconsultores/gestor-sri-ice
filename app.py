@@ -22,6 +22,24 @@ RUTAS_LIBRES = {
     '/security/solicitar_ip', '/static',
 }
 
+def _crear_admin_inicial():
+    from models.user import Usuario
+    email = 'jomapconsultores@outlook.com'
+    if not Usuario.query.filter_by(email=email).first():
+        admin = Usuario(
+            email=email,
+            nombre='Admin CMAJ',
+            empresa='CMAJ ASOCIADOS SAS',
+            ruc='0195146942001',
+            is_admin=True,
+            activo=True,
+        )
+        admin.set_password('Admin2024!')
+        db.session.add(admin)
+        db.session.commit()
+        print(f'[INIT] Admin creado: {email}')
+
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -81,6 +99,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        _crear_admin_inicial()
 
     # ── Middleware de validación de IP ────────────────────────────────────────
     @app.before_request
