@@ -1,40 +1,943 @@
 {% extends "base.html" %}
+{% block title %}Guía ICE – Bebidas Alcohólicas 2021–2026{% endblock %}
+{% block topbar_title %}Tarifas ICE 2021–2026{% endblock %}
 
-{% block title %}Tabla de Tarifas ICE{% endblock %}
+{% block head %}
+<style>
+.guia-hero {
+    background: linear-gradient(135deg, #0d1b2e 0%, #1a3354 100%);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+}
+.guia-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 80% 50%, rgba(37,99,235,.2) 0%, transparent 65%);
+}
+.guia-nav .nav-link {
+    font-size: .8rem; font-weight: 600; border-radius: 8px;
+    color: #475569; padding: 6px 14px;
+}
+.guia-nav .nav-link.active { background: #0d1b2e; color: #fff; }
+.guia-nav .nav-link:hover:not(.active) { background: #f1f5f9; color: #0f172a; }
+
+.art-card {
+    border: 1.5px solid #e2e8f0; border-radius: 10px;
+    padding: 16px 18px; background: #fff;
+    transition: box-shadow .15s;
+}
+.art-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.06); }
+.art-ref {
+    font-size: .65rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .08em; color: #2563eb; margin-bottom: 6px;
+}
+.art-title { font-size: .88rem; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+.art-body { font-size: .78rem; color: #475569; line-height: 1.6; }
+
+.tarifa-table th { font-size: .72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; color: #fff; background: #0d1b2e; }
+.tarifa-table td { font-size: .82rem; vertical-align: middle; }
+.tarifa-table .year-cell { font-weight: 800; font-size: .9rem; }
+.tarifa-table tr.vigente { background: #f0fdf4 !important; }
+.tarifa-table tr.vigente td { font-weight: 700; }
+
+.formula-box {
+    background: #f8fafc; border: 1.5px solid #e2e8f0;
+    border-radius: 10px; padding: 16px 20px;
+    font-family: 'Courier New', monospace; font-size: .82rem;
+}
+.formula-box .f-label {
+    font-family: 'Inter', sans-serif; font-size: .65rem;
+    font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
+    color: #2563eb; margin-bottom: 8px;
+}
+.formula-box .f-eq { color: #0f172a; font-weight: 700; font-size: .9rem; }
+.formula-box .f-note { font-family: 'Inter', sans-serif; font-size: .72rem;
+    color: #64748b; margin-top: 8px; }
+
+.nac-card {
+    border: 1.5px solid #e2e8f0; border-radius: 10px; overflow: hidden;
+}
+.nac-header {
+    background: #0d1b2e; color: #fff; padding: 12px 16px;
+    font-size: .8rem; font-weight: 700;
+}
+.nac-body { padding: 14px 16px; font-size: .78rem; color: #475569; line-height: 1.65; }
+.nac-art { background: #f8fafc; border-left: 3px solid #2563eb;
+    padding: 8px 12px; border-radius: 0 6px 6px 0; margin: 8px 0; font-size: .77rem; }
+.badge-nac { background: #eff6ff; color: #1d4ed8; font-size: .62rem;
+    font-weight: 700; border-radius: 5px; padding: 2px 8px; }
+
+.section-divider {
+    display: flex; align-items: center; gap: 10px;
+    color: #94a3b8; font-size: .65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .08em; margin: 20px 0 12px;
+}
+.section-divider::before, .section-divider::after {
+    content: ''; flex: 1; height: 1px; background: #e2e8f0;
+}
+
+.ejemplo-box {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border: 1.5px solid #bae6fd; border-radius: 10px; padding: 16px 18px;
+}
+.ejemplo-row { display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 0; font-size: .8rem; }
+.ejemplo-row.total { border-top: 1.5px solid #bae6fd; margin-top: 6px;
+    padding-top: 8px; font-weight: 700; font-size: .88rem; }
+</style>
+{% endblock %}
 
 {% block content %}
-<h2 class="mb-4"><i class="bi bi-table"></i> Tabla de Tarifas Tributarias 2021-2026</h2>
 
-<div class="alert alert-info">
-    <i class="bi bi-info-circle"></i> Fuente: Resoluciones NAC-DGERCGC y Decretos Ejecutivos del SRI Ecuador
+{# ── Hero ──────────────────────────────────────────────────────────────────── #}
+<div class="guia-hero">
+    <div style="position:relative;z-index:1">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+            <span style="background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.3);color:#93c5fd;font-size:.65rem;font-weight:800;padding:4px 12px;border-radius:20px;letter-spacing:.08em;text-transform:uppercase">
+                Módulo Gratuito
+            </span>
+            <span style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:#4ade80;font-size:.65rem;font-weight:800;padding:4px 12px;border-radius:20px;letter-spacing:.08em;text-transform:uppercase">
+                Acceso Libre
+            </span>
+        </div>
+        <h1 style="color:#fff;font-size:1.5rem;font-weight:800;margin:0 0 8px;letter-spacing:-.4px">
+            <i class="bi bi-book me-2" style="color:#60a5fa"></i>
+            Guía ICE – Bebidas Alcohólicas
+        </h1>
+        <p style="color:rgba(255,255,255,.55);font-size:.85rem;margin:0 0 16px;max-width:620px;line-height:1.6">
+            Referencia legal completa del Impuesto a los Consumos Especiales para bebidas alcohólicas, licores y cervezas.
+            Tarifas 2021–2026, base legal, fórmulas, rebajas y normativa NAC vigente.
+        </p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <a href="{{ url_for('ice.calculadora') }}" class="btn btn-sm btn-primary" style="border-radius:8px">
+                <i class="bi bi-calculator me-1"></i>Calcular ICE Simple
+            </a>
+            <a href="{{ url_for('ice.multiple') }}" class="btn btn-sm" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px">
+                <i class="bi bi-calculator-fill me-1"></i>ICE Múltiple
+            </a>
+        </div>
+    </div>
 </div>
 
-<div class="row">
-    {% for anio, info in tax_db.items() %}
-    <div class="col-md-6 col-lg-4 mb-4">
-        <div class="card shadow h-100">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">{{ anio }}</h5>
+{# ── Navegación de pestañas ────────────────────────────────────────────────── #}
+<ul class="nav guia-nav gap-1 mb-4 flex-wrap" id="guiaTabs" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tGeneralidades">Generalidades</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tBaseLegal">Base Legal</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tTarifas">Tarifas 2021–2026</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tFormulas">Fórmulas</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tRebajas">Rebajas y Exenciones</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tNAC">NAC 2026</button></li>
+</ul>
+
+<div class="tab-content">
+
+{# ════════════════════════════════════════════════════════════════════════════
+   TAB 1 — GENERALIDADES
+════════════════════════════════════════════════════════════════════════════ #}
+<div class="tab-pane fade show active" id="tGeneralidades">
+    <div class="row g-4">
+
+        <div class="col-lg-6">
+            <div class="art-card h-100">
+                <div class="art-ref"><i class="bi bi-info-circle me-1"></i>Definición</div>
+                <div class="art-title">¿Qué es el ICE?</div>
+                <div class="art-body">
+                    El <strong>Impuesto a los Consumos Especiales (ICE)</strong> es un impuesto
+                    <strong>monofásico</strong> e <strong>indirecto</strong>. Se calcula
+                    <strong>una sola vez</strong> en toda la cadena de distribución y se
+                    encuentra incluido en el Precio de Venta al Público (PVP).
+                    <br><br>
+                    Al ser monofásico, no importa cuántas veces se transfiera el bien: el impuesto
+                    se aplica únicamente en la primera etapa (producción o importación).
+                </div>
             </div>
-            <div class="card-body">
-                <table class="table table-sm">
-                    <tr><td>Especifica</td><td class="text-end fw-bold">{{ info.esp }}</td></tr>
-                    <tr><td>Artesanal</td><td class="text-end">{{ info.art }}</td></tr>
-                    <tr><td>Industrial</td><td class="text-end">
-                        {% if info.ind is mapping %}
-                            {% for r, v in info.ind.items() %}{{ v }}<br>{% endfor %}
-                        {% else %}{{ info.ind }}{% endif %}
-                    </td></tr>
-                    <tr><td>Umbral AdV</td><td class="text-end">${{ info.umb }}</td></tr>
-                    <tr><td>IVA</td><td class="text-end">{{ info.iva if info.iva == 'MIXTO' else (info.iva * 100)|int|string + '%' }}</td></tr>
-                </table>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="art-card h-100">
+                <div class="art-ref"><i class="bi bi-arrow-left-right me-1"></i>Clasificación</div>
+                <div class="art-title">Tipo de impuesto</div>
+                <div class="art-body">
+                    <div class="row g-2 mt-1">
+                        <div class="col-6">
+                            <div class="rounded p-2 text-center" style="background:#fef2f2;border:1px solid #fecaca">
+                                <div style="font-weight:700;color:#dc2626;font-size:.82rem">Impuestos Directos</div>
+                                <div style="font-size:.72rem;color:#64748b;margin-top:4px">Se aplican a las personas (Renta, IR)</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="rounded p-2 text-center" style="background:#f0fdf4;border:1px solid #bbf7d0">
+                                <div style="font-weight:700;color:#16a34a;font-size:.82rem">Impuestos Indirectos</div>
+                                <div style="font-size:.72rem;color:#64748b;margin-top:4px">Se aplican a bienes y servicios (IVA, <strong>ICE</strong>)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="art-card h-100">
+                <div class="art-ref"><i class="bi bi-shop me-1"></i>Cadena de comercialización</div>
+                <div class="art-title">¿Dónde se aplica?</div>
+                <div class="art-body">
+                    <div class="d-flex align-items-center gap-2 mt-1" style="font-size:.8rem">
+                        <div class="text-center rounded p-2" style="background:#eff6ff;border:1px solid #bfdbfe;flex:1">
+                            <i class="bi bi-factory" style="color:#2563eb;font-size:1.1rem"></i>
+                            <div class="fw-bold" style="color:#1d4ed8">Productor</div>
+                            <div class="text-success fw-bold" style="font-size:.68rem">ICE aquí ✓</div>
+                        </div>
+                        <i class="bi bi-arrow-right" style="color:#94a3b8"></i>
+                        <div class="text-center rounded p-2" style="background:#f8fafc;border:1px solid #e2e8f0;flex:1">
+                            <i class="bi bi-truck" style="color:#94a3b8;font-size:1.1rem"></i>
+                            <div class="fw-bold" style="color:#94a3b8">Distribuidor</div>
+                            <div style="font-size:.68rem;color:#94a3b8">Ya incluido</div>
+                        </div>
+                        <i class="bi bi-arrow-right" style="color:#94a3b8"></i>
+                        <div class="text-center rounded p-2" style="background:#f8fafc;border:1px solid #e2e8f0;flex:1">
+                            <i class="bi bi-person" style="color:#94a3b8;font-size:1.1rem"></i>
+                            <div class="fw-bold" style="color:#94a3b8">Consumidor</div>
+                            <div style="font-size:.68rem;color:#94a3b8">Paga PVP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="art-card h-100">
+                <div class="art-ref"><i class="bi bi-people me-1"></i>Art. 79–80 LRTI</div>
+                <div class="art-title">Sujetos del ICE</div>
+                <div class="art-body">
+                    <div class="mb-2">
+                        <div class="fw-bold" style="color:#0284c7">Sujeto Activo — El Estado</div>
+                        <div style="font-size:.75rem">Administrado por el <strong>SRI</strong></div>
+                    </div>
+                    <div>
+                        <div class="fw-bold" style="color:#dc2626">Sujetos Pasivos</div>
+                        <ul style="font-size:.75rem;margin:4px 0 0;padding-left:16px">
+                            <li>Fabricantes nacionales</li>
+                            <li>Importadores</li>
+                            <li>Prestadores de servicios gravados</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="art-card h-100">
+                <div class="art-ref"><i class="bi bi-layers me-1"></i>Art. 75 LRTI</div>
+                <div class="art-title">Tipos de imposición ICE</div>
+                <div class="art-body">
+                    <div class="d-flex flex-column gap-2 mt-1">
+                        <div class="rounded p-2" style="background:#eff6ff;border:1px solid #bfdbfe;font-size:.77rem">
+                            <div class="fw-bold" style="color:#1d4ed8">Tarifa Específica</div>
+                            <div>Monto fijo por unidad de medida ($/litro de alcohol puro)</div>
+                        </div>
+                        <div class="rounded p-2" style="background:#fffbeb;border:1px solid #fde68a;font-size:.77rem">
+                            <div class="fw-bold" style="color:#d97706">Tarifa Ad Valorem</div>
+                            <div>Porcentaje sobre el excedente del precio por litro</div>
+                        </div>
+                        <div class="rounded p-2" style="background:#faf5ff;border:1px solid #e9d5ff;font-size:.77rem">
+                            <div class="fw-bold" style="color:#7c3aed">Imposición Mixta</div>
+                            <div>Específica + Ad Valorem simultáneamente (bebidas alcohólicas)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="art-card">
+                <div class="art-ref"><i class="bi bi-exclamation-circle me-1"></i>Art. 76 LRTI — Regla importante</div>
+                <div class="art-title">Los descuentos NO reducen la base del ICE</div>
+                <div class="art-body">
+                    <div class="rounded p-3" style="background:#fef2f2;border:1px solid #fecaca;font-size:.82rem">
+                        <i class="bi bi-quote me-1" style="color:#dc2626"></i>
+                        <em>"La base imponible del ICE <strong>no considerará ningún descuento</strong> aplicado al valor de la transferencia
+                        del bien o en la prestación del servicio. La base imponible del ICE no incluye el impuesto al valor agregado
+                        y será pagado en una sola etapa."</em>
+                        <div style="font-size:.7rem;color:#64748b;margin-top:6px">— Art. 76 LRTI</div>
+                    </div>
+                    <div class="mt-3" style="font-size:.8rem">
+                        Tampoco aplica el <strong>margen mínimo de comercialización (1,30)</strong> para bebidas alcohólicas
+                        (aplica sí para: perfumes, tabaco, armas, focos, aviones, gaseosas, energizantes).
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    {% endfor %}
 </div>
 
-<a href="{{ url_for('ice.calculadora') }}" class="btn btn-primary">
-    <i class="bi bi-calculator"></i> Ir a Calculadora
-</a>
+{# ════════════════════════════════════════════════════════════════════════════
+   TAB 2 — BASE LEGAL
+════════════════════════════════════════════════════════════════════════════ #}
+<div class="tab-pane fade" id="tBaseLegal">
+
+    <div class="section-divider">Ley de Régimen Tributario Interno (LRTI)</div>
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-6">
+            <div class="art-card h-100">
+                <div class="art-ref">Art. 75 LRTI</div>
+                <div class="art-title">Objeto del impuesto</div>
+                <div class="art-body">
+                    Establece que el ICE grava a los bienes y servicios de procedencia nacional o importada, descritos
+                    en el artículo 82 de esta Ley. Define los tipos de imposición: específica, ad valorem y mixta.
+                    Para bebidas alcohólicas aplica imposición <strong>mixta</strong>.
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="art-card h-100">
+                <div class="art-ref">Art. 76 LRTI</div>
+                <div class="art-title">Base imponible del ICE</div>
+                <div class="art-body">
+                    Para bebidas alcohólicas (numeral 12):
+                    <ul style="font-size:.77rem;margin-top:6px;padding-left:16px">
+                        <li><strong>Tarifa específica:</strong> litros de alcohol puro = volumen (L) × grado alcohólico (%)</li>
+                        <li><strong>Tarifa ad valorem:</strong> excedente del precio de venta del fabricante o ex aduana sobre el umbral ajustado anualmente, multiplicado por 75%</li>
+                        <li>El umbral se actualiza cada año mediante Resolución NAC</li>
+                        <li>Los descuentos no reducen la base imponible</li>
+                        <li>No se aplica margen de comercialización (1,30)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="art-card h-100">
+                <div class="art-ref">Art. 79–80 LRTI</div>
+                <div class="art-title">Sujeto activo y sujetos pasivos</div>
+                <div class="art-body">
+                    El sujeto activo es el Estado, administrado por el SRI. Son sujetos pasivos los fabricantes
+                    nacionales e importadores de los bienes gravados con ICE, así como los prestadores de los servicios
+                    gravados. La obligación nace en el momento de la transferencia al distribuidor o en la importación.
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="art-card h-100">
+                <div class="art-ref">Art. 82 LRTI</div>
+                <div class="art-title">Tarifas del ICE – Grupo IV/V (Bebidas alcohólicas)</div>
+                <div class="art-body">
+                    <table class="table table-sm mb-0" style="font-size:.75rem">
+                        <thead style="background:#0d1b2e;color:#fff">
+                            <tr><th>Producto</th><th>Tarifa Esp.</th><th>Ad Valorem</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Alcohol / Bebidas alcohólicas</td><td>$10,41/LA</td><td>75%</td></tr>
+                            <tr><td>Cerveza industrial</td><td>$13,62/LA</td><td>75%</td></tr>
+                            <tr><td>Cerveza artesanal</td><td>$1,56/LA</td><td>75%</td></tr>
+                            <tr><td>Cigarrillos</td><td>$0,16/unid.</td><td>No aplica</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="font-size:.68rem;color:#64748b;margin-top:6px">Tarifas vigentes 2026 — Art. 82 LRTI + Res. NAC-DGERCGC25-00000040</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="art-card h-100">
+                <div class="art-ref">Art. 82 LRTI (inc. 7)</div>
+                <div class="art-title">Rebaja del 50% en tarifa específica</div>
+                <div class="art-body">
+                    Las bebidas alcohólicas elaboradas localmente con caña de azúcar u otros productos agropecuarios
+                    cultivados localmente, adquiridos a <strong>artesanos, microempresas u organizaciones de la
+                    economía popular y solidaria</strong>, tendrán una rebaja de hasta el <strong>50%</strong> en la
+                    tarifa específica.
+                    <br><br>No aplica si la bebida contiene menos del <strong>70%</strong> de ingredientes nacionales.
+                    Para la cerveza, aplica únicamente para <strong>nuevas marcas</strong>.
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="art-card h-100">
+                <div class="art-ref">Art. 83 LRTI</div>
+                <div class="art-title">Exenciones del ICE</div>
+                <div class="art-body">
+                    Están exentas del ICE las bebidas alcohólicas elaboradas localmente y provenientes de la
+                    <strong>fermentación alcohólica completa o parcial</strong> de productos agropecuarios cultivados
+                    en el Ecuador, siempre que cumplan los requisitos reglamentarios de contenido de ingredientes
+                    nacionales (≥ 90% de ingredientes nacionales y ≤ 5% de grado alcohólico en algunos casos).
+                    <br><br>Ver NAC-DGERCGC25-00000041 para condiciones detalladas 2026.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-divider">Reglamento para la Aplicación de la LRTI (RLRTI)</div>
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+            <div class="art-card h-100">
+                <div class="art-ref">Art. 197 RLRTI</div>
+                <div class="art-title">Cálculo tarifa específica</div>
+                <div class="art-body">
+                    Determina que para bebidas alcohólicas, los litros de alcohol puro se calculan:
+                    <div class="formula-box mt-2" style="font-size:.75rem">
+                        LA = Volumen(L) × (Grado% ÷ 100)
+                    </div>
+                    El grado alcohólico es el que consta en la notificación sanitaria del producto (escala Gay-Lussac).
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="art-card h-100">
+                <div class="art-ref">Art. 198 RLRTI</div>
+                <div class="art-title">Precio de venta del fabricante</div>
+                <div class="art-body">
+                    Es el precio facturado en la primera venta efectuada por el productor, incluyendo todos los importes
+                    cargados al comprador, ya sea de forma conjunta o separada.
+                    <br><br>Equivale al <strong>precio ex-fábrica</strong> = costos totales + utilidad.
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="art-card h-100">
+                <div class="art-ref">Art. 199.5 RLRTI</div>
+                <div class="art-title">Condiciones para rebaja 50%</div>
+                <div class="art-body">
+                    El alcohol, caña u otros productos deben ser adquiridos a artesanos, microempresarios, empresas u
+                    organizaciones de la economía popular y solidaria.
+                    <br><br>
+                    <strong>No aplica</strong> para adquisiciones a partes relacionadas por capital con el sujeto pasivo.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-divider">Resoluciones NAC por año</div>
+    <div class="table-responsive">
+        <table class="table table-sm" style="font-size:.8rem">
+            <thead style="background:#0d1b2e;color:#fff">
+                <tr>
+                    <th>Año</th>
+                    <th>Resolución NAC (Tarifas)</th>
+                    <th>Resolución NAC (Umbral AdV)</th>
+                    <th>Umbral $/Litro</th>
+                    <th>IVA</th>
+                    <th>Observaciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td class="fw-bold">2021</td><td>NAC-DGERCGC20-00000057</td><td>NAC-DGERCGC20-00000058</td><td>$4,29</td><td>12%</td><td>Cerveza ind. con rangos de producción; tarifa esp. $7,18</td></tr>
+                <tr><td class="fw-bold">2022</td><td>NAC-DGERCGC21-00000057</td><td>NAC-DGERCGC21-00000058</td><td>$4,37</td><td>12%</td><td>Se unifica tarifa cerveza industrial; $10,00/LA licores</td></tr>
+                <tr><td class="fw-bold">2023</td><td>NAC-DGERCGC22-00000047</td><td>NAC-DGERCGC22-00000048</td><td>$4,53</td><td>12%</td><td>Tarifas iguales a 2022; umbral sube por IPC</td></tr>
+                <tr><td class="fw-bold">2024</td><td>NAC-DGERCGC23-00000044</td><td>NAC-DGERCGC23-00000045</td><td>$4,60</td><td>12% (Ene–Mar) / 15% (Abr–Dic)</td><td>IVA mixto por cambio legal desde abril 2024</td></tr>
+                <tr><td class="fw-bold">2025</td><td>NAC-DGERCGC24-00000043</td><td>NAC-DGERCGC24-00000044</td><td>$4,67</td><td>15%</td><td>Ajuste por IPC; tarifa esp. $10,30/LA</td></tr>
+                <tr style="background:#f0fdf4;font-weight:700"><td>2026 ✓</td><td>NAC-DGERCGC25-00000040</td><td>NAC-DGERCGC25-00000042</td><td>$4,72</td><td>15%</td><td>Vigente. Exenciones: NAC-41. Perfumes: NAC-45</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="alert py-2" style="background:#fffbeb;border:1px solid #fde68a;font-size:.75rem;color:#92400e">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        Los números exactos de NAC para años anteriores a 2026 son de referencia aproximada.
+        Las resoluciones definitivas se publican en el <strong>Registro Oficial</strong> y en el portal
+        <strong>www.sri.gob.ec → Normativa</strong>. Para 2026 los números son exactos y verificados.
+    </div>
+</div>
+
+{# ════════════════════════════════════════════════════════════════════════════
+   TAB 3 — TARIFAS 2021–2026
+════════════════════════════════════════════════════════════════════════════ #}
+<div class="tab-pane fade" id="tTarifas">
+
+    <div class="alert py-2 mb-3" style="background:#eff6ff;border:1px solid #bfdbfe;font-size:.78rem;color:#1d4ed8">
+        <i class="bi bi-info-circle me-1"></i>
+        <strong>LA</strong> = Litro de Alcohol Puro. <strong>AdV</strong> = Ad Valorem. El umbral ad valorem se actualiza anualmente según el IPC (INEC).
+    </div>
+
+    <div class="table-responsive mb-4">
+        <table class="table table-bordered tarifa-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" class="align-middle">Año</th>
+                    <th colspan="3" class="text-center">Tarifa Específica ($/LA)</th>
+                    <th rowspan="2" class="align-middle text-center">Umbral AdV<br>($/Litro)</th>
+                    <th rowspan="2" class="align-middle text-center">AdV</th>
+                    <th rowspan="2" class="align-middle text-center">IVA</th>
+                    <th rowspan="2" class="align-middle">Normativa</th>
+                </tr>
+                <tr>
+                    <th class="text-center">Licores / Ron / Vino</th>
+                    <th class="text-center">Cerveza Artesanal</th>
+                    <th class="text-center">Cerveza Industrial</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="year-cell">2021</td>
+                    <td class="text-center">$7,18</td>
+                    <td class="text-center">$1,49</td>
+                    <td class="text-center">
+                        $8,41 (≤730k hl)<br>
+                        <small class="text-muted">$10,48 (730k–1,4M)</small><br>
+                        <small class="text-muted">$13,08 (&gt;1,4M hl)</small>
+                    </td>
+                    <td class="text-center">$4,29</td>
+                    <td class="text-center">75%</td>
+                    <td class="text-center">12%</td>
+                    <td><small>NAC-DGERCGC20-00000057/058</small></td>
+                </tr>
+                <tr>
+                    <td class="year-cell">2022</td>
+                    <td class="text-center">$10,00</td>
+                    <td class="text-center">$1,50</td>
+                    <td class="text-center">$13,08</td>
+                    <td class="text-center">$4,37</td>
+                    <td class="text-center">75%</td>
+                    <td class="text-center">12%</td>
+                    <td><small>NAC-DGERCGC21-00000057/058</small></td>
+                </tr>
+                <tr>
+                    <td class="year-cell">2023</td>
+                    <td class="text-center">$10,00</td>
+                    <td class="text-center">$1,50</td>
+                    <td class="text-center">$13,08</td>
+                    <td class="text-center">$4,53</td>
+                    <td class="text-center">75%</td>
+                    <td class="text-center">12%</td>
+                    <td><small>NAC-DGERCGC22-00000047/048</small></td>
+                </tr>
+                <tr>
+                    <td class="year-cell">2024</td>
+                    <td class="text-center">$10,15</td>
+                    <td class="text-center">$1,52</td>
+                    <td class="text-center">$13,28</td>
+                    <td class="text-center">$4,60</td>
+                    <td class="text-center">75%</td>
+                    <td class="text-center">
+                        <span class="badge" style="background:#fef3c7;color:#92400e;font-size:.65rem">
+                            12% Ene–Mar<br>15% Abr–Dic
+                        </span>
+                    </td>
+                    <td><small>NAC-DGERCGC23-00000044/045</small></td>
+                </tr>
+                <tr>
+                    <td class="year-cell">2025</td>
+                    <td class="text-center">$10,30</td>
+                    <td class="text-center">$1,54</td>
+                    <td class="text-center">$13,48</td>
+                    <td class="text-center">$4,67</td>
+                    <td class="text-center">75%</td>
+                    <td class="text-center">15%</td>
+                    <td><small>NAC-DGERCGC24-00000043/044</small></td>
+                </tr>
+                <tr class="vigente">
+                    <td class="year-cell">2026 <span class="badge bg-success ms-1" style="font-size:.58rem">VIGENTE</span></td>
+                    <td class="text-center text-success fw-bold">$10,41</td>
+                    <td class="text-center text-success fw-bold">$1,56</td>
+                    <td class="text-center text-success fw-bold">$13,62</td>
+                    <td class="text-center text-success fw-bold">$4,72</td>
+                    <td class="text-center">75%</td>
+                    <td class="text-center">15%</td>
+                    <td><small><strong>NAC-DGERCGC25-00000040/042</strong></small></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section-divider">Otras tarifas ICE relevantes (no bebidas alcohólicas)</div>
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered" style="font-size:.78rem">
+            <thead style="background:#475569;color:#fff">
+                <tr><th>Grupo</th><th>Producto</th><th>Tarifa</th><th>Tipo</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>I</td><td>Productos del tabaco</td><td>150%</td><td>Ad valorem</td></tr>
+                <tr><td>I</td><td>Tabaco calentado / líquidos con nicotina</td><td>50%</td><td>Ad valorem</td></tr>
+                <tr><td>I</td><td>Perfumes y aguas de tocador</td><td>20% (venta local) / Escala (venta directa)</td><td>Ad valorem / mixta</td></tr>
+                <tr><td>I</td><td>Armas de fuego y municiones</td><td>30%</td><td>Ad valorem</td></tr>
+                <tr><td>I</td><td>Focos incandescentes</td><td>100%</td><td>Ad valorem</td></tr>
+                <tr><td>I</td><td>Bebidas gaseosas ≤25g azúcar/L y energizantes</td><td>10%</td><td>Ad valorem</td></tr>
+                <tr><td>II</td><td>Vehículos motorizados (varios rangos)</td><td>5%–35%</td><td>Ad valorem</td></tr>
+                <tr><td>III</td><td>Televisión pagada</td><td>15%</td><td>Ad valorem</td></tr>
+                <tr><td>III</td><td>Membresías y afiliaciones clubes</td><td>30%</td><td>Ad valorem</td></tr>
+                <tr><td>IV</td><td>Cigarrillos</td><td>$0,16/unidad</td><td>Específica</td></tr>
+                <tr><td>IV</td><td>Bebidas gaseosas >25g azúcar/L</td><td>$0,18/100g azúcar + 10%</td><td>Mixta</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# ════════════════════════════════════════════════════════════════════════════
+   TAB 4 — FÓRMULAS
+════════════════════════════════════════════════════════════════════════════ #}
+<div class="tab-pane fade" id="tFormulas">
+    <div class="row g-4">
+
+        <div class="col-lg-6">
+            <div class="art-card h-100">
+                <div class="art-ref"><i class="bi bi-1-circle me-1"></i>Paso 1 — Precio Ex-Fábrica</div>
+                <div class="art-title">Base del cálculo</div>
+                <div class="art-body">
+                    <div class="formula-box">
+                        <div class="f-label">Definición</div>
+                        <div class="f-eq">Precio Ex-Fábrica = Costos Totales + Utilidad</div>
+                        <div class="f-note">Es el precio facturado en la primera venta del productor. No se aplica margen de comercialización (1,30) para bebidas alcohólicas.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="art-card h-100">
+                <div class="art-ref"><i class="bi bi-2-circle me-1"></i>Paso 2 — ICE Específico</div>
+                <div class="art-title">Por litro de alcohol puro (Art. 76 LRTI)</div>
+                <div class="art-body">
+                    <div class="formula-box">
+                        <div class="f-label">Fórmula unitaria (por botella)</div>
+                        <div class="f-eq">
+                            ICE<sub>esp</sub> = Tarifa × (Grado% ÷ 100) × (Capacidad ÷ 1000)
+                        </div>
+                        <div class="f-note mt-2">
+                            <strong>Ejemplo 2026:</strong> Ron 35° en 750cc<br>
+                            ICE<sub>esp</sub> = 10,41 × (35 ÷ 100) × (750 ÷ 1000)<br>
+                            ICE<sub>esp</sub> = 10,41 × 0,35 × 0,75 = <strong>$2,7326</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="art-card h-100">
+                <div class="art-ref"><i class="bi bi-3-circle me-1"></i>Paso 3 — ICE Ad Valorem</div>
+                <div class="art-title">Solo si precio/litro supera el umbral (Art. 76 LRTI + NAC-42)</div>
+                <div class="art-body">
+                    <div class="formula-box">
+                        <div class="f-label">Fórmula unitaria (por botella)</div>
+                        <div class="f-eq">
+                            Si (Precio ÷ (Cap÷1000)) &gt; Umbral:<br>
+                            ICE<sub>adv</sub> = (Precio/L − Umbral) × 75% × (Cap ÷ 1000)
+                        </div>
+                        <div class="f-note mt-2">
+                            <strong>Ejemplo 2026:</strong> Ron $4,50 en 750cc, umbral $4,72<br>
+                            Precio/L = 4,50 ÷ 0,75 = $6,00 &gt; $4,72 ✓<br>
+                            ICE<sub>adv</sub> = (6,00 − 4,72) × 0,75 × 0,75 = <strong>$0,7200</strong>
+                        </div>
+                    </div>
+                    <div class="rounded p-2 mt-2" style="background:#fffbeb;border:1px solid #fde68a;font-size:.73rem">
+                        <i class="bi bi-lightbulb me-1" style="color:#d97706"></i>
+                        Si el precio ex-fábrica por litro es <strong>menor o igual al umbral</strong>, el ICE Ad Valorem es $0.
+                        Solo aplica la tarifa específica.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="art-card h-100">
+                <div class="art-ref"><i class="bi bi-4-circle me-1"></i>Pasos 4 y 5 — IVA y PVP</div>
+                <div class="art-title">Precio final al consumidor</div>
+                <div class="art-body">
+                    <div class="formula-box mb-3">
+                        <div class="f-label">Base IVA</div>
+                        <div class="f-eq">Base IVA = Precio Ex-Fáb. + ICE Total</div>
+                    </div>
+                    <div class="formula-box mb-3">
+                        <div class="f-label">IVA (15% en 2025–2026)</div>
+                        <div class="f-eq">IVA = Base IVA × 15%</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="f-label">PVP (precio de venta al público)</div>
+                        <div class="f-eq">PVP = Base IVA + IVA</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="ejemplo-box">
+                <div class="fw-bold mb-3" style="color:#0284c7;font-size:.85rem">
+                    <i class="bi bi-calculator-fill me-2"></i>Ejemplo Completo 2026 — Ron 35°, 750cc, precio ex-fábrica $4,50
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="ejemplo-row"><span>Precio Ex-Fábrica (por bot.)</span><span class="fw-bold">$4,5000</span></div>
+                        <div class="ejemplo-row"><span>Grado alcohólico</span><span>35%</span></div>
+                        <div class="ejemplo-row"><span>Capacidad</span><span>750 cc</span></div>
+                        <div class="ejemplo-row"><span>Tarifa específica 2026</span><span>$10,41/LA</span></div>
+                        <div class="ejemplo-row"><span>Umbral ad valorem 2026</span><span>$4,72/L</span></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="ejemplo-row">
+                            <span>ICE Específico = 10,41 × 0,35 × 0,75</span>
+                            <span class="fw-bold text-primary">$2,7326</span>
+                        </div>
+                        <div class="ejemplo-row">
+                            <span>Precio/L = 4,50 ÷ 0,75 = $6,00 &gt; $4,72</span>
+                            <span class="text-success" style="font-size:.72rem">AdV aplica</span>
+                        </div>
+                        <div class="ejemplo-row">
+                            <span>ICE Ad Valorem = (6,00−4,72) × 0,75 × 0,75</span>
+                            <span class="fw-bold text-purple" style="color:#7c3aed">$0,7200</span>
+                        </div>
+                        <div class="ejemplo-row"><span>ICE Total = 2,7326 + 0,7200</span><span class="fw-bold">$3,4526</span></div>
+                        <div class="ejemplo-row"><span>Base IVA = 4,50 + 3,4526</span><span class="fw-bold">$7,9526</span></div>
+                        <div class="ejemplo-row"><span>IVA 15% = 7,9526 × 0,15</span><span class="fw-bold">$1,1929</span></div>
+                        <div class="ejemplo-row total"><span>PVP Final</span><span style="color:#0284c7">$9,1455</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ════════════════════════════════════════════════════════════════════════════
+   TAB 5 — REBAJAS Y EXENCIONES
+════════════════════════════════════════════════════════════════════════════ #}
+<div class="tab-pane fade" id="tRebajas">
+    <div class="row g-4">
+
+        <div class="col-lg-6">
+            <div class="art-card h-100">
+                <div class="art-ref" style="color:#d97706"><i class="bi bi-percent me-1"></i>Art. 82 LRTI + Art. 199.5 RLRTI</div>
+                <div class="art-title">Rebaja del 50% — Tarifa Específica</div>
+                <div class="art-body">
+                    <div class="fw-bold mb-2" style="font-size:.82rem">¿Cuándo aplica?</div>
+                    <ul style="font-size:.78rem;padding-left:16px">
+                        <li>Bebidas alcohólicas elaboradas <strong>localmente</strong> con caña de azúcar u otros productos agropecuarios</li>
+                        <li>Los insumos deben ser adquiridos a <strong>artesanos, microempresas u organizaciones de economía popular y solidaria</strong></li>
+                        <li>La bebida debe contener <strong>mínimo 70%</strong> de ingredientes nacionales</li>
+                        <li>Para cerveza: aplica <strong>únicamente para nuevas marcas</strong> (registradas por primera vez en el mercado)</li>
+                    </ul>
+                    <div class="fw-bold mt-3 mb-2" style="font-size:.82rem">Restricciones</div>
+                    <ul style="font-size:.78rem;padding-left:16px">
+                        <li><strong>No aplica</strong> si la adquisición es a partes relacionadas (vinculación por capital)</li>
+                        <li>Requiere documentación que acredite la condición del proveedor</li>
+                    </ul>
+                    <div class="rounded p-2 mt-2" style="background:#fffbeb;border:1px solid #fde68a;font-size:.75rem">
+                        <strong>Efecto:</strong> La tarifa específica se reduce a la mitad.<br>
+                        Ej. 2026: $10,41 → <strong>$5,205/LA</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="art-card h-100">
+                <div class="art-ref" style="color:#16a34a"><i class="bi bi-shield-check me-1"></i>Art. 83 LRTI + NAC-DGERCGC25-00000041</div>
+                <div class="art-title">Exención del ICE — Fermentación local</div>
+                <div class="art-body">
+                    <div class="fw-bold mb-2" style="font-size:.82rem">¿Qué está exento?</div>
+                    <div class="rounded p-2 mb-3" style="background:#f0fdf4;border:1px solid #bbf7d0;font-size:.77rem">
+                        Bebidas alcohólicas elaboradas localmente y provenientes de la
+                        <strong>fermentación alcohólica completa o parcial</strong> de productos agropecuarios
+                        cultivados en el Ecuador.
+                    </div>
+                    <div class="fw-bold mb-2" style="font-size:.82rem">Condiciones para la exención 2026 (NAC-41)</div>
+                    <ul style="font-size:.78rem;padding-left:16px">
+                        <li>Los productos agropecuarios base deben ser cultivados en Ecuador</li>
+                        <li>El proceso de fermentación debe realizarse en el país</li>
+                        <li>Deben cumplir requisitos de registro y notificación ante el SRI</li>
+                        <li>El productor debe ser fabricante nacional registrado</li>
+                    </ul>
+                    <div class="rounded p-2 mt-2" style="background:#eff6ff;border:1px solid #bfdbfe;font-size:.75rem">
+                        <strong>Ejemplos típicos:</strong> Chicha de jora, guarapo, vinos de frutas
+                        nacionales con fermentación artesanal completa.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="art-card">
+                <div class="art-ref"><i class="bi bi-table me-1"></i>Cuadro comparativo</div>
+                <div class="art-title">Rebaja vs Exención — ¿Cuándo aplica cada una?</div>
+                <div class="art-body">
+                    <div class="table-responsive mt-2">
+                        <table class="table table-sm table-bordered" style="font-size:.78rem">
+                            <thead style="background:#0d1b2e;color:#fff">
+                                <tr><th>Criterio</th><th>Rebaja 50%</th><th>Exención Total</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Proceso de elaboración</td><td>Destilación o fermentación con insumos locales</td><td>Solo fermentación alcohólica de productos agropecuarios ecuatorianos</td></tr>
+                                <tr><td>Origen del insumo base</td><td>Adquirido a artesanos/microempresas/EPS nacionales</td><td>Cultivado en Ecuador</td></tr>
+                                <tr><td>Porcentaje ingredientes nacionales</td><td>Mínimo 70%</td><td>El proceso de fermentación completo</td></tr>
+                                <tr><td>Para cerveza</td><td>Solo nuevas marcas</td><td>Si proviene de fermentación de granos nacionales</td></tr>
+                                <tr><td>Resultado en ICE</td><td>Tarifa específica al 50%</td><td>ICE = $0</td></tr>
+                                <tr><td>Ad valorem</td><td>Sí aplica (si precio &gt; umbral)</td><td>No aplica (exento total)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ════════════════════════════════════════════════════════════════════════════
+   TAB 6 — NAC 2026
+════════════════════════════════════════════════════════════════════════════ #}
+<div class="tab-pane fade" id="tNAC">
+
+    <div class="row g-4">
+
+        <div class="col-12">
+            <div class="nac-card">
+                <div class="nac-header">
+                    <span class="badge-nac me-2">NAC-DGERCGC25-00000040</span>
+                    Resolución de Tarifas Globales ICE 2026
+                    <span class="float-end" style="font-size:.7rem;opacity:.7">Vigente desde 01-01-2026</span>
+                </div>
+                <div class="nac-body">
+                    <div class="fw-bold mb-2">Objeto:</div>
+                    <p>Establece las tarifas específicas del ICE para bebidas alcohólicas y otros bienes gravados, aplicables para el período fiscal 2026. Emitida por la Directora General del SRI, magíster Alexandra Verónica Navarrete Ricaurte.</p>
+                    <div class="nac-art">
+                        <strong>Art. 1 — Tarifas específicas 2026 (bebidas alcohólicas):</strong><br>
+                        • Alcohol y bebidas alcohólicas (incluye ron, vinos, aguardientes, licores): <strong>USD 10,41 por litro de alcohol puro</strong><br>
+                        • Cerveza industrial: <strong>USD 13,62 por litro de alcohol puro</strong><br>
+                        • Cerveza artesanal: <strong>USD 1,56 por litro de alcohol puro</strong><br>
+                        • Cigarrillos: USD 0,16 por unidad
+                    </div>
+                    <div class="nac-art">
+                        <strong>Fundamento legal:</strong> Art. 82 LRTI. Las tarifas se fijan en base a la actualización por IPC y la tabla de incrementos progresivos establecida en la ley.
+                    </div>
+                    <div class="nac-art">
+                        <strong>Vigencia:</strong> A partir de su publicación en el Registro Oficial, aplicable desde el 01 de enero de 2026. Dictada el 29 de diciembre de 2025.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="nac-card h-100">
+                <div class="nac-header">
+                    <span class="badge-nac me-2">NAC-DGERCGC25-00000042</span>
+                    Umbral Ad Valorem 2026
+                </div>
+                <div class="nac-body">
+                    <div class="fw-bold mb-2">Objeto:</div>
+                    <p>Ajusta el valor del precio de venta del fabricante y precio ex aduana para la determinación de la base imponible de la tarifa ad valorem del ICE en bebidas alcohólicas para 2026.</p>
+                    <div class="nac-art">
+                        <strong>Umbral 2026:</strong>
+                        <div style="font-size:1.2rem;font-weight:800;color:#2563eb;margin:6px 0">USD 4,72 por litro de bebida</div>
+                        Si el precio de venta del fabricante o ex aduana por litro supera este valor, se aplica la tarifa ad valorem del 75% sobre el excedente.
+                    </div>
+                    <div class="nac-art">
+                        <strong>Histórico de umbrales:</strong><br>
+                        2021: $4,29 · 2022: $4,37 · 2023: $4,53 · 2024: $4,60 · 2025: $4,67 · <strong>2026: $4,72</strong>
+                    </div>
+                    <div class="nac-art">
+                        <strong>Fundamento del ajuste:</strong> IPC General INEC a noviembre 2024 = +1,0535%. La moneda mínima es $0,01; los valores se expresan con dos decimales.
+                    </div>
+                    <div class="nac-art">
+                        <strong>Microempresas y EPS:</strong> Se aplica ad valorem si el precio supera <strong>el doble del umbral</strong> ($9,44/L para 2026).
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="nac-card h-100">
+                <div class="nac-header">
+                    <span class="badge-nac me-2">NAC-DGERCGC25-00000041</span>
+                    Exenciones ICE 2026
+                </div>
+                <div class="nac-body">
+                    <div class="fw-bold mb-2">Objeto:</div>
+                    <p>Establece los requisitos y condiciones para que las bebidas alcohólicas provenientes de fermentación local sean consideradas exentas del ICE para el período fiscal 2026.</p>
+                    <div class="nac-art">
+                        <strong>Bebidas exentas:</strong> Las elaboradas localmente provenientes de fermentación alcohólica completa o parcial de productos agropecuarios cultivados en Ecuador.
+                    </div>
+                    <div class="nac-art">
+                        <strong>Requisitos:</strong><br>
+                        • Registro del productor en el catastro del SRI<br>
+                        • Declaración jurada sobre origen de insumos<br>
+                        • El proceso de fermentación debe ser el principal proceso de elaboración<br>
+                        • No aplica a bebidas destiladas aunque usen insumos locales
+                    </div>
+                    <div class="nac-art">
+                        <strong>Para nuevas marcas de cerveza artesanal:</strong> Aplica la rebaja del 50% (no la exención), siempre que sean marcas establecidas por primera vez en el mercado y cumplan los requisitos de ingredientes locales.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="nac-card">
+                <div class="nac-header">
+                    <span class="badge-nac me-2">NAC-DGERCGC25-00000045</span>
+                    Tarifas Especiales — Perfumes y Aguas de Tocador (Venta Directa)
+                </div>
+                <div class="nac-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="fw-bold mb-2">Objeto:</div>
+                            <p>Establece la tabla de porcentajes de incremento para el cálculo del ICE de perfumes y aguas de tocador comercializados mediante venta directa.</p>
+                            <div class="nac-art">
+                                <strong>Tarifa general (venta local):</strong> 20% ad valorem (Art. 82 LRTI)
+                            </div>
+                            <div class="nac-art">
+                                <strong>Venta directa</strong> — Escala progresiva 2026:
+                                <table class="table table-sm mt-2 mb-0" style="font-size:.75rem">
+                                    <thead style="background:#f1f5f9">
+                                        <tr><th>Precio ex aduana o costos</th><th>Hasta</th><th>% Incremento</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>$0,00</td><td>$1,50</td><td class="fw-bold">150%</td></tr>
+                                        <tr><td>$1,51</td><td>$3,00</td><td class="fw-bold">180%</td></tr>
+                                        <tr><td>$3,01</td><td>$6,00</td><td class="fw-bold">240%</td></tr>
+                                        <tr><td>$6,01</td><td>En adelante</td><td class="fw-bold">300%</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fw-bold mb-2">Nota aclaratoria:</div>
+                            <div class="rounded p-3" style="background:#f8fafc;border:1px solid #e2e8f0;font-size:.78rem">
+                                Esta NAC aplica <strong>exclusivamente a perfumes y aguas de tocador</strong> vendidos directamente al consumidor (sin distribuidores intermediarios). No tiene relación con el cálculo ICE de bebidas alcohólicas.
+                                <br><br>
+                                La venta directa implica que el fabricante o importador comercializa el producto directamente al consumidor final, sin pasar por la cadena distribución tradicional.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="rounded p-3" style="background:#f0fdf4;border:1.5px solid #bbf7d0;font-size:.78rem">
+                <div class="fw-bold mb-2" style="color:#15803d">
+                    <i class="bi bi-info-circle-fill me-1"></i>Sobre las resoluciones NAC anteriores a 2026
+                </div>
+                <p class="mb-1">
+                    El SRI emite cada año (generalmente en diciembre) las resoluciones NAC equivalentes para el año siguiente.
+                    Las cuatro resoluciones de 2026 tienen sus equivalentes en años anteriores:
+                </p>
+                <ul style="margin:0;padding-left:18px">
+                    <li><strong>2025:</strong> NAC-DGERCGC24-00000043 (tarifas) y NAC-DGERCGC24-00000044 (umbral $4,67)</li>
+                    <li><strong>2024:</strong> NAC-DGERCGC23-00000044 (tarifas) y NAC-DGERCGC23-00000045 (umbral $4,60)</li>
+                    <li><strong>2023:</strong> NAC-DGERCGC22-00000047 (tarifas) y NAC-DGERCGC22-00000048 (umbral $4,53)</li>
+                    <li><strong>2022:</strong> NAC-DGERCGC21-00000057 (tarifas) y NAC-DGERCGC21-00000058 (umbral $4,37)</li>
+                    <li><strong>2021:</strong> NAC-DGERCGC20-00000057 (tarifas con rangos de cerveza industrial)</li>
+                </ul>
+                <p class="mb-0 mt-1">
+                    Todas disponibles en: <strong>www.sri.gob.ec → Normativa → Resoluciones</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 text-center" style="color:#94a3b8;font-size:.73rem">
+        <i class="bi bi-person-circle me-1"></i>
+        Contenido compilado y estructurado por <strong>Marco Antonio Posligua San Martín</strong> · CMAJ Asociados SAS ·
+        Basado en fuentes oficiales: LRTI, RLRTI y Resoluciones NAC del SRI Ecuador
+    </div>
+</div>
+
+</div>{# /tab-content #}
 {% endblock %}

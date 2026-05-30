@@ -62,13 +62,13 @@ class Config:
             'tooltip': 'Cálculo ICE individual con reporte Excel + base legal',
         },
         'ice_multiple': {
-            'nombre': 'ICE Múltiple + Mezcla',
+            'nombre': 'ICE Múltiple',
             'descripcion': (
                 'Calcula el ICE de múltiples productos (licores, cerveza artesanal e industrial) '
                 'en una sola sesión. Ingresa costos totales, utilidad y precio ex fábrica; obtén '
                 'ICE específico, ICE ad-valorem, IVA y PVP por unidad y por cantidad de botellas. '
-                'Los productos se guardan en la base de datos. Genera un reporte Excel con resumen '
-                'total de todos los productos.'
+                'Incluye cálculo de mezcla total. Los productos quedan guardados en la base de datos. '
+                'Genera reporte Excel con resumen por producto y totales generales.'
             ),
             'precio': 15.00,
             'precio_unico': False,

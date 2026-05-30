@@ -201,14 +201,9 @@
                 </div>
                 <div class="p-3">
                     {% if activo_multi %}
-                    <div class="d-grid gap-2">
-                        <a href="{{ url_for('ice.multiple') }}" class="btn btn-sm btn-warning text-dark">
-                            <i class="bi bi-calculator-fill me-1"></i>Multi-Producto
-                        </a>
-                        <a href="{{ url_for('ice.mezcla') }}" class="btn btn-sm btn-outline-warning">
-                            <i class="bi bi-shuffle me-1"></i>Mezcla Total
-                        </a>
-                    </div>
+                    <a href="{{ url_for('ice.multiple') }}" class="btn btn-sm btn-warning text-dark w-100">
+                        <i class="bi bi-calculator-fill me-1"></i>Abrir ICE Múltiple
+                    </a>
                     {% else %}
                     <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-sm w-100" style="background:#fffbeb;color:#d97706;border:1px solid #fde68a;font-weight:600">
                         <i class="bi bi-lock me-1"></i>Contratar — $15/mes
