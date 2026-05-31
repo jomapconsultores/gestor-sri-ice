@@ -1,7 +1,16 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, render_template, request, flash, redirect, url_for, Response
 from flask_login import login_required, current_user
 from services.ice_calculator import IceCalculator, TAX_DB
+from services.ice_session import guardar_sesion_multiple, cargar_sesion_multiple
 from routes.payments import usuario_tiene_modulo
+import io
+import json as _json
+try:
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    OPENPYXL_AVAILABLE = True
+except ImportError:
+    OPENPYXL_AVAILABLE = False
 
 ice = Blueprint('ice', __name__)
 
@@ -99,6 +108,7 @@ def calcular():
 
         return render_template('ice/resultado.html',
                                resultados=resultados,
+                               anios_raw=anios_raw,
                                datos={
                                    'precio': precio, 'costos': costos,
                                    'utilidad': utilidad, 'volumen': volumen,
@@ -118,7 +128,8 @@ def multiple():
     r = _requiere_ice_multiple()
     if r:
         return r
-    return render_template('ice/multiple.html', tax_db=TAX_DB)
+    productos_guardados = cargar_sesion_multiple(current_user.id)
+    return render_template('ice/multiple.html', tax_db=TAX_DB, productos_guardados=productos_guardados)
 
 
 @ice.route('/calcular_multiple', methods=['POST'])
@@ -194,6 +205,22 @@ def calcular_multiple():
                 items.append(res)
             resultados[lbl] = items
             totales[lbl] = {k: round(v, 4) for k, v in tot.items()}
+
+        productos_para_guardar = [
+            {
+                'nombre': p['nombre'],
+                'tipo_producto': p['datos'].get('tipo_producto', 'Licor'),
+                'volumen_cc': p['datos'].get('volumen_cc', 750),
+                'grado_alcoholico': p['datos'].get('grado_alcoholico', 35),
+                'precio_fabrica': p['datos'].get('precio_fabrica', 0),
+                'costos': p['datos'].get('costos', 0),
+                'utilidad': p['datos'].get('utilidad', 0),
+                'cantidad': p['datos'].get('cantidad', 1),
+                'escala': p['datos'].get('escala', ''),
+            }
+            for p in productos
+        ]
+        guardar_sesion_multiple(current_user.id, productos_para_guardar)
 
         return render_template('ice/resultado_multiple.html',
                                resultados=resultados,
@@ -274,6 +301,103 @@ def calcular_mezcla():
     except Exception as e:
         flash(f'Error: {str(e)}', 'danger')
         return render_template('ice/mezcla.html', tax_db=TAX_DB)
+
+
+# ── Exportaciones Excel ───────────────────────────────────────────────────────
+
+@ice.route('/exportar_excel_simple', methods=['POST'])
+@login_required
+def exportar_excel_simple():
+    r = _requiere_ice_simple()
+    if r:
+        return r
+
+    if not OPENPYXL_AVAILABLE:
+        flash('Excel no disponible. Contacta al administrador.', 'danger')
+        return redirect(url_for('ice.calculadora'))
+
+    try:
+        precio   = float(request.form.get('precio', 0))
+        volumen  = float(request.form.get('volumen', 750))
+        grado    = float(request.form.get('grado', 35))
+        cantidad = int(request.form.get('cantidad', 1))
+        anios_json = request.form.get('anios', '[]')
+        anios_raw = _json.loads(anios_json)
+
+        if not anios_raw:
+            flash('Sin períodos seleccionados.', 'warning')
+            return redirect(url_for('ice.calculadora'))
+
+        datos = {
+            'precio_fabrica': precio,
+            'volumen_cc': volumen,
+            'grado_alcoholico': grado,
+            'cantidad': cantidad,
+        }
+
+        periodos = _resolver_anios(anios_raw)
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = 'ICE Simple'
+
+        header_fill = PatternFill(start_color='0D1B2E', end_color='0D1B2E', fill_type='solid')
+        header_font = Font(bold=True, color='FFFFFF', size=11)
+        border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                       top=Side(style='thin'), bottom=Side(style='thin'))
+
+        ws['A1'] = 'Cálculo ICE Simple'
+        ws['A1'].font = Font(bold=True, size=14)
+        ws['A1'].fill = header_fill
+        ws['A1'].font = Font(bold=True, color='FFFFFF', size=14)
+        ws.merge_cells('A1:D1')
+
+        ws['A2'] = f'Precio Ex-Fábrica: ${precio}'
+        ws['A3'] = f'Volumen: {volumen}cc'
+        ws['A4'] = f'Grado Alcohólico: {grado}%'
+        ws['A5'] = f'Cantidad: {cantidad} unidad(es)'
+
+        row = 7
+        for p in periodos:
+            res = IceCalculator.calcular_liquidacion_completa(datos, p['anio'], iva_tasa=p['iva'])
+
+            ws[f'A{row}'] = p['label']
+            ws[f'A{row}'].font = Font(bold=True, size=11, color='FFFFFF')
+            ws[f'A{row}'].fill = PatternFill(start_color='2563EB', end_color='2563EB', fill_type='solid')
+            ws.merge_cells(f'A{row}:B{row}')
+            row += 1
+
+            campos = [
+                ('ICE Específico Unitario', res.get('ice_especifico_unitario', 0)),
+                ('ICE Ad Valorem Unitario', res.get('ice_advalorem_unitario', 0)),
+                ('ICE Total Unitario', res.get('ice_total_unitario', 0)),
+                ('ICE Específico Total', res.get('ice_especifico_total', 0)),
+                ('ICE Ad Valorem Total', res.get('ice_advalorem_total', 0)),
+                ('ICE Total', res.get('ice_total', 0)),
+                ('Base IVA', res.get('base_iva', 0)),
+                ('IVA Total', res.get('iva_total', 0)),
+                ('PVP Final', res.get('pvp', 0)),
+            ]
+
+            for label, value in campos:
+                ws[f'A{row}'] = label
+                ws[f'B{row}'] = f'${value:.2f}'
+                ws[f'B{row}'].number_format = '$#,##0.00'
+                row += 1
+
+            row += 1
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        return Response(output.getvalue(),
+                       mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                       headers={'Content-Disposition': 'attachment; filename=ICE_Simple.xlsx'})
+
+    except Exception as e:
+        flash(f'Error al generar Excel: {str(e)}', 'danger')
+        return redirect(url_for('ice.calculadora'))
 
 
 # ── Comparativa y Tarifas ─────────────────────────────────────────────────────

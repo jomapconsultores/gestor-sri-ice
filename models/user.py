@@ -212,6 +212,68 @@ class ModuloSuscrito(db.Model):
         return self.fecha_vencimiento and self.fecha_vencimiento > datetime.utcnow()
 
 
+class ProductoSesionICE(db.Model):
+    """Último lote de productos calculados en ICE Múltiple por usuario."""
+    __tablename__ = "producto_sesion_ice"
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=False)
+    nombre = db.Column(db.String(300), nullable=False)
+    tipo_producto = db.Column(db.String(50), default='Licor')
+    volumen_cc = db.Column(db.Numeric(10, 2), default=750)
+    grado_alcoholico = db.Column(db.Numeric(6, 2), default=35)
+    precio_fabrica = db.Column(db.Numeric(12, 4))
+    costos = db.Column(db.Numeric(12, 4), default=0)
+    utilidad = db.Column(db.Numeric(12, 4), default=0)
+    cantidad = db.Column(db.Integer, default=1)
+    escala = db.Column(db.String(50))
+    orden = db.Column(db.Integer, default=0)
+    fecha_guardado = db.Column(db.DateTime, default=datetime.utcnow)
+    usuario = db.relationship("Usuario", backref="sesiones_ice", lazy=True)
+
+
+class AnexoICEGuardado(db.Model):
+    """XMLs de Anexo ICE/PVP guardados por usuario para edición futura."""
+    __tablename__ = "anexo_ice_guardado"
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=False)
+    nombre = db.Column(db.String(300))
+    tipo = db.Column(db.String(10), default='ICE')
+    xml_contenido = db.Column(db.Text)
+    periodo_anio = db.Column(db.String(4))
+    periodo_mes = db.Column(db.String(2))
+    fecha_guardado = db.Column(db.DateTime, default=datetime.utcnow)
+    usuario = db.relationship("Usuario", backref="anexos_guardados", lazy=True)
+
+
+class FacturaICEProcesada(db.Model):
+    """Registro de cada factura XML procesada en el módulo Facturas ICE."""
+    __tablename__ = "factura_ice_procesada"
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=False)
+    nombre_archivo = db.Column(db.String(500))
+    fecha_emision = db.Column(db.String(30))
+    tipo_id_cliente = db.Column(db.String(10))
+    id_cliente = db.Column(db.String(20))
+    razon_social_cliente = db.Column(db.String(300))
+    nombre_producto = db.Column(db.String(500))
+    cod_marca = db.Column(db.String(20))
+    cod_prod_sri = db.Column(db.String(50))
+    capacidad = db.Column(db.String(10))
+    grado_alcoholico = db.Column(db.String(10))
+    cantidad_cajas = db.Column(db.Numeric(10, 2))
+    unidades_botellas = db.Column(db.Integer)
+    precio_por_caja = db.Column(db.Numeric(12, 4))
+    precio_por_botella = db.Column(db.Numeric(12, 4))
+    base_ice = db.Column(db.Numeric(12, 2))
+    valor_ice = db.Column(db.Numeric(12, 2))
+    base_iva = db.Column(db.Numeric(12, 2))
+    valor_iva = db.Column(db.Numeric(12, 2))
+    periodo_anio = db.Column(db.String(4))
+    periodo_mes = db.Column(db.String(2))
+    fecha_proceso = db.Column(db.DateTime, default=datetime.utcnow)
+    usuario = db.relationship("Usuario", backref="facturas_ice_procesadas", lazy=True)
+
+
 class SolicitudAcceso(db.Model):
     """Comprobante de pago subido por el usuario para que el admin apruebe."""
     __tablename__ = "solicitud_acceso"

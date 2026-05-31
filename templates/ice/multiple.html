@@ -5,9 +5,17 @@
 {% block content %}
 <div class="page-header mb-4">
     <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+            <span style="background:rgba(217,119,6,.15);border:1px solid rgba(217,119,6,.3);color:#fbbf24;font-size:.65rem;font-weight:800;padding:4px 12px;border-radius:20px">USD $15/mes</span>
+        </div>
         <h1 class="page-title"><i class="bi bi-calculator-fill"></i>ICE Múltiple + Mezcla</h1>
         <p class="page-subtitle">Calcula ICE para múltiples productos con costos, utilidad, PVP y resumen total</p>
     </div>
+</div>
+
+<div style="background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.2);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:.8rem">
+    <i class="bi bi-person-badge me-1"></i>
+    Desarrollado por <strong>Marco Antonio Posligua San Martín</strong>
 </div>
 
 <form method="POST" action="{{ url_for('ice.calcular_multiple') }}" id="formMultiple">
@@ -235,9 +243,46 @@ function selAmbos2024M() {
     document.getElementById('m2024q2').checked = true;
 }
 
-// Agregar primer producto al cargar
+// Pre-cargar productos guardados o agregar uno vacío
 document.addEventListener('DOMContentLoaded', function() {
-    agregarProducto();
+    const productosGuardados = {{ productos_guardados | tojson | safe }};
+
+    if (productosGuardados && productosGuardados.length > 0) {
+        productosGuardados.forEach(p => {
+            agregarProducto();
+            const row = document.querySelector('.producto-row:last-child');
+            const idx = contador;
+
+            // Pre-llenar campos
+            const campos = {
+                [`nombre_${idx}`]: p.nombre || '',
+                [`tipo_${idx}`]: p.tipo_producto || 'Licor',
+                [`volumen_${idx}`]: p.volumen_cc || 750,
+                [`grado_${idx}`]: p.grado_alcoholico || 35,
+                [`costos_${idx}`]: p.costos || 3,
+                [`utilidad_${idx}`]: p.utilidad || 1.5,
+                [`precio_${idx}`]: p.precio_fabrica || 4.5,
+                [`cantidad_${idx}`]: p.cantidad || 1,
+                [`escala_${idx}`]: p.escala || '',
+            };
+
+            for (const [name, value] of Object.entries(campos)) {
+                const input = row.querySelector(`[name="${name}"]`);
+                if (input) {
+                    input.value = value;
+                }
+            }
+
+            // Actualizar visibilidad de escala si aplica
+            const tipoSelect = row.querySelector(`[name="tipo_${idx}"]`);
+            if (tipoSelect && tipoSelect.value === 'Cerveza Industrial') {
+                row.querySelector('.escala-row').classList.remove('d-none');
+            }
+        });
+    } else {
+        // Si no hay productos guardados, agregar uno vacío
+        agregarProducto();
+    }
 });
 </script>
 {% endblock %}
