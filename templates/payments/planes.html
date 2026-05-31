@@ -15,168 +15,238 @@
     <!-- ── COLUMNA IZQUIERDA: Módulos ──────────────────────────────────────── -->
     <div class="col-lg-8">
 
-        <!-- SECCIÓN ICE -->
-        <div class="mb-2 d-flex align-items-center gap-2">
-            <span style="font-size:.65rem;font-weight:800;color:#2563eb;text-transform:uppercase;letter-spacing:.1em">
-                <i class="bi bi-fire me-1"></i>Impuesto a los Consumos Especiales (ICE)
-            </span>
-            <hr class="flex-grow-1 my-0" style="border-color:#e2e8f0">
-        </div>
+        <div class="accordion" id="accordionModulos">
 
-        <div class="row g-2 mb-4">
-            {% for id, m in modulos.items() %}
-            {% if m.get('categoria') == 'ice' %}
-            <div class="col-12">
-                <div class="modulo-card p-0 {% if id in modulos_activos %}border-success{% elif id in solicitudes_pendientes %}border-warning{% endif %}"
-                     style="border-radius:10px;border:1.5px solid {% if id in modulos_activos %}#4ade80{% elif id in solicitudes_pendientes %}#fbbf24{% else %}#e2e8f0{% endif %};background:{% if id in modulos_activos %}#f0fdf4{% elif id in solicitudes_pendientes %}#fffbeb{% else %}#fff{% endif %};transition:all .15s;cursor:{% if id in modulos_activos or id in solicitudes_pendientes %}default{% else %}pointer{% endif %}"
-                     {% if not id in modulos_activos and not id in solicitudes_pendientes %}onclick="toggleModulo('{{ id }}', this)"{% endif %}>
-                    <div class="d-flex align-items-start gap-3 p-3">
-
-                        <!-- Icono -->
-                        <div style="width:42px;height:42px;border-radius:10px;background:
-                            {% if m.get('gratuito') %}#dcfce7{% elif m.color == 'primary' %}#eff6ff{% elif m.color == 'warning' %}#fffbeb{% elif m.color == 'info' %}#f0f9ff{% elif m.color == 'danger' %}#fef2f2{% else %}#f1f5f9{% endif %};
-                            color:
-                            {% if m.get('gratuito') %}#16a34a{% elif m.color == 'primary' %}#2563eb{% elif m.color == 'warning' %}#d97706{% elif m.color == 'info' %}#0284c7{% elif m.color == 'danger' %}#dc2626{% else %}#64748b{% endif %};
-                            display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">
-                            <i class="bi bi-{{ m.icono }}"></i>
-                        </div>
-
-                        <!-- Info -->
-                        <div class="flex-grow-1">
-                            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                                <span style="font-size:.88rem;font-weight:700;color:#0f172a">{{ m.nombre }}</span>
-                                {% if id in modulos_activos %}
-                                    <span class="badge bg-success">ACTIVO</span>
-                                {% elif id in solicitudes_pendientes %}
-                                    <span class="badge bg-warning text-dark">PENDIENTE</span>
-                                {% elif m.get('gratuito') %}
-                                    <span class="badge" style="background:#dcfce7;color:#15803d">GRATUITO</span>
-                                {% endif %}
+            <!-- ═══════════════════════════════════════════════════════ ICE -->
+            <div class="accordion-item mb-2 border-0" style="border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)">
+                <h2 class="accordion-header">
+                    <button class="accordion-button fw-bold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#collapseICE"
+                            style="background:#eff6ff;color:#1e40af;font-size:.88rem">
+                        <i class="bi bi-fire me-2 text-primary"></i>
+                        Impuesto a los Consumos Especiales (ICE)
+                    </button>
+                </h2>
+                <div id="collapseICE" class="accordion-collapse collapse show"
+                     data-bs-parent="#accordionModulos">
+                    <div class="accordion-body pt-2 pb-3">
+                        <div class="row g-2">
+                            {% for id, m in modulos.items() %}
+                            {% if m.get('categoria') == 'ice' %}
+                            <div class="col-12">
+                                <div class="modulo-card p-0"
+                                     style="border-radius:10px;border:1.5px solid {% if id in modulos_activos %}#4ade80{% elif id in solicitudes_pendientes %}#fbbf24{% else %}#e2e8f0{% endif %};background:{% if id in modulos_activos %}#f0fdf4{% elif id in solicitudes_pendientes %}#fffbeb{% else %}#fff{% endif %};transition:all .15s;cursor:{% if id in modulos_activos or id in solicitudes_pendientes %}default{% else %}pointer{% endif %}"
+                                     {% if not id in modulos_activos and not id in solicitudes_pendientes %}onclick="toggleModulo('{{ id }}', this)"{% endif %}>
+                                    <div class="d-flex align-items-start gap-3 p-3">
+                                        <div style="width:42px;height:42px;border-radius:10px;background:{% if m.get('gratuito') %}#dcfce7{% elif m.color == 'primary' %}#eff6ff{% elif m.color == 'warning' %}#fffbeb{% elif m.color == 'info' %}#f0f9ff{% elif m.color == 'danger' %}#fef2f2{% else %}#f1f5f9{% endif %};color:{% if m.get('gratuito') %}#16a34a{% elif m.color == 'primary' %}#2563eb{% elif m.color == 'warning' %}#d97706{% elif m.color == 'info' %}#0284c7{% elif m.color == 'danger' %}#dc2626{% else %}#64748b{% endif %};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">
+                                            <i class="bi bi-{{ m.icono }}"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                                <span style="font-size:.88rem;font-weight:700;color:#0f172a">{{ m.nombre }}</span>
+                                                {% if id in modulos_activos %}<span class="badge bg-success">ACTIVO</span>
+                                                {% elif id in solicitudes_pendientes %}<span class="badge bg-warning text-dark">PENDIENTE</span>
+                                                {% elif m.get('gratuito') %}<span class="badge" style="background:#dcfce7;color:#15803d">GRATUITO</span>
+                                                {% endif %}
+                                            </div>
+                                            <p style="font-size:.77rem;color:#64748b;margin:0 0 8px;line-height:1.55">{{ m.descripcion }}</p>
+                                            <div class="d-flex align-items-center gap-2">
+                                                {% if m.get('gratuito') %}<span style="font-size:.78rem;font-weight:700;color:#16a34a"><i class="bi bi-check-circle me-1"></i>Acceso libre</span>
+                                                {% elif m.precio_unico %}<span class="badge bg-warning text-dark">PAGO ÚNICO</span><span style="font-size:.82rem;font-weight:700;color:#0f172a">${{ "%.2f"|format(m.precio) }} + IVA</span>
+                                                {% else %}<span style="font-size:.82rem;font-weight:700;color:#0f172a">${{ "%.2f"|format(m.precio) }} + IVA / mes</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% if not id in modulos_activos and not id in solicitudes_pendientes and not m.get('gratuito') %}
+                                        <div class="flex-shrink-0 pt-1">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="modulos" value="{{ id }}" id="mod_{{ id }}"
+                                                   onchange="actualizarPrecio()" onclick="event.stopPropagation()"
+                                                   style="width:18px;height:18px;cursor:pointer">
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
-                            <p style="font-size:.77rem;color:#64748b;margin:0 0 8px;line-height:1.55">{{ m.descripcion }}</p>
-                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                {% if m.get('gratuito') %}
-                                    <span style="font-size:.78rem;font-weight:700;color:#16a34a"><i class="bi bi-check-circle me-1"></i>Acceso libre</span>
-                                {% elif m.precio_unico %}
-                                    <span class="badge bg-warning text-dark">PAGO ÚNICO</span>
-                                    <span style="font-size:.82rem;font-weight:700;color:#0f172a">${{ "%.2f"|format(m.precio) }} + IVA</span>
-                                {% else %}
-                                    <span style="font-size:.82rem;font-weight:700;color:#0f172a">${{ "%.2f"|format(m.precio) }} + IVA / mes</span>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <!-- Checkbox -->
-                        {% if not id in modulos_activos and not id in solicitudes_pendientes and not m.get('gratuito') %}
-                        <div class="flex-shrink-0 pt-1">
-                            <input class="form-check-input" type="checkbox"
-                                   name="modulos" value="{{ id }}" id="mod_{{ id }}"
-                                   onchange="actualizarPrecio()" onclick="event.stopPropagation()"
-                                   style="width:18px;height:18px;cursor:pointer">
-                        </div>
-                        {% endif %}
-
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-            {% endfor %}
-        </div>
-
-        <!-- SECCIÓN TRIBUTARIA -->
-        <div class="mb-2 d-flex align-items-center gap-2">
-            <span style="font-size:.65rem;font-weight:800;color:#7c3aed;text-transform:uppercase;letter-spacing:.1em">
-                <i class="bi bi-journal-text me-1"></i>Tributaria
-            </span>
-            <hr class="flex-grow-1 my-0" style="border-color:#e2e8f0">
-        </div>
-
-        <div class="row g-2 mb-4">
-            {% for id, m in modulos.items() %}
-            {% if m.get('categoria') == 'tributaria' %}
-            <div class="col-sm-6">
-                <div class="modulo-card p-0 {% if id in modulos_activos %}border-success{% elif id in solicitudes_pendientes %}border-warning{% endif %}"
-                     style="border-radius:10px;border:1.5px solid {% if id in modulos_activos %}#4ade80{% elif id in solicitudes_pendientes %}#fbbf24{% else %}#e2e8f0{% endif %};background:{% if id in modulos_activos %}#f0fdf4{% elif id in solicitudes_pendientes %}#fffbeb{% else %}#fff{% endif %};height:100%;transition:all .15s;cursor:{% if id in modulos_activos or id in solicitudes_pendientes %}default{% else %}pointer{% endif %}"
-                     {% if not id in modulos_activos and not id in solicitudes_pendientes %}onclick="toggleModulo('{{ id }}', this)"{% endif %}>
-                    <div class="d-flex gap-2 p-3">
-                        <div style="width:36px;height:36px;border-radius:9px;background:#f1f5f9;color:#64748b;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">
-                            <i class="bi bi-{{ m.icono }}"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
-                                <span style="font-size:.82rem;font-weight:700;color:#0f172a">{{ m.nombre }}</span>
-                                {% if id in modulos_activos %}
-                                    <span class="badge bg-success ms-auto">ACTIVO</span>
-                                {% elif id in solicitudes_pendientes %}
-                                    <span class="badge bg-warning text-dark ms-auto">PEND.</span>
-                                {% endif %}
-                            </div>
-                            <p style="font-size:.72rem;color:#94a3b8;margin:0 0 6px;line-height:1.5">{{ m.descripcion[:90] }}{% if m.descripcion|length > 90 %}…{% endif %}</p>
-                            {% if m.precio_unico %}
-                                <span class="badge bg-warning text-dark" style="font-size:.65rem">ÚNICO</span>
-                                <span style="font-size:.75rem;font-weight:700;color:#475569"> ${{ "%.0f"|format(m.precio) }} + IVA</span>
-                            {% else %}
-                                <span style="font-size:.75rem;font-weight:700;color:#475569">${{ "%.0f"|format(m.precio) }} + IVA/mes</span>
                             {% endif %}
+                            {% endfor %}
                         </div>
-                        {% if not id in modulos_activos and not id in solicitudes_pendientes %}
-                        <input class="form-check-input flex-shrink-0 mt-1" type="checkbox"
-                               name="modulos" value="{{ id }}" id="mod_{{ id }}"
-                               onchange="actualizarPrecio()" onclick="event.stopPropagation()"
-                               style="width:16px;height:16px;cursor:pointer">
-                        {% endif %}
                     </div>
                 </div>
             </div>
-            {% endif %}
-            {% endfor %}
-        </div>
 
-        <!-- SECCIÓN ODOO -->
-        <div class="mb-2 d-flex align-items-center gap-2">
-            <span style="font-size:.65rem;font-weight:800;color:#059669;text-transform:uppercase;letter-spacing:.1em">
-                <i class="bi bi-box-seam me-1"></i>Odoo
-            </span>
-            <hr class="flex-grow-1 my-0" style="border-color:#e2e8f0">
-        </div>
+            <!-- ═══════════════════════════════════════════ TRIBUTARIA -->
+            <div class="accordion-item mb-2 border-0" style="border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed fw-bold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#collapseTrib"
+                            style="background:#faf5ff;color:#6d28d9;font-size:.88rem">
+                        <i class="bi bi-journal-text me-2" style="color:#7c3aed"></i>
+                        Tributaria
+                    </button>
+                </h2>
+                <div id="collapseTrib" class="accordion-collapse collapse"
+                     data-bs-parent="#accordionModulos">
+                    <div class="accordion-body pt-2 pb-3">
+                        <!-- Sub-acordeón Tributaria -->
+                        <div class="accordion" id="accordionTrib">
 
-        <div class="row g-2 mb-4">
-            {% for id, m in modulos.items() %}
-            {% if m.get('categoria') == 'odoo' %}
-            <div class="col-12">
-                <div class="modulo-card p-0 {% if id in modulos_activos %}border-success{% elif id in solicitudes_pendientes %}border-warning{% endif %}"
-                     style="border-radius:10px;border:1.5px solid {% if id in modulos_activos %}#4ade80{% elif id in solicitudes_pendientes %}#fbbf24{% else %}#d1fae5{% endif %};background:{% if id in modulos_activos %}#f0fdf4{% elif id in solicitudes_pendientes %}#fffbeb{% else %}#f0fdf4{% endif %};transition:all .15s;cursor:{% if id in modulos_activos or id in solicitudes_pendientes %}default{% else %}pointer{% endif %}"
-                     {% if not id in modulos_activos and not id in solicitudes_pendientes %}onclick="toggleModulo('{{ id }}', this)"{% endif %}>
-                    <div class="d-flex align-items-start gap-3 p-3">
-                        <div style="width:42px;height:42px;border-radius:10px;background:#d1fae5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">
-                            <i class="bi bi-{{ m.icono }}"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                                <span style="font-size:.88rem;font-weight:700;color:#0f172a">{{ m.nombre }}</span>
-                                {% if id in modulos_activos %}
-                                    <span class="badge bg-success">ACTIVO</span>
-                                {% elif id in solicitudes_pendientes %}
-                                    <span class="badge bg-warning text-dark">PENDIENTE</span>
-                                {% endif %}
+                            <!-- Módulos individuales -->
+                            <div class="accordion-item border-0 mb-1" style="border-radius:8px;overflow:hidden;background:#f8fafc">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button py-2 collapsed" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#collTribInd"
+                                            style="background:#f1f5f9;color:#334155;font-size:.82rem">
+                                        <i class="bi bi-list-check me-2"></i>Módulos individuales (Ingresos / Gastos)
+                                    </button>
+                                </h2>
+                                <div id="collTribInd" class="accordion-collapse collapse show"
+                                     data-bs-parent="#accordionTrib">
+                                    <div class="accordion-body pt-2">
+                                        <div class="row g-2">
+                                            {% for id, m in modulos.items() %}
+                                            {% if m.get('categoria') == 'tributaria' and id != 'registro_completo' %}
+                                            <div class="col-sm-6">
+                                                <div class="modulo-card p-0"
+                                                     style="border-radius:10px;border:1.5px solid {% if id in modulos_activos %}#4ade80{% elif id in solicitudes_pendientes %}#fbbf24{% else %}#e2e8f0{% endif %};background:{% if id in modulos_activos %}#f0fdf4{% elif id in solicitudes_pendientes %}#fffbeb{% else %}#fff{% endif %};height:100%;transition:all .15s;cursor:{% if id in modulos_activos or id in solicitudes_pendientes %}default{% else %}pointer{% endif %}"
+                                                     {% if not id in modulos_activos and not id in solicitudes_pendientes %}onclick="toggleModulo('{{ id }}', this)"{% endif %}>
+                                                    <div class="d-flex gap-2 p-3">
+                                                        <div style="width:36px;height:36px;border-radius:9px;background:#f1f5f9;color:#64748b;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">
+                                                            <i class="bi bi-{{ m.icono }}"></i>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
+                                                                <span style="font-size:.82rem;font-weight:700;color:#0f172a">{{ m.nombre }}</span>
+                                                                {% if id in modulos_activos %}<span class="badge bg-success ms-auto">ACTIVO</span>
+                                                                {% elif id in solicitudes_pendientes %}<span class="badge bg-warning text-dark ms-auto">PEND.</span>
+                                                                {% endif %}
+                                                            </div>
+                                                            <p style="font-size:.72rem;color:#94a3b8;margin:0 0 6px;line-height:1.5">{{ m.descripcion[:90] }}{% if m.descripcion|length > 90 %}…{% endif %}</p>
+                                                            {% if m.precio_unico %}<span class="badge bg-warning text-dark" style="font-size:.65rem">ÚNICO</span><span style="font-size:.75rem;font-weight:700;color:#475569"> ${{ "%.0f"|format(m.precio) }} + IVA</span>
+                                                            {% else %}<span style="font-size:.75rem;font-weight:700;color:#475569">${{ "%.0f"|format(m.precio) }} + IVA/mes</span>
+                                                            {% endif %}
+                                                        </div>
+                                                        {% if not id in modulos_activos and not id in solicitudes_pendientes %}
+                                                        <input class="form-check-input flex-shrink-0 mt-1" type="checkbox"
+                                                               name="modulos" value="{{ id }}" id="mod_{{ id }}"
+                                                               onchange="actualizarPrecio()" onclick="event.stopPropagation()"
+                                                               style="width:16px;height:16px;cursor:pointer">
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <p style="font-size:.77rem;color:#64748b;margin:0 0 8px;line-height:1.55">{{ m.descripcion }}</p>
-                            <span style="font-size:.82rem;font-weight:700;color:#059669">${{ "%.2f"|format(m.precio) }} + IVA / mes</span>
-                        </div>
-                        {% if not id in modulos_activos and not id in solicitudes_pendientes %}
-                        <div class="flex-shrink-0 pt-1">
-                            <input class="form-check-input" type="checkbox"
-                                   name="modulos" value="{{ id }}" id="mod_{{ id }}"
-                                   onchange="actualizarPrecio()" onclick="event.stopPropagation()"
-                                   style="width:18px;height:18px;cursor:pointer">
-                        </div>
-                        {% endif %}
+
+                            <!-- Registro Completo -->
+                            <div class="accordion-item border-0 mt-1" style="border-radius:8px;overflow:hidden">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button py-2 collapsed" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#collTribComp"
+                                            style="background:#f5f3ff;color:#6d28d9;font-size:.82rem">
+                                        <i class="bi bi-journal-richtext me-2"></i>Registro Completo (todo en uno)
+                                        <span class="badge ms-2" style="background:#7c3aed;font-size:.62rem">$120/mes</span>
+                                    </button>
+                                </h2>
+                                <div id="collTribComp" class="accordion-collapse collapse"
+                                     data-bs-parent="#accordionTrib">
+                                    <div class="accordion-body pt-2">
+                                        {% for id, m in modulos.items() %}
+                                        {% if id == 'registro_completo' %}
+                                        <div class="modulo-card p-0"
+                                             style="border-radius:10px;border:1.5px solid {% if id in modulos_activos %}#a78bfa{% elif id in solicitudes_pendientes %}#fbbf24{% else %}#ddd6fe{% endif %};background:{% if id in modulos_activos %}#f5f3ff{% elif id in solicitudes_pendientes %}#fffbeb{% else %}#faf5ff{% endif %};transition:all .15s;cursor:{% if id in modulos_activos or id in solicitudes_pendientes %}default{% else %}pointer{% endif %}"
+                                             {% if not id in modulos_activos and not id in solicitudes_pendientes %}onclick="toggleModulo('{{ id }}', this)"{% endif %}>
+                                            <div class="d-flex align-items-start gap-3 p-3">
+                                                <div style="width:42px;height:42px;border-radius:10px;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">
+                                                    <i class="bi bi-{{ m.icono }}"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                                        <span style="font-size:.88rem;font-weight:700;color:#0f172a">{{ m.nombre }}</span>
+                                                        {% if id in modulos_activos %}<span class="badge bg-success">ACTIVO</span>
+                                                        {% elif id in solicitudes_pendientes %}<span class="badge bg-warning text-dark">PENDIENTE</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <p style="font-size:.77rem;color:#64748b;margin:0 0 8px;line-height:1.55">{{ m.descripcion }}</p>
+                                                    <span style="font-size:.82rem;font-weight:700;color:#7c3aed">${{ "%.2f"|format(m.precio) }} + IVA / mes</span>
+                                                </div>
+                                                {% if not id in modulos_activos and not id in solicitudes_pendientes %}
+                                                <div class="flex-shrink-0 pt-1">
+                                                    <input class="form-check-input" type="checkbox"
+                                                           name="modulos" value="{{ id }}" id="mod_{{ id }}"
+                                                           onchange="actualizarPrecio()" onclick="event.stopPropagation()"
+                                                           style="width:18px;height:18px;cursor:pointer">
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>{# /accordionTrib #}
                     </div>
                 </div>
             </div>
-            {% endif %}
-            {% endfor %}
-        </div>
+
+            <!-- ══════════════════════════════════════════════════ ODOO -->
+            <div class="accordion-item mb-2 border-0" style="border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed fw-bold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#collapseOdoo"
+                            style="background:#f0fdf4;color:#065f46;font-size:.88rem">
+                        <i class="bi bi-box-seam me-2 text-success"></i>Odoo
+                    </button>
+                </h2>
+                <div id="collapseOdoo" class="accordion-collapse collapse"
+                     data-bs-parent="#accordionModulos">
+                    <div class="accordion-body pt-2 pb-3">
+                        <div class="row g-2">
+                            {% for id, m in modulos.items() %}
+                            {% if m.get('categoria') == 'odoo' %}
+                            <div class="col-12">
+                                <div class="modulo-card p-0"
+                                     style="border-radius:10px;border:1.5px solid {% if id in modulos_activos %}#4ade80{% elif id in solicitudes_pendientes %}#fbbf24{% else %}#d1fae5{% endif %};background:{% if id in modulos_activos %}#f0fdf4{% elif id in solicitudes_pendientes %}#fffbeb{% else %}#f0fdf4{% endif %};transition:all .15s;cursor:{% if id in modulos_activos or id in solicitudes_pendientes %}default{% else %}pointer{% endif %}"
+                                     {% if not id in modulos_activos and not id in solicitudes_pendientes %}onclick="toggleModulo('{{ id }}', this)"{% endif %}>
+                                    <div class="d-flex align-items-start gap-3 p-3">
+                                        <div style="width:42px;height:42px;border-radius:10px;background:#d1fae5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">
+                                            <i class="bi bi-{{ m.icono }}"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                                <span style="font-size:.88rem;font-weight:700;color:#0f172a">{{ m.nombre }}</span>
+                                                {% if id in modulos_activos %}<span class="badge bg-success">ACTIVO</span>
+                                                {% elif id in solicitudes_pendientes %}<span class="badge bg-warning text-dark">PENDIENTE</span>
+                                                {% endif %}
+                                            </div>
+                                            <p style="font-size:.77rem;color:#64748b;margin:0 0 8px;line-height:1.55">{{ m.descripcion }}</p>
+                                            <span style="font-size:.82rem;font-weight:700;color:#059669">${{ "%.2f"|format(m.precio) }} + IVA / mes</span>
+                                        </div>
+                                        {% if not id in modulos_activos and not id in solicitudes_pendientes %}
+                                        <div class="flex-shrink-0 pt-1">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="modulos" value="{{ id }}" id="mod_{{ id }}"
+                                                   onchange="actualizarPrecio()" onclick="event.stopPropagation()"
+                                                   style="width:18px;height:18px;cursor:pointer">
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>{# /accordionModulos #}
 
     </div>
 

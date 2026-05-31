@@ -1,5 +1,38 @@
 {% extends "base.html" %}
 {% block title %}Procesador Retenciones XML{% endblock %}
+
+{% block head %}
+<style>
+#dropZoneRet {
+    border: 2px dashed #bfdbfe;
+    border-radius: 12px;
+    background: #f8fafc;
+    padding: 36px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+}
+#dropZoneRet.dragover {
+    border-color: #2563eb;
+    background: #eff6ff;
+}
+#dropZoneRet input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.file-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #eff6ff; border: 1px solid #bfdbfe;
+    border-radius: 20px; padding: 3px 10px 3px 8px;
+    font-size: .72rem; color: #1d4ed8; margin: 2px;
+}
+.file-chip .rm {
+    cursor: pointer; color: #93c5fd; font-size: .8rem; line-height: 1;
+}
+.file-chip .rm:hover { color: #dc2626; }
+</style>
+{% endblock %}
+
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -8,24 +41,54 @@
 </div>
 
 <!-- Carga de archivos -->
-<div class="card mb-3 border-primary">
-    <div class="card-header bg-primary text-white fw-bold py-2">
+<div class="card mb-3" style="border:1.5px solid #bfdbfe">
+    <div class="card-header fw-bold py-2" style="background:#eff6ff;color:#1d4ed8">
         <i class="bi bi-upload me-1"></i>Cargar XMLs de Retenciones
     </div>
     <div class="card-body">
-        <div class="row g-3 align-items-end">
-            <div class="col-md-8">
-                <label class="form-label small fw-bold">Archivos XML de retenciones <span class="text-danger">*</span></label>
-                <input type="file" class="form-control form-control-sm" id="inputXML" multiple accept=".xml">
-                <div class="form-text">Sube uno o varios XMLs de comprobantes de retención del SRI</div>
+
+        <!-- Drag & Drop Zone -->
+        <div id="dropZoneRet" onclick="document.getElementById('inputXML').click()">
+            <input type="file" id="inputXML" multiple accept=".xml"
+                   onchange="agregarArchivos(this.files)">
+            <div id="dropIdleRet">
+                <i class="bi bi-cloud-upload" style="font-size:2.5rem;color:#93c5fd"></i>
+                <div class="fw-bold mt-2" style="color:#1d4ed8;font-size:.95rem">
+                    Arrastra los archivos XML aquí
+                </div>
+                <div class="text-muted" style="font-size:.8rem;margin-top:4px">
+                    o haz clic para seleccionarlos · múltiples archivos permitidos
+                </div>
             </div>
-            <div class="col-md-4">
-                <button class="btn btn-primary fw-bold w-100" onclick="procesarXMLs()">
-                    <i class="bi bi-gear me-1"></i>Procesar Retenciones
-                </button>
+            <div id="dropActiveRet" class="d-none" style="pointer-events:none">
+                <i class="bi bi-file-earmark-arrow-down" style="font-size:2rem;color:#2563eb"></i>
+                <div class="fw-bold mt-2" style="color:#2563eb">Suelta los archivos aquí</div>
             </div>
         </div>
-        <div class="alert alert-info mt-3 small mb-0">
+
+        <!-- Lista de archivos seleccionados -->
+        <div id="listaArchivos" class="mt-3 d-none">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold" style="font-size:.8rem;color:#475569">
+                    <i class="bi bi-files me-1"></i>Archivos seleccionados:
+                    <span id="cntArchivos" class="badge bg-primary ms-1">0</span>
+                </span>
+                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2"
+                        style="font-size:.72rem" onclick="limpiarArchivos()">
+                    <i class="bi bi-x-circle me-1"></i>Limpiar todo
+                </button>
+            </div>
+            <div id="chipsArchivos" style="max-height:100px;overflow-y:auto"></div>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+            <button class="btn btn-primary fw-bold flex-grow-1" id="btnProcesar"
+                    onclick="procesarXMLs()" disabled>
+                <i class="bi bi-gear me-1"></i>Procesar Retenciones
+            </button>
+        </div>
+
+        <div class="alert alert-info mt-3 small mb-0 py-2">
             <i class="bi bi-info-circle me-1"></i>
             Se detectan automáticamente: Renta (código 1), IVA (código 2) e ISD (código 6). Los duplicados se marcan en rojo.
         </div>
@@ -124,13 +187,43 @@
 
 <script>
 let todasFilas = [];
+let archivosSeleccionados = [];
+
+// Drag & Drop handlers
+const dz = document.getElementById('dropZoneRet');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); document.getElementById('dropIdleRet').classList.add('d-none'); document.getElementById('dropActiveRet').classList.remove('d-none'); });
+dz.addEventListener('dragleave', () => { dz.classList.remove('dragover'); document.getElementById('dropIdleRet').classList.remove('d-none'); document.getElementById('dropActiveRet').classList.add('d-none'); });
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragover'); document.getElementById('dropIdleRet').classList.remove('d-none'); document.getElementById('dropActiveRet').classList.add('d-none'); agregarArchivos(e.dataTransfer.files); });
+
+function agregarArchivos(files) {
+    [...files].forEach(f => {
+        if (f.name.toLowerCase().endsWith('.xml') && !archivosSeleccionados.find(x => x.name === f.name && x.size === f.size))
+            archivosSeleccionados.push(f);
+    });
+    renderChips();
+}
+
+function renderChips() {
+    const cnt = archivosSeleccionados.length;
+    const lista = document.getElementById('listaArchivos');
+    const chips = document.getElementById('chipsArchivos');
+    if (cnt === 0) { lista.classList.add('d-none'); document.getElementById('btnProcesar').disabled = true; return; }
+    lista.classList.remove('d-none');
+    document.getElementById('cntArchivos').textContent = cnt;
+    document.getElementById('btnProcesar').disabled = false;
+    chips.innerHTML = archivosSeleccionados.map((f, i) =>
+        `<span class="file-chip"><i class="bi bi-file-earmark-code me-1"></i>${f.name} <span class="rm" onclick="quitarArchivo(${i})">✕</span></span>`
+    ).join('');
+}
+
+function quitarArchivo(idx) { archivosSeleccionados.splice(idx, 1); renderChips(); }
+function limpiarArchivos() { archivosSeleccionados = []; document.getElementById('inputXML').value = ''; renderChips(); }
 
 async function procesarXMLs() {
-    const input = document.getElementById('inputXML');
-    if (!input.files.length) { alert('Selecciona al menos un archivo XML'); return; }
+    if (!archivosSeleccionados.length) { alert('Selecciona al menos un archivo XML'); return; }
 
     const fd = new FormData();
-    [...input.files].forEach(f => fd.append('archivos_xml', f));
+    archivosSeleccionados.forEach(f => fd.append('archivos_xml', f));
 
     mostrarSpinner('Procesando XMLs de retenciones...');
     try {

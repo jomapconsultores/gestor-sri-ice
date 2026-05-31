@@ -1,5 +1,38 @@
 {% extends "base.html" %}
 {% block title %}Conciliación Bancaria Odoo{% endblock %}
+
+{% block head %}
+<style>
+#dropZonePDF {
+    border: 2px dashed #bfdbfe;
+    border-radius: 12px;
+    background: #f8fafc;
+    padding: 36px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+}
+#dropZonePDF.dragover {
+    border-color: #2563eb;
+    background: #eff6ff;
+}
+#dropZonePDF input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.file-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #eff6ff; border: 1px solid #bfdbfe;
+    border-radius: 20px; padding: 3px 10px 3px 8px;
+    font-size: .72rem; color: #1d4ed8; margin: 2px;
+}
+.file-chip .rm {
+    cursor: pointer; color: #93c5fd; font-size: .8rem; line-height: 1;
+}
+.file-chip .rm:hover { color: #dc2626; }
+</style>
+{% endblock %}
+
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -10,18 +43,45 @@
 <div class="row g-3">
     <!-- Panel izquierdo: carga -->
     <div class="col-lg-4">
-        <div class="card border-primary">
-            <div class="card-header bg-primary text-white fw-bold"><i class="bi bi-file-earmark-pdf me-1"></i>1. Subir Estados de Cuenta PDF</div>
+        <div class="card" style="border:1.5px solid #bfdbfe">
+            <div class="card-header fw-bold" style="background:#eff6ff;color:#1d4ed8"><i class="bi bi-file-earmark-pdf me-1"></i>1. Subir Estados de Cuenta PDF</div>
             <div class="card-body">
-                <div id="zonaUpload" class="border border-2 border-dashed rounded p-3 text-center mb-3" style="cursor:pointer; border-color:#0d6efd!important; min-height:120px">
-                    <i class="bi bi-cloud-upload text-primary" style="font-size:2rem"></i>
-                    <p class="small text-muted mt-1 mb-0">Arrastra PDFs aquí o haz clic</p>
-                    <input type="file" id="inputPDF" multiple accept=".pdf" class="d-none">
+
+                <!-- Drag & Drop Zone -->
+                <div id="dropZonePDF" onclick="document.getElementById('inputPDF').click()">
+                    <input type="file" id="inputPDF" multiple accept=".pdf"
+                           onchange="agregarArchivos(this.files)">
+                    <div id="dropIdlePDF">
+                        <i class="bi bi-cloud-upload" style="font-size:2.5rem;color:#93c5fd"></i>
+                        <div class="fw-bold mt-2" style="color:#1d4ed8;font-size:.95rem">
+                            Arrastra los archivos PDF aquí
+                        </div>
+                        <div class="text-muted" style="font-size:.8rem;margin-top:4px">
+                            o haz clic para seleccionarlos · múltiples archivos permitidos
+                        </div>
+                    </div>
+                    <div id="dropActivePDF" class="d-none" style="pointer-events:none">
+                        <i class="bi bi-file-earmark-arrow-down" style="font-size:2rem;color:#2563eb"></i>
+                        <div class="fw-bold mt-2" style="color:#2563eb">Suelta los archivos aquí</div>
+                    </div>
                 </div>
 
-                <div id="listaPDFs" class="mb-3"></div>
+                <!-- Lista de archivos seleccionados -->
+                <div id="listaArchivos" class="mt-3 d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold" style="font-size:.8rem;color:#475569">
+                            <i class="bi bi-files me-1"></i>Archivos seleccionados:
+                            <span id="cntArchivos" class="badge bg-primary ms-1">0</span>
+                        </span>
+                        <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2"
+                                style="font-size:.72rem" onclick="limpiarArchivos()">
+                            <i class="bi bi-x-circle me-1"></i>Limpiar todo
+                        </button>
+                    </div>
+                    <div id="chipsArchivos" style="max-height:100px;overflow-y:auto"></div>
+                </div>
 
-                <button class="btn btn-primary w-100 fw-bold" id="btnProcesar" disabled onclick="procesarPDFs()">
+                <button class="btn btn-primary w-100 fw-bold mt-3" id="btnProcesar" disabled onclick="procesarPDFs()">
                     <i class="bi bi-cpu me-1"></i>2. Procesar con IA (Mistral)
                 </button>
                 <p class="text-muted small mt-2 mb-0 text-center"><i class="bi bi-info-circle me-1"></i>La IA extrae todas las transacciones automáticamente</p>
@@ -99,41 +159,38 @@ let pdfArchivos = [];
 let diarios = {};
 let transacciones = [];
 
-// Drag & Drop
-const zona = document.getElementById('zonaUpload');
-const input = document.getElementById('inputPDF');
-
-zona.addEventListener('click', () => input.click());
-zona.addEventListener('dragover', e => { e.preventDefault(); zona.classList.add('border-primary'); });
-zona.addEventListener('dragleave', () => zona.classList.remove('border-primary'));
-zona.addEventListener('drop', e => {
-    e.preventDefault();
-    zona.classList.remove('border-primary');
-    agregarArchivos([...e.dataTransfer.files].filter(f => f.name.toLowerCase().endsWith('.pdf')));
-});
-input.addEventListener('change', () => agregarArchivos([...input.files]));
+// Drag & Drop handlers
+const dz = document.getElementById('dropZonePDF');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); document.getElementById('dropIdlePDF').classList.add('d-none'); document.getElementById('dropActivePDF').classList.remove('d-none'); });
+dz.addEventListener('dragleave', () => { dz.classList.remove('dragover'); document.getElementById('dropIdlePDF').classList.remove('d-none'); document.getElementById('dropActivePDF').classList.add('d-none'); });
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragover'); document.getElementById('dropIdlePDF').classList.remove('d-none'); document.getElementById('dropActivePDF').classList.add('d-none'); agregarArchivos(e.dataTransfer.files); });
 
 function agregarArchivos(files) {
-    files.forEach(f => {
-        if (!pdfArchivos.find(p => p.name === f.name)) {
+    [...files].forEach(f => {
+        if (f.name.toLowerCase().endsWith('.pdf') && !pdfArchivos.find(p => p.name === f.name && p.size === f.size)) {
             pdfArchivos.push(f);
             const diario = prompt(`Diario Odoo para: ${f.name}`, 'Diario Bancario') || 'Diario Bancario';
             diarios[f.name] = diario;
         }
     });
-    renderLista();
+    renderChips();
 }
 
-function renderLista() {
-    const lista = document.getElementById('listaPDFs');
-    if (pdfArchivos.length === 0) { lista.innerHTML = ''; return; }
-    lista.innerHTML = pdfArchivos.map((f, i) => `
-        <div class="d-flex justify-content-between align-items-center border-bottom py-1 small">
-            <span><i class="bi bi-file-earmark-pdf text-danger me-1"></i>${f.name}</span>
-            <span class="badge bg-light text-dark">${diarios[f.name]}</span>
-        </div>`).join('');
+function renderChips() {
+    const cnt = pdfArchivos.length;
+    const lista = document.getElementById('listaArchivos');
+    const chips = document.getElementById('chipsArchivos');
+    if (cnt === 0) { lista.classList.add('d-none'); document.getElementById('btnProcesar').disabled = true; return; }
+    lista.classList.remove('d-none');
+    document.getElementById('cntArchivos').textContent = cnt;
     document.getElementById('btnProcesar').disabled = false;
+    chips.innerHTML = pdfArchivos.map((f, i) =>
+        `<span class="file-chip"><i class="bi bi-file-earmark-pdf text-danger me-1"></i>${f.name} <span class="rm" onclick="quitarArchivo(${i})">✕</span></span>`
+    ).join('');
 }
+
+function quitarArchivo(idx) { const f = pdfArchivos[idx]; delete diarios[f.name]; pdfArchivos.splice(idx, 1); renderChips(); }
+function limpiarArchivos() { pdfArchivos = []; diarios = {}; document.getElementById('inputPDF').value = ''; renderChips(); }
 
 async function procesarPDFs() {
     if (!pdfArchivos.length) return;

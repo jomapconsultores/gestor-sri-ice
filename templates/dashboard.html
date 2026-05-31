@@ -100,13 +100,16 @@
 {# ══════════════════════════════════════════════════════════════════════════
    SECCIÓN ICE
 ══════════════════════════════════════════════════════════════════════════ #}
-<div class="d-flex align-items-center gap-2 mb-3">
+<div class="d-flex align-items-center gap-2 mb-2" style="cursor:pointer"
+     data-bs-toggle="collapse" data-bs-target="#secICE" aria-expanded="true">
     <span style="font-size:.62rem;font-weight:800;color:#2563eb;text-transform:uppercase;letter-spacing:.1em">
         <i class="bi bi-fire me-1"></i>Impuesto a los Consumos Especiales (ICE)
     </span>
     <div style="flex:1;height:1px;background:#e2e8f0"></div>
+    <i class="bi bi-chevron-down text-muted" style="font-size:.75rem;transition:transform .2s" id="chevICE"></i>
 </div>
 
+<div id="secICE" class="collapse show mb-1">
 <div class="row g-3 mb-4">
 
     {# ── 1. Tarifas ICE (GRATIS) ──────────────────────────────────────────── #}
@@ -317,26 +320,31 @@
     </div>
 
 </div>
+</div>{# /secICE collapse #}
 
 {# ══════════════════════════════════════════════════════════════════════════
    MÓDULOS GENERALES ACTIVOS (solo si el usuario tiene alguno)
 ══════════════════════════════════════════════════════════════════════════ #}
 {# ── Módulos Tributaria activos ──────────────────────────────────────────── #}
-{% set trib_activos = ['facturas','exportacion','descarga_sri','retenciones','sri_pro','soporte'] %}
+{% set trib_activos = ['facturas','exportacion','descarga_sri','retenciones','sri_pro','soporte','registro_completo'] %}
 {% if (modulos_activos | select('in', trib_activos) | list) or current_user.is_admin %}
-<div class="d-flex align-items-center gap-2 mb-3">
+<div class="d-flex align-items-center gap-2 mb-2 mt-1" style="cursor:pointer"
+     data-bs-toggle="collapse" data-bs-target="#secTrib" aria-expanded="true">
     <span style="font-size:.62rem;font-weight:800;color:#7c3aed;text-transform:uppercase;letter-spacing:.1em">
         <i class="bi bi-journal-text me-1"></i>Tributaria
     </span>
     <div style="flex:1;height:1px;background:#e2e8f0"></div>
+    <i class="bi bi-chevron-down text-muted" style="font-size:.75rem;transition:transform .2s" id="chevTrib"></i>
 </div>
+<div id="secTrib" class="collapse show">
 <div class="row g-3 mb-4">
     {% for mod_id, mod_icon, mod_nombre, mod_url in [
-        ('facturas',     'bi-receipt',               'Facturas Gastos/Ingresos',    url_for('invoices.pagina_carga')),
-        ('retenciones',  'bi-file-earmark-minus',    'Retenciones XML',             safe_url_for('retenciones.index')),
-        ('sri_pro',      'bi-cloud-arrow-down',      'Gestor SRI Pro',              safe_url_for('sri_processor.index')),
-        ('descarga_sri', 'bi-cloud-download',        'Descarga Masiva SRI',         url_for('downloader.pagina_descarga')),
-        ('exportacion',  'bi-file-earmark-excel',    'Exportación Excel',           url_for('exports.exportar_declaracion')),
+        ('facturas',          'bi-receipt',               'Facturas Gastos/Ingresos',    url_for('invoices.pagina_carga')),
+        ('retenciones',       'bi-file-earmark-minus',    'Retenciones XML',             safe_url_for('retenciones.index')),
+        ('sri_pro',           'bi-cloud-arrow-down',      'Gestor SRI Pro',              safe_url_for('sri_processor.index')),
+        ('descarga_sri',      'bi-cloud-download',        'Descarga Masiva SRI',         url_for('downloader.pagina_descarga')),
+        ('exportacion',       'bi-file-earmark-excel',    'Exportación Excel',           url_for('exports.exportar_declaracion')),
+        ('registro_completo', 'bi-journal-richtext',      'Registro Completo',           safe_url_for('registro_completo.index')),
     ] %}
     {% if mod_id in modulos_activos or current_user.is_admin %}
     <div class="col-md-4 col-lg-3">
@@ -355,16 +363,20 @@
     {% endif %}
     {% endfor %}
 </div>
+</div>{# /secTrib collapse #}
 {% endif %}
 
 {# ── Módulos Odoo activos ─────────────────────────────────────────────────── #}
 {% if 'conciliacion' in modulos_activos or current_user.is_admin %}
-<div class="d-flex align-items-center gap-2 mb-3">
+<div class="d-flex align-items-center gap-2 mb-2 mt-1" style="cursor:pointer"
+     data-bs-toggle="collapse" data-bs-target="#secOdoo" aria-expanded="true">
     <span style="font-size:.62rem;font-weight:800;color:#059669;text-transform:uppercase;letter-spacing:.1em">
         <i class="bi bi-box-seam me-1"></i>Odoo
     </span>
     <div style="flex:1;height:1px;background:#e2e8f0"></div>
+    <i class="bi bi-chevron-down text-muted" style="font-size:.75rem;transition:transform .2s" id="chevOdoo"></i>
 </div>
+<div id="secOdoo" class="collapse show">
 <div class="row g-3 mb-4">
     <div class="col-md-4 col-lg-3">
         <a href="{{ safe_url_for('conciliacion.index') }}" class="card h-100 text-decoration-none" style="border:1.5px solid #a7f3d0;background:#f0fdf4;transition:box-shadow .15s">
@@ -380,6 +392,7 @@
         </a>
     </div>
 </div>
+</div>{# /secOdoo collapse #}
 {% endif %}
 
 {# ── Nota sobre módulos no completados (no se puede cancelar) ─────────────── #}
@@ -390,5 +403,17 @@
     <a href="{{ url_for('payments.ver_planes') }}" class="fw-bold" style="color:#0284c7">Contratar Módulos</a>.
 </div>
 {% endif %}
+
+<script>
+// Rotate chevron icons when sections collapse/expand
+['ICE','Trib','Odoo'].forEach(key => {
+    const el = document.getElementById('sec' + key);
+    if (!el) return;
+    const chev = document.getElementById('chev' + key);
+    if (!chev) return;
+    el.addEventListener('hide.bs.collapse', () => { chev.style.transform = 'rotate(-90deg)'; });
+    el.addEventListener('show.bs.collapse', () => { chev.style.transform = 'rotate(0deg)'; });
+});
+</script>
 
 {% endblock %}

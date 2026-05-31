@@ -88,11 +88,12 @@ def create_app():
 
     # Módulos Pro – importados aquí para capturar cualquier error de importación
     _pro_modules = [
-        ('routes.ats',          'ats',           '/ats'),
-        ('routes.conciliacion', 'conciliacion',   '/conciliacion'),
-        ('routes.sri_processor','sri_processor',  '/sri_processor'),
-        ('routes.ice_auditoria','ice_auditoria',  '/ice_auditoria'),
-        ('routes.retenciones',  'retenciones',    '/retenciones'),
+        ('routes.ats',               'ats',                '/ats'),
+        ('routes.conciliacion',      'conciliacion',        '/conciliacion'),
+        ('routes.sri_processor',     'sri_processor',       '/sri_processor'),
+        ('routes.ice_auditoria',     'ice_auditoria',       '/ice_auditoria'),
+        ('routes.retenciones',       'retenciones',         '/retenciones'),
+        ('routes.registro_completo', 'registro_completo_bp', '/registro_completo'),
     ]
     for _mod, _attr, _prefix in _pro_modules:
         try:
