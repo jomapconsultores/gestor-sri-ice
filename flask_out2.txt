@@ -1,0 +1,32 @@
+  [OK] Blueprint ats registrado en /ats
+  [OK] Blueprint conciliacion registrado en /conciliacion
+  [OK] Blueprint sri_processor registrado en /sri_processor
+  [OK] Blueprint ice_auditoria registrado en /ice_auditoria
+  [OK] Blueprint retenciones registrado en /retenciones
+  [OK] Blueprint registro_completo_bp registrado en /registro_completo
+ * Serving Flask app 'app'
+ * Debug mode: on
+  [OK] Blueprint ats registrado en /ats
+  [OK] Blueprint conciliacion registrado en /conciliacion
+  [OK] Blueprint sri_processor registrado en /sri_processor
+  [OK] Blueprint ice_auditoria registrado en /ice_auditoria
+  [OK] Blueprint retenciones registrado en /retenciones
+  [OK] Blueprint registro_completo_bp registrado en /registro_completo
+  [OK] Blueprint ats registrado en /ats
+  [OK] Blueprint conciliacion registrado en /conciliacion
+  [OK] Blueprint sri_processor registrado en /sri_processor
+  [OK] Blueprint ice_auditoria registrado en /ice_auditoria
+  [OK] Blueprint retenciones registrado en /retenciones
+  [OK] Blueprint registro_completo_bp registrado en /registro_completo
+  [OK] Blueprint ats registrado en /ats
+  [OK] Blueprint conciliacion registrado en /conciliacion
+  [OK] Blueprint sri_processor registrado en /sri_processor
+  [OK] Blueprint ice_auditoria registrado en /ice_auditoria
+  [OK] Blueprint retenciones registrado en /retenciones
+  [OK] Blueprint registro_completo_bp registrado en /registro_completo
+  [OK] Blueprint ats registrado en /ats
+  [OK] Blueprint conciliacion registrado en /conciliacion
+  [OK] Blueprint sri_processor registrado en /sri_processor
+  [OK] Blueprint ice_auditoria registrado en /ice_auditoria
+  [OK] Blueprint retenciones registrado en /retenciones
+  [OK] Blueprint registro_completo_bp registrado en /registro_completo

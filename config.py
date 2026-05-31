@@ -145,14 +145,20 @@ class Config:
             'color': 'danger', 'icono': 'receipt',
             'tooltip': 'Sube facturas de gasto, clasifica y exporta a Excel',
         },
-        # ── Módulos Tributaria — COMPLETO ────────────────────────────────────────────
+        # ── Módulo Declaración Completa ───────────────────────────────────────────────
         'registro_completo': {
-            'nombre': 'Registro de Ingresos y Gastos',
-            'descripcion': 'Módulo integrado con todos los pasos: ingresos clasificados, retenciones, gastos clasificados, cálculo de IVA (a pagar o crédito tributario), ingresos a crédito (1-3 meses), acumulación de crédito tributario e ICE específico y ad valorem para declaración.',
+            'nombre': 'Declaración ICE + IVA',
+            'descripcion': (
+                'Todo en un solo lugar: Tarifas ICE, Cálculo ICE Simple y Múltiple, '
+                'Generación de Anexos ICE/PVP, Procesamiento de Facturas ICE, '
+                'Facturas de Ingreso, Retenciones, Facturas de Gasto con clasificación, '
+                'Liquidación IVA (a pagar o crédito tributario) e ICE específico + '
+                'ad valorem para declaración. Reporte Excel con todas las hojas.'
+            ),
             'precio': 120.00, 'precio_unico': False, 'gratuito': False,
             'categoria': 'tributaria', 'subcategoria': 'completo',
-            'color': 'dark', 'icono': 'journal-check',
-            'tooltip': 'Módulo completo: ingresos + gastos + IVA + ICE para declaración',
+            'color': 'dark', 'icono': 'journal-richtext',
+            'tooltip': 'Todo en uno: ICE + Tributaria + Liquidación + Excel completo',
         },
         # ── Módulos Odoo ─────────────────────────────────────────────────────────────
         'conciliacion': {

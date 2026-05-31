@@ -8,7 +8,7 @@
         <h1 class="page-title">
             <i class="bi bi-journal-richtext text-primary me-2"></i>Declaración ICE + IVA
         </h1>
-        <p class="page-subtitle">Módulo completo integrado: ICE + Tributaria + Liquidación + Reportes en un solo lugar</p>
+        <p class="page-subtitle">Módulo integrado: ICE + Tributaria + Liquidación en un solo lugar</p>
     </div>
     <div>
         <span class="badge" style="background:#7c3aed; font-size:.82rem; padding:6px 14px; color:#fff">$120 / mes</span>
@@ -17,7 +17,7 @@
 
 <div class="alert alert-info mb-4">
     <i class="bi bi-info-circle me-2"></i>
-    <strong>Tu módulo incluye:</strong> Tarifas ICE • Cálculo ICE Simple • ICE Múltiple • Anexos ICE/PVP • Facturas ICE • Facturas de Ingreso • Retenciones • Facturas de Gasto • Liquidación IVA • Reportes Excel
+    <strong>Tu módulo integrado incluye:</strong> Cálculo ICE Simple • ICE Múltiple • Facturas de Ingreso • Retenciones • Facturas de Gasto • Liquidación IVA + ICE • Reporte Excel completo
 </div>
 
 <!-- Tabs principales -->
@@ -29,63 +29,163 @@
 
 <div class="tab-content">
 
-    <!-- SECCIÓN ICE -->
+    <!-- ===== SECCIÓN ICE ===== -->
     <div id="sec-ice" class="tab-pane fade show active">
         <h5 class="mb-3" style="color:#1e40af"><i class="bi bi-fire me-2"></i>ICE — Impuesto a los Consumos Especiales</h5>
 
         <!-- Sub-tabs ICE -->
         <ul class="nav nav-pills mb-3" role="tablist">
-            <li class="nav-item"><a class="nav-link active" id="subtab-tarifas" data-bs-toggle="pill" href="#ice-tarifas" style="font-size:.82rem">Tarifas 2021–2026</a></li>
-            <li class="nav-item"><a class="nav-link" id="subtab-simple" data-bs-toggle="pill" href="#ice-simple" style="font-size:.82rem">ICE Simple</a></li>
+            <li class="nav-item"><a class="nav-link active" id="subtab-simple" data-bs-toggle="pill" href="#ice-simple" style="font-size:.82rem">ICE Simple</a></li>
             <li class="nav-item"><a class="nav-link" id="subtab-multiple" data-bs-toggle="pill" href="#ice-multiple" style="font-size:.82rem">ICE Múltiple</a></li>
-            <li class="nav-item"><a class="nav-link" id="subtab-anexos" data-bs-toggle="pill" href="#ice-anexos" style="font-size:.82rem">Anexos ICE/PVP</a></li>
-            <li class="nav-item"><a class="nav-link" id="subtab-facturas" data-bs-toggle="pill" href="#ice-facturas" style="font-size:.82rem">Facturas ICE</a></li>
         </ul>
 
         <div class="pill-content">
-            <div id="ice-tarifas" class="pill-pane fade show active">
-                <div class="card mb-3"><div class="card-body">
-                    <h6 class="fw-bold">Tarifas ICE Vigentes 2021–2026</h6>
-                    <p class="text-muted small">Las tarifas se actualizan anualmente según resoluciones del SRI.</p>
-                    <a href="{{ safe_url_for('ice.ver_tarifas') }}" class="btn btn-primary btn-sm"><i class="bi bi-eye me-1"></i>Ver tabla completa de tarifas</a>
-                </div></div>
+            <!-- ICE Simple -->
+            <div id="ice-simple" class="pill-pane fade show active">
+                <div class="card">
+                    <div class="card-header fw-bold" style="background:#eff6ff; border-bottom: 1px solid #bfdbfe; color:#1d4ed8">
+                        Cálculo ICE Simple
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Calcula el ICE para un producto individual.</p>
+
+                        <form id="formIceSimple" class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <label class="form-label">Nombre del Producto</label>
+                                <input type="text" class="form-control" name="nombre" placeholder="Ej: Ron Blanco" value="">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Tipo de Producto *</label>
+                                <select class="form-select" name="tipo_producto" required>
+                                    <option value="">-- Seleccionar --</option>
+                                    <option value="licor_ron">Licor - Ron</option>
+                                    <option value="licor_vino">Licor - Vino</option>
+                                    <option value="cerveza_industrial">Cerveza Industrial</option>
+                                    <option value="cerveza_artesanal">Cerveza Artesanal</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Año *</label>
+                                <select class="form-select" name="anio" required>
+                                    <option value="">-- Seleccionar --</option>
+                                    <option value="2021">2021</option>
+                                    <option value="2022">2022</option>
+                                    <option value="2023">2023</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2026">2026</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Precio ex-fábrica (USD) *</label>
+                                <input type="number" class="form-control" name="precio" placeholder="0.00" step="0.01" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Capacidad (ml o cc) *</label>
+                                <input type="number" class="form-control" name="capacidad" placeholder="750" step="1" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Grado Alcohólico (%) *</label>
+                                <input type="number" class="form-control" name="grado" placeholder="40" step="0.1" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Cantidad de unidades</label>
+                                <input type="number" class="form-control" name="cantidad" placeholder="1" value="1" step="1">
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="button" class="btn btn-primary w-100" onclick="calcularIceSimple()">
+                                    <i class="bi bi-calculator me-1"></i>Calcular
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Resultados ICE Simple -->
+                        <div id="resultadoIceSimple" style="display:none">
+                            <div class="alert alert-success mb-3">
+                                <i class="bi bi-check-circle me-2"></i>Cálculo completado exitosamente
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead style="background:#0D1B2E; color:white">
+                                        <tr>
+                                            <th>Concepto</th>
+                                            <th>Unitario</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyIceSimple"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div id="ice-simple" class="pill-pane fade">
-                <div class="card mb-3"><div class="card-header fw-bold" style="background:#eff6ff; border-bottom: 1px solid #bfdbfe; color:#1d4ed8">Cálculo ICE Simple</div>
-                <div class="card-body">
-                    <p class="text-muted small mb-3">Calcula el ICE para un producto individual con base legal incluida.</p>
-                    <a href="{{ safe_url_for('ice.calculadora') }}" class="btn btn-primary btn-sm"><i class="bi bi-calculator me-1"></i>Ir a calculadora ICE Simple</a>
-                </div></div>
-            </div>
-
+            <!-- ICE Múltiple -->
             <div id="ice-multiple" class="pill-pane fade">
-                <div class="card mb-3"><div class="card-header fw-bold" style="background:#eff6ff; border-bottom: 1px solid #bfdbfe; color:#1d4ed8">ICE Múltiple + Mezcla</div>
-                <div class="card-body">
-                    <p class="text-muted small mb-3">Calcula ICE para múltiples productos con costos, utilidad, PVP y mezcla total.</p>
-                    <a href="{{ safe_url_for('ice.multiple') }}" class="btn btn-primary btn-sm"><i class="bi bi-calculator-fill me-1"></i>Ir a ICE Múltiple</a>
-                </div></div>
-            </div>
+                <div class="card">
+                    <div class="card-header fw-bold" style="background:#eff6ff; border-bottom: 1px solid #bfdbfe; color:#1d4ed8">
+                        ICE Múltiple
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Calcula ICE para múltiples productos y genera comparativa por período.</p>
 
-            <div id="ice-anexos" class="pill-pane fade">
-                <div class="card mb-3"><div class="card-header fw-bold" style="background:#eff6ff; border-bottom: 1px solid #bfdbfe; color:#1d4ed8">Anexos ICE / PVP (Editor XML)</div>
-                <div class="card-body">
-                    <p class="text-muted small mb-3">Carga, edita y genera archivos XML de Anexos ICE y PVP para envío a SRI.</p>
-                    <a href="{{ safe_url_for('ats.editor') }}" class="btn btn-primary btn-sm"><i class="bi bi-file-earmark-text me-1"></i>Abrir editor XML</a>
-                </div></div>
-            </div>
+                        <div class="mb-3">
+                            <label class="form-label">Año (para todos los productos) *</label>
+                            <select class="form-select" id="anioMultiple" required>
+                                <option value="">-- Seleccionar --</option>
+                                <option value="2021">2021</option>
+                                <option value="2022">2022</option>
+                                <option value="2023">2023</option>
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                            </select>
+                        </div>
 
-            <div id="ice-facturas" class="pill-pane fade">
-                <div class="card mb-3"><div class="card-header fw-bold" style="background:#eff6ff; border-bottom: 1px solid #bfdbfe; color:#1d4ed8">Facturas ICE</div>
-                <div class="card-body">
-                    <p class="text-muted small mb-3">Carga XMLs de facturas de ingreso. ICE y base ICE se detectan automáticamente.</p>
-                    <a href="{{ safe_url_for('ice_auditoria.index') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Procesar facturas ICE</a>
-                </div></div>
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="agregarProductoIceMultiple()">
+                                <i class="bi bi-plus-circle me-1"></i>Agregar producto
+                            </button>
+                        </div>
+
+                        <div id="productosIceMultiple" class="mb-4"></div>
+
+                        <div class="text-end">
+                            <button type="button" class="btn btn-primary" onclick="calcularIceMultiple()">
+                                <i class="bi bi-calculator me-1"></i>Calcular todos
+                            </button>
+                        </div>
+
+                        <!-- Resultados ICE Múltiple -->
+                        <div id="resultadoIceMultiple" style="display:none" class="mt-4">
+                            <div class="alert alert-success mb-3">
+                                <i class="bi bi-check-circle me-2"></i>Cálculo completado exitosamente
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead style="background:#0D1B2E; color:white">
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Tipo</th>
+                                            <th>Cantidad</th>
+                                            <th>ICE Esp/u</th>
+                                            <th>ICE Ad/u</th>
+                                            <th>ICE Total/u</th>
+                                            <th>PVP Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyIceMultiple"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- SECCIÓN TRIBUTARIA -->
+    <!-- ===== SECCIÓN TRIBUTARIA ===== -->
     <div id="sec-tributaria" class="tab-pane fade">
         <h5 class="mb-3" style="color:#6d28d9"><i class="bi bi-journal-text me-2"></i>Tributaria — Ingresos y Gastos</h5>
 
@@ -96,51 +196,234 @@
         </ul>
 
         <div class="pill-content">
+            <!-- Ingresos -->
             <div id="trib-ingresos" class="pill-pane fade show active">
-                <div class="card mb-3"><div class="card-header fw-bold" style="background:#faf5ff; border-bottom: 1px solid #c4b5fd; color:#7c3aed">Facturas de Ingreso</div>
-                <div class="card-body">
-                    <p class="text-muted small mb-3">Carga XMLs de facturas de venta. Se extraen automáticamente: RUC, emisor, ICE, IVA, totales.</p>
-                    <a href="{{ safe_url_for('invoices.cargar_ingresos') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar facturas de ingreso</a>
-                </div></div>
+                <div class="card">
+                    <div class="card-header fw-bold" style="background:#faf5ff; border-bottom: 1px solid #c4b5fd; color:#7c3aed">
+                        Facturas de Ingreso
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Carga XMLs de facturas de venta. Se extraen automáticamente: RUC, emisor, ICE, IVA, totales.</p>
+
+                        <div id="dropZoneIngresos" class="drop-zone mb-3" style="border: 2px dashed #bfdbfe; padding: 30px; text-align: center; border-radius: 8px; cursor: pointer; background:#f0f9ff">
+                            <div id="dropIdleIngresos">
+                                <i class="bi bi-cloud-upload" style="font-size: 2.5rem; color: #60a5fa;"></i>
+                                <p class="mb-0 mt-2" style="color: #1e40af;"><strong>Arrastra archivos XML aquí</strong></p>
+                                <p class="text-muted small">o haz clic para seleccionar</p>
+                            </div>
+                            <div id="dropActiveIngresos" style="display:none; color: #059669;">
+                                <i class="bi bi-check-circle" style="font-size: 2.5rem;"></i>
+                                <p class="mb-0 mt-2"><strong>Suelta los archivos</strong></p>
+                            </div>
+                            <input type="file" id="inputIngresos" multiple accept=".xml" style="display:none" onchange="agregarArchivosIngresos(this.files)">
+                        </div>
+
+                        <div id="chipsIngresosContainer" class="mb-3"></div>
+
+                        <div class="text-end mb-3">
+                            <button type="button" class="btn btn-primary" id="btnProcesarIngresos" disabled onclick="procesarIngresos()">
+                                <i class="bi bi-play-fill me-1"></i>Procesar
+                            </button>
+                        </div>
+
+                        <!-- Resultados Ingresos -->
+                        <div id="resultadoIngresos" style="display:none">
+                            <div class="alert alert-success mb-3">
+                                <i class="bi bi-check-circle me-2"></i><span id="msgIngresos"></span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead style="background:#0D1B2E; color:white">
+                                        <tr>
+                                            <th>N° Factura</th>
+                                            <th>Fecha</th>
+                                            <th>Emisor</th>
+                                            <th>Base ICE</th>
+                                            <th>ICE</th>
+                                            <th>Base IVA</th>
+                                            <th>IVA</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyIngresos"></tbody>
+                                    <tfoot style="background:#27AE60; color:white; font-weight:bold">
+                                        <tr>
+                                            <td colspan="3">TOTALES</td>
+                                            <td id="tot-base-ice-ing">0.00</td>
+                                            <td id="tot-ice-ing">0.00</td>
+                                            <td id="tot-base-iva-ing">0.00</td>
+                                            <td id="tot-iva-ing">0.00</td>
+                                            <td id="tot-total-ing">0.00</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
+            <!-- Retenciones -->
             <div id="trib-retenciones" class="pill-pane fade">
-                <div class="card mb-3"><div class="card-header fw-bold" style="background:#faf5ff; border-bottom: 1px solid #c4b5fd; color:#7c3aed">Retenciones</div>
-                <div class="card-body">
-                    <p class="text-muted small mb-3">Carga comprobantes de retención con clasificación Renta, IVA e ISD.</p>
-                    <a href="{{ safe_url_for('retenciones.index') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar retenciones</a>
-                </div></div>
+                <div class="card">
+                    <div class="card-header fw-bold" style="background:#faf5ff; border-bottom: 1px solid #c4b5fd; color:#7c3aed">
+                        Retenciones
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Carga comprobantes de retención con clasificación automática: Renta, IVA e ISD.</p>
+
+                        <div id="dropZoneRetenciones" class="drop-zone mb-3" style="border: 2px dashed #c4b5fd; padding: 30px; text-align: center; border-radius: 8px; cursor: pointer; background:#faf5ff">
+                            <div id="dropIdleRetenciones">
+                                <i class="bi bi-cloud-upload" style="font-size: 2.5rem; color: #a78bfa;"></i>
+                                <p class="mb-0 mt-2" style="color: #6d28d9;"><strong>Arrastra archivos XML aquí</strong></p>
+                                <p class="text-muted small">o haz clic para seleccionar</p>
+                            </div>
+                            <div id="dropActiveRetenciones" style="display:none; color: #059669;">
+                                <i class="bi bi-check-circle" style="font-size: 2.5rem;"></i>
+                                <p class="mb-0 mt-2"><strong>Suelta los archivos</strong></p>
+                            </div>
+                            <input type="file" id="inputRetenciones" multiple accept=".xml" style="display:none" onchange="agregarArchivosRetenciones(this.files)">
+                        </div>
+
+                        <div id="chipsRetencionesContainer" class="mb-3"></div>
+
+                        <div class="text-end mb-3">
+                            <button type="button" class="btn btn-primary" id="btnProcesarRetenciones" disabled onclick="procesarRetenciones()">
+                                <i class="bi bi-play-fill me-1"></i>Procesar
+                            </button>
+                        </div>
+
+                        <!-- Resultados Retenciones -->
+                        <div id="resultadoRetenciones" style="display:none">
+                            <div class="alert alert-success mb-3">
+                                <i class="bi bi-check-circle me-2"></i><span id="msgRetenciones"></span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead style="background:#0D1B2E; color:white">
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>RUC Emisor</th>
+                                            <th>Agente de Retención</th>
+                                            <th>Base Renta</th>
+                                            <th>Ret. Renta</th>
+                                            <th>Base IVA</th>
+                                            <th>Ret. IVA</th>
+                                            <th>Ret. ISD</th>
+                                            <th>Total Retenido</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyRetenciones"></tbody>
+                                    <tfoot style="background:#27AE60; color:white; font-weight:bold">
+                                        <tr>
+                                            <td colspan="3">TOTALES</td>
+                                            <td id="tot-base-renta">0.00</td>
+                                            <td id="tot-ret-renta">0.00</td>
+                                            <td id="tot-base-iva-ret">0.00</td>
+                                            <td id="tot-ret-iva">0.00</td>
+                                            <td id="tot-ret-isd">0.00</td>
+                                            <td id="tot-ret-total">0.00</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
+            <!-- Gastos -->
             <div id="trib-gastos" class="pill-pane fade">
-                <div class="card mb-3"><div class="card-header fw-bold" style="background:#faf5ff; border-bottom: 1px solid #c4b5fd; color:#7c3aed">Facturas de Gasto</div>
-                <div class="card-body">
-                    <p class="text-muted small mb-3">Carga facturas de compra. <strong>Yanbal:</strong> descuento automático. <strong>Otros:</strong> descuento opcional. IVA deducible vs. personal.</p>
-                    <a href="{{ safe_url_for('gastos.panel') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar facturas de gasto</a>
-                </div></div>
+                <div class="card">
+                    <div class="card-header fw-bold" style="background:#faf5ff; border-bottom: 1px solid #c4b5fd; color:#7c3aed">
+                        Facturas de Gasto
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Carga facturas de compra. <strong>Yanbal:</strong> descuento automático. <strong>Otros:</strong> descuento opcional. IVA deducible vs. personal.</p>
+
+                        <div id="dropZoneGastos" class="drop-zone mb-3" style="border: 2px dashed #fed7aa; padding: 30px; text-align: center; border-radius: 8px; cursor: pointer; background:#fffbeb">
+                            <div id="dropIdleGastos">
+                                <i class="bi bi-cloud-upload" style="font-size: 2.5rem; color: #f59e0b;"></i>
+                                <p class="mb-0 mt-2" style="color: #92400e;"><strong>Arrastra archivos XML aquí</strong></p>
+                                <p class="text-muted small">o haz clic para seleccionar</p>
+                            </div>
+                            <div id="dropActiveGastos" style="display:none; color: #059669;">
+                                <i class="bi bi-check-circle" style="font-size: 2.5rem;"></i>
+                                <p class="mb-0 mt-2"><strong>Suelta los archivos</strong></p>
+                            </div>
+                            <input type="file" id="inputGastos" multiple accept=".xml" style="display:none" onchange="agregarArchivosGastos(this.files)">
+                        </div>
+
+                        <div id="chipsGastosContainer" class="mb-3"></div>
+
+                        <div class="text-end mb-3">
+                            <button type="button" class="btn btn-primary" id="btnProcesarGastos" disabled onclick="procesarGastos()">
+                                <i class="bi bi-play-fill me-1"></i>Procesar
+                            </button>
+                        </div>
+
+                        <!-- Resultados Gastos -->
+                        <div id="resultadoGastos" style="display:none">
+                            <div class="alert alert-success mb-3">
+                                <i class="bi bi-check-circle me-2"></i><span id="msgGastos"></span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead style="background:#0D1B2E; color:white">
+                                        <tr>
+                                            <th>N° Factura</th>
+                                            <th>Fecha</th>
+                                            <th>Emisor</th>
+                                            <th>Base IVA</th>
+                                            <th>IVA</th>
+                                            <th>Total</th>
+                                            <th>Yanbal</th>
+                                            <th>Descuento</th>
+                                            <th>Tipo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyGastos"></tbody>
+                                    <tfoot style="background:#27AE60; color:white; font-weight:bold">
+                                        <tr>
+                                            <td colspan="3">TOTALES</td>
+                                            <td id="tot-base-iva-gas">0.00</td>
+                                            <td id="tot-iva-gas">0.00</td>
+                                            <td id="tot-total-gas">0.00</td>
+                                            <td colspan="3" id="tot-yanbal-info"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- SECCIÓN LIQUIDACIÓN -->
+    <!-- ===== SECCIÓN LIQUIDACIÓN ===== -->
     <div id="sec-liquidacion" class="tab-pane fade">
         <h5 class="mb-3" style="color:#92400e"><i class="bi bi-calculator me-2"></i>Liquidación IVA + ICE</h5>
         <div class="card">
             <div class="card-body">
-                <p class="text-muted mb-3">Después de cargar todos tus documentos (ingresos, retenciones, gastos), descargarás un reporte Excel completo con 6 hojas:</p>
+                <p class="mb-3">Descarga un reporte Excel completo con 6 hojas consolidando todos tus cálculos y documentos:</p>
                 <ul class="mb-3" style="font-size:.88rem">
+                    <li><strong>ICE Simple:</strong> Desglose de cálculo por producto</li>
+                    <li><strong>ICE Múltiple:</strong> Análisis de múltiples productos</li>
                     <li><strong>Ingresos:</strong> Tabla de facturas de venta con ICE, IVA, totales</li>
-                    <li><strong>Retenciones:</strong> Clasificación Renta, IVA, ISD</li>
+                    <li><strong>Retenciones:</strong> Clasificación Renta, IVA, ISD con montos</li>
                     <li><strong>Gastos:</strong> Gastos generales y personales, con IVA deducible/no deducible</li>
-                    <li><strong>Liquidación IVA:</strong> Cálculo de IVA neto (a pagar o crédito tributario)</li>
-                    <li><strong>ICE a Declarar:</strong> ICE Específico + Ad Valorem (75%)</li>
-                    <li><strong>Resumen Ejecutivo:</strong> Totales y estado de declaración</li>
+                    <li><strong>Liquidación IVA:</strong> Cálculo de IVA neto (a pagar o crédito tributario) + ICE a declarar</li>
                 </ul>
-                <div class="alert alert-success mb-3" style="font-size:.82rem">
-                    <i class="bi bi-check-circle me-2"></i>
-                    <strong>Todas tus funcionalidades ICE + Tributaria en un solo lugar.</strong> No necesitas ir a módulos separados.
+                <div class="alert alert-info mb-3" style="font-size:.82rem">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Nota:</strong> Procesa todos los archivos en las secciones ICE y Tributaria antes de descargar el reporte.
                 </div>
-                <a href="#" class="btn btn-success btn-lg" disabled><i class="bi bi-file-earmark-excel me-2"></i>Descargar Reporte Completo (próximamente)</a>
+                <div class="text-end">
+                    <button type="button" class="btn btn-success btn-lg" onclick="exportarExcel()">
+                        <i class="bi bi-file-earmark-excel me-2"></i>Descargar Reporte Completo
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -148,24 +431,506 @@
 </div>
 
 <style>
-    .nav-tabs .nav-link.active { border-bottom-color: #2563eb !important; color: #2563eb !important; font-weight: 600; }
-    .nav-pills .nav-link.active { background-color: #2563eb; }
-    .pill-content > .pill-pane { display: none; }
-    .pill-content > .pill-pane.active { display: block; }
+    .nav-tabs .nav-link.active {
+        border-bottom-color: #2563eb !important;
+        color: #2563eb !important;
+        font-weight: 600;
+    }
+    .nav-pills .nav-link.active {
+        background-color: #2563eb;
+    }
+    .pill-content > .pill-pane {
+        display: none;
+    }
+    .pill-content > .pill-pane.active {
+        display: block;
+    }
+    .drop-zone {
+        transition: all 0.2s;
+    }
+    .drop-zone.drag-over {
+        background: #dbeafe !important;
+        border-color: #3b82f6 !important;
+    }
 </style>
 
 <script>
-    // Habilitar pills (sub-tabs)
-    document.addEventListener('DOMContentLoaded', function() {
-        const pillLinks = document.querySelectorAll('[data-bs-toggle="pill"]');
-        pillLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const target = this.getAttribute('href');
-                document.querySelectorAll('.pill-pane').forEach(p => p.classList.remove('active'));
-                document.querySelector(target).classList.add('active');
-            });
+// ===== STATE =====
+let estadoModulo = {
+    ice_simple: null,
+    ice_multiple: [],
+    ingresos: [],
+    retenciones: [],
+    gastos: [],
+    liquidacion: {}
+};
+
+let archivos = {
+    ingresos: new Map(),
+    retenciones: new Map(),
+    gastos: new Map()
+};
+
+// ===== UTILIDADES =====
+function formatear(num) {
+    return new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+}
+
+function mostrarError(msg) {
+    alert('Error: ' + msg);
+}
+
+// ===== ICE SIMPLE =====
+function calcularIceSimple() {
+    const form = document.getElementById('formIceSimple');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+
+    if (!data.tipo_producto || !data.anio || !data.precio || !data.capacidad || !data.grado) {
+        alert('Por favor completa todos los campos requeridos.');
+        return;
+    }
+
+    fetch('{{ url_for("registro_completo.procesar_ice_simple") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.exito) {
+            estadoModulo.ice_simple = d;
+            mostrarResultadosIceSimple(d);
+        } else {
+            mostrarError(d.error || 'No se pudo calcular');
+        }
+    })
+    .catch(e => mostrarError(e.message));
+}
+
+function mostrarResultadosIceSimple(dato) {
+    const tbody = document.getElementById('tbodyIceSimple');
+    tbody.innerHTML = `
+        <tr>
+            <td><strong>ICE Específico (unit.)</strong></td>
+            <td>${formatear(dato.ice_especifico_uni)}</td>
+            <td>${formatear(dato.ice_especifico_total)}</td>
+        </tr>
+        <tr>
+            <td><strong>ICE Ad Valorem (unit.)</strong></td>
+            <td>${formatear(dato.ice_advalorem_uni)}</td>
+            <td>${formatear(dato.ice_advalorem_total)}</td>
+        </tr>
+        <tr>
+            <td><strong>ICE Total (unit.)</strong></td>
+            <td>${formatear(dato.ice_total_uni)}</td>
+            <td>${formatear(dato.ice_total)}</td>
+        </tr>
+        <tr style="background:#f0f9ff">
+            <td><strong>IVA (unit.)</strong></td>
+            <td>${formatear(dato.iva_uni)}</td>
+            <td>${formatear(dato.iva_total)}</td>
+        </tr>
+        <tr style="background:#f0f9ff">
+            <td><strong>PVP (unit.)</strong></td>
+            <td>${formatear(dato.pvp_uni)}</td>
+            <td>${formatear(dato.pvp_total)}</td>
+        </tr>
+    `;
+    document.getElementById('resultadoIceSimple').style.display = 'block';
+}
+
+// ===== ICE MULTIPLE =====
+let contadorProductos = 0;
+
+function agregarProductoIceMultiple() {
+    const container = document.getElementById('productosIceMultiple');
+    const id = ++contadorProductos;
+    const html = `
+        <div class="card mb-2" id="prod-${id}">
+            <div class="card-body">
+                <button type="button" class="btn btn-sm btn-danger float-end" onclick="eliminarProducto(${id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+                <div class="row g-2">
+                    <div class="col-md-2">
+                        <input type="text" class="form-control form-control-sm" placeholder="Nombre" data-nombre="${id}">
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select form-select-sm" data-tipo="${id}">
+                            <option value="">Tipo</option>
+                            <option value="licor_ron">Ron</option>
+                            <option value="licor_vino">Vino</option>
+                            <option value="cerveza_industrial">Cerveza Ind.</option>
+                            <option value="cerveza_artesanal">Cerveza Art.</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <input type="number" class="form-control form-control-sm" placeholder="Precio" data-precio="${id}" step="0.01">
+                    </div>
+                    <div class="col-md-1">
+                        <input type="number" class="form-control form-control-sm" placeholder="Cap.(ml)" data-capacidad="${id}" step="1">
+                    </div>
+                    <div class="col-md-1">
+                        <input type="number" class="form-control form-control-sm" placeholder="Grado%" data-grado="${id}" step="0.1">
+                    </div>
+                    <div class="col-md-1">
+                        <input type="number" class="form-control form-control-sm" placeholder="Cant." data-cantidad="${id}" value="1" step="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+}
+
+function eliminarProducto(id) {
+    document.getElementById(`prod-${id}`).remove();
+}
+
+function calcularIceMultiple() {
+    const anio = document.getElementById('anioMultiple').value;
+    if (!anio) {
+        alert('Selecciona un año');
+        return;
+    }
+
+    const productos = [];
+    document.querySelectorAll('[data-tipo]').forEach(el => {
+        const id = el.dataset.tipo;
+        const tipo = el.value;
+        const nombre = document.querySelector(`[data-nombre="${id}"]`).value || `Producto ${id}`;
+        const precio = parseFloat(document.querySelector(`[data-precio="${id}"]`).value) || 0;
+        const capacidad = parseFloat(document.querySelector(`[data-capacidad="${id}"]`).value) || 0;
+        const grado = parseFloat(document.querySelector(`[data-grado="${id}"]`).value) || 0;
+        const cantidad = parseInt(document.querySelector(`[data-cantidad="${id}"]`).value) || 1;
+
+        if (tipo && precio > 0 && capacidad > 0 && grado > 0) {
+            productos.push({ nombre, tipo_producto: tipo, precio, capacidad, grado, cantidad });
+        }
+    });
+
+    if (productos.length === 0) {
+        alert('Agrega al menos un producto válido');
+        return;
+    }
+
+    fetch('{{ url_for("registro_completo.procesar_ice_multiple") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productos, anio })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.exito) {
+            estadoModulo.ice_multiple = d.productos;
+            mostrarResultadosIceMultiple(d.productos);
+        } else {
+            mostrarError(d.error || 'No se pudo calcular');
+        }
+    })
+    .catch(e => mostrarError(e.message));
+}
+
+function mostrarResultadosIceMultiple(productos) {
+    const tbody = document.getElementById('tbodyIceMultiple');
+    tbody.innerHTML = productos.map(p => `
+        <tr>
+            <td>${p.nombre}</td>
+            <td>${p.tipo}</td>
+            <td>${p.cantidad}</td>
+            <td>${formatear(p.ice_especifico_uni)}</td>
+            <td>${formatear(p.ice_advalorem_uni)}</td>
+            <td>${formatear(p.ice_total_uni)}</td>
+            <td>${formatear(p.pvp_total)}</td>
+        </tr>
+    `).join('');
+    document.getElementById('resultadoIceMultiple').style.display = 'block';
+}
+
+// ===== DRAG & DROP UTILS =====
+function setupDropZone(dropZoneId, dropIdleId, dropActiveId, inputId, archivosMap, onFiles) {
+    const dz = document.getElementById(dropZoneId);
+    const idle = document.getElementById(dropIdleId);
+    const active = document.getElementById(dropActiveId);
+    const input = document.getElementById(inputId);
+
+    dz.addEventListener('click', () => input.click());
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+        dz.addEventListener(evt, e => e.preventDefault());
+    });
+
+    dz.addEventListener('dragenter', () => {
+        idle.style.display = 'none';
+        active.style.display = 'block';
+        dz.classList.add('drag-over');
+    });
+
+    dz.addEventListener('dragleave', () => {
+        idle.style.display = 'block';
+        active.style.display = 'none';
+        dz.classList.remove('drag-over');
+    });
+
+    dz.addEventListener('drop', (e) => {
+        idle.style.display = 'block';
+        active.style.display = 'none';
+        dz.classList.remove('drag-over');
+        onFiles(e.dataTransfer.files);
+    });
+}
+
+// ===== INGRESOS =====
+setupDropZone('dropZoneIngresos', 'dropIdleIngresos', 'dropActiveIngresos', 'inputIngresos', archivos.ingresos, agregarArchivosIngresos);
+
+function agregarArchivosIngresos(files) {
+    for (const f of files) {
+        if (f.name.endsWith('.xml')) archivos.ingresos.set(f.name, f);
+    }
+    renderChipsIngresos();
+}
+
+function renderChipsIngresos() {
+    const container = document.getElementById('chipsIngresosContainer');
+    container.innerHTML = Array.from(archivos.ingresos.keys()).map(name => `
+        <span class="badge bg-primary me-2 mb-2">
+            ${name} <button type="button" class="btn-close btn-close-white ms-1" onclick="archivos.ingresos.delete('${name}'); renderChipsIngresos(); document.getElementById('btnProcesarIngresos').disabled = archivos.ingresos.size === 0;" style="font-size: 0.7rem;"></button>
+        </span>
+    `).join('');
+    document.getElementById('btnProcesarIngresos').disabled = archivos.ingresos.size === 0;
+}
+
+function procesarIngresos() {
+    const fd = new FormData();
+    archivos.ingresos.forEach(f => fd.append('archivos_xml', f));
+
+    fetch('{{ url_for("registro_completo.procesar_ingresos") }}', {
+        method: 'POST',
+        body: fd
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.facturas) {
+            estadoModulo.ingresos = d.facturas;
+            document.getElementById('msgIngresos').textContent = `${d.cantidad} factura(s) procesada(s)`;
+            mostrarResultadosIngresos(d);
+        } else {
+            mostrarError(d.error || 'Error al procesar');
+        }
+    })
+    .catch(e => mostrarError(e.message));
+}
+
+function mostrarResultadosIngresos(d) {
+    const tbody = document.getElementById('tbodyIngresos');
+    tbody.innerHTML = d.facturas.map(f => `
+        <tr>
+            <td>${f.numero}</td>
+            <td>${f.fecha}</td>
+            <td>${f.emisor}</td>
+            <td>${formatear(f.base_ice || 0)}</td>
+            <td>${formatear(f.ice || 0)}</td>
+            <td>${formatear(f.base_iva || 0)}</td>
+            <td>${formatear(f.iva || 0)}</td>
+            <td>${formatear(f.total)}</td>
+        </tr>
+    `).join('');
+
+    const tot = d.totales;
+    document.getElementById('tot-base-ice-ing').textContent = formatear(tot.base_ice);
+    document.getElementById('tot-ice-ing').textContent = formatear(tot.ice);
+    document.getElementById('tot-base-iva-ing').textContent = formatear(tot.base_iva);
+    document.getElementById('tot-iva-ing').textContent = formatear(tot.iva);
+    document.getElementById('tot-total-ing').textContent = formatear(tot.total);
+
+    document.getElementById('resultadoIngresos').style.display = 'block';
+}
+
+// ===== RETENCIONES =====
+setupDropZone('dropZoneRetenciones', 'dropIdleRetenciones', 'dropActiveRetenciones', 'inputRetenciones', archivos.retenciones, agregarArchivosRetenciones);
+
+function agregarArchivosRetenciones(files) {
+    for (const f of files) {
+        if (f.name.endsWith('.xml')) archivos.retenciones.set(f.name, f);
+    }
+    renderChipsRetenciones();
+}
+
+function renderChipsRetenciones() {
+    const container = document.getElementById('chipsRetencionesContainer');
+    container.innerHTML = Array.from(archivos.retenciones.keys()).map(name => `
+        <span class="badge bg-primary me-2 mb-2">
+            ${name} <button type="button" class="btn-close btn-close-white ms-1" onclick="archivos.retenciones.delete('${name}'); renderChipsRetenciones(); document.getElementById('btnProcesarRetenciones').disabled = archivos.retenciones.size === 0;" style="font-size: 0.7rem;"></button>
+        </span>
+    `).join('');
+    document.getElementById('btnProcesarRetenciones').disabled = archivos.retenciones.size === 0;
+}
+
+function procesarRetenciones() {
+    const fd = new FormData();
+    archivos.retenciones.forEach(f => fd.append('archivos_xml', f));
+
+    fetch('{{ url_for("registro_completo.procesar_retenciones") }}', {
+        method: 'POST',
+        body: fd
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.retenciones) {
+            estadoModulo.retenciones = d.retenciones;
+            document.getElementById('msgRetenciones').textContent = `${d.cantidad} documento(s) procesado(s)`;
+            mostrarResultadosRetenciones(d);
+        } else {
+            mostrarError(d.error || 'Error al procesar');
+        }
+    })
+    .catch(e => mostrarError(e.message));
+}
+
+function mostrarResultadosRetenciones(d) {
+    const tbody = document.getElementById('tbodyRetenciones');
+    tbody.innerHTML = d.retenciones.map(r => `
+        <tr>
+            <td>${r.fecha}</td>
+            <td>${r.ruc_emisor}</td>
+            <td>${r.emisor}</td>
+            <td>${formatear(r.base_renta || 0)}</td>
+            <td>${formatear(r.ret_renta || 0)}</td>
+            <td>${formatear(r.base_iva || 0)}</td>
+            <td>${formatear(r.ret_iva || 0)}</td>
+            <td>${formatear(r.ret_isd || 0)}</td>
+            <td>${formatear(r.total_retenido || 0)}</td>
+        </tr>
+    `).join('');
+
+    const tot = d.totales;
+    document.getElementById('tot-base-renta').textContent = formatear(tot.base_renta || 0);
+    document.getElementById('tot-ret-renta').textContent = formatear(tot.ret_renta || 0);
+    document.getElementById('tot-base-iva-ret').textContent = formatear(tot.base_iva || 0);
+    document.getElementById('tot-ret-iva').textContent = formatear(tot.ret_iva || 0);
+    document.getElementById('tot-ret-isd').textContent = formatear(tot.ret_isd || 0);
+    document.getElementById('tot-ret-total').textContent = formatear(tot.total_retenido || 0);
+
+    document.getElementById('resultadoRetenciones').style.display = 'block';
+}
+
+// ===== GASTOS =====
+setupDropZone('dropZoneGastos', 'dropIdleGastos', 'dropActiveGastos', 'inputGastos', archivos.gastos, agregarArchivosGastos);
+
+function agregarArchivosGastos(files) {
+    for (const f of files) {
+        if (f.name.endsWith('.xml')) archivos.gastos.set(f.name, f);
+    }
+    renderChipsGastos();
+}
+
+function renderChipsGastos() {
+    const container = document.getElementById('chipsGastosContainer');
+    container.innerHTML = Array.from(archivos.gastos.keys()).map(name => `
+        <span class="badge bg-primary me-2 mb-2">
+            ${name} <button type="button" class="btn-close btn-close-white ms-1" onclick="archivos.gastos.delete('${name}'); renderChipsGastos(); document.getElementById('btnProcesarGastos').disabled = archivos.gastos.size === 0;" style="font-size: 0.7rem;"></button>
+        </span>
+    `).join('');
+    document.getElementById('btnProcesarGastos').disabled = archivos.gastos.size === 0;
+}
+
+function procesarGastos() {
+    const fd = new FormData();
+    archivos.gastos.forEach(f => fd.append('archivos_xml', f));
+
+    fetch('{{ url_for("registro_completo.procesar_gastos") }}', {
+        method: 'POST',
+        body: fd
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.gastos) {
+            estadoModulo.gastos = d.gastos;
+            document.getElementById('msgGastos').textContent = `${d.cantidad} factura(s) procesada(s)`;
+            mostrarResultadosGastos(d);
+        } else {
+            mostrarError(d.error || 'Error al procesar');
+        }
+    })
+    .catch(e => mostrarError(e.message));
+}
+
+function mostrarResultadosGastos(d) {
+    const tbody = document.getElementById('tbodyGastos');
+    tbody.innerHTML = d.gastos.map(g => `
+        <tr>
+            <td>${g.numero}</td>
+            <td>${g.fecha}</td>
+            <td>${g.emisor}</td>
+            <td>${formatear(g.base_iva)}</td>
+            <td>${formatear(g.iva)}</td>
+            <td>${formatear(g.total)}</td>
+            <td>${g.es_yanbal ? '<span class="badge bg-warning">SÍ</span>' : '-'}</td>
+            <td>${formatear(g.descuento)}</td>
+            <td>${g.es_personal ? 'Personal' : 'General'}</td>
+        </tr>
+    `).join('');
+
+    const tot = d.totales;
+    document.getElementById('tot-base-iva-gas').textContent = formatear(tot.base_iva);
+    document.getElementById('tot-iva-gas').textContent = formatear(tot.iva);
+    document.getElementById('tot-total-gas').textContent = formatear(tot.total);
+    document.getElementById('tot-yanbal-info').textContent = tot.descuento_total > 0 ? `Descuento Yanbal: ${formatear(tot.descuento_total)}` : '';
+
+    document.getElementById('resultadoGastos').style.display = 'block';
+}
+
+// ===== EXPORT EXCEL =====
+function exportarExcel() {
+    // Preparar liquidación
+    const liq_data = {
+        iva_ventas: estadoModulo.ingresos.reduce((s, f) => s + (f.iva || 0), 0),
+        iva_compras: estadoModulo.gastos.reduce((s, g) => s + (g.iva || 0), 0),
+        ret_iva: estadoModulo.retenciones.reduce((s, r) => s + (r.ret_iva || 0), 0),
+        ice_especifico: estadoModulo.ice_simple?.ice_especifico_total || 0,
+        ice_advalorem: estadoModulo.ice_simple?.ice_advalorem_total || 0,
+        total_ice: (estadoModulo.ice_simple?.ice_especifico_total || 0) + (estadoModulo.ice_simple?.ice_advalorem_total || 0),
+    };
+    liq_data.iva_neto = liq_data.iva_ventas - liq_data.iva_compras - liq_data.ret_iva;
+    liq_data.estado = liq_data.iva_neto > 0 ? 'A PAGAR' : 'CRÉDITO';
+
+    const payload = {
+        ice_simple: estadoModulo.ice_simple ? [estadoModulo.ice_simple] : [],
+        ice_multiple: estadoModulo.ice_multiple,
+        ingresos: estadoModulo.ingresos,
+        retenciones: estadoModulo.retenciones,
+        gastos: estadoModulo.gastos,
+        liquidacion: liq_data
+    };
+
+    fetch('{{ url_for("registro_completo.exportar_excel") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.blob())
+    .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Registro_Completo.xlsx';
+        a.click();
+        URL.revokeObjectURL(url);
+    })
+    .catch(e => mostrarError(e.message));
+}
+
+// Pills navigation
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[data-bs-toggle="pill"]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = this.getAttribute('href');
+            document.querySelectorAll('.pill-pane').forEach(p => p.classList.remove('active'));
+            document.querySelector(target).classList.add('active');
         });
     });
+});
 </script>
 {% endblock %}

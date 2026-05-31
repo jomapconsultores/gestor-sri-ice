@@ -1,0 +1,342 @@
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 802-928-233
+127.0.0.1 - - [30/May/2026 21:14:11] "GET / HTTP/1.1" 302 -
+127.0.0.1 - - [30/May/2026 21:14:11] "GET /payments/planes HTTP/1.1" 200 -
+ * Detected change in 'C:\\Users\\mapos\\Dropbox\\Programas\\gestor_sri_ice\\app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 802-928-233
+ * Detected change in 'C:\\Users\\mapos\\Dropbox\\Programas\\gestor_sri_ice\\config.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 802-928-233
+127.0.0.1 - - [30/May/2026 22:16:08] "GET /auth/login HTTP/1.1" 200 -
+127.0.0.1 - - [30/May/2026 22:16:16] "POST /auth/login HTTP/1.1" 302 -
+127.0.0.1 - - [30/May/2026 22:16:17] "GET /dashboard HTTP/1.1" 200 -
+127.0.0.1 - - [30/May/2026 22:16:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [30/May/2026 22:16:23] "GET /registro_completo/ HTTP/1.1" 200 -
+127.0.0.1 - - [30/May/2026 22:16:28] "GET /registro_completo/ HTTP/1.1" 200 -
+127.0.0.1 - - [30/May/2026 22:17:46] "POST /auth/login HTTP/1.1" 302 -
+127.0.0.1 - - [30/May/2026 22:17:47] "GET /registro_completo/ HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\routes\registro_completo.py", line 28, in index
+    return render_template('registro_completo/index.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\registro_completo\index.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\base.html", line 510, in top-level template code
+    {% block content %}{% endblock %}
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\registro_completo\index.html", line 119, in block 'content'
+    <a href="{{ url_for('gastos.subir_gastos') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar facturas de gasto</a>
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\werkzeug\routing\map.py", line 901, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'gastos.subir_gastos'. Did you mean 'gastos.subir_mapa' instead?
+127.0.0.1 - - [30/May/2026 22:18:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [30/May/2026 22:18:10] "GET /registro_completo/ HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\routes\registro_completo.py", line 28, in index
+    return render_template('registro_completo/index.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\registro_completo\index.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\base.html", line 510, in top-level template code
+    {% block content %}{% endblock %}
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\registro_completo\index.html", line 119, in block 'content'
+    <a href="{{ url_for('gastos.subir_gastos') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar facturas de gasto</a>
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\werkzeug\routing\map.py", line 901, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'gastos.subir_gastos'. Did you mean 'gastos.subir_mapa' instead?
+127.0.0.1 - - [30/May/2026 22:18:10] "GET /registro_completo/ HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\routes\registro_completo.py", line 28, in index
+    return render_template('registro_completo/index.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\registro_completo\index.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\base.html", line 510, in top-level template code
+    {% block content %}{% endblock %}
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\registro_completo\index.html", line 119, in block 'content'
+    <a href="{{ url_for('gastos.subir_gastos') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar facturas de gasto</a>
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\werkzeug\routing\map.py", line 901, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'gastos.subir_gastos'. Did you mean 'gastos.subir_mapa' instead?
+127.0.0.1 - - [30/May/2026 22:18:10] "GET /registro_completo/ HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\routes\registro_completo.py", line 28, in index
+    return render_template('registro_completo/index.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\registro_completo\index.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\base.html", line 510, in top-level template code
+    {% block content %}{% endblock %}
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\registro_completo\index.html", line 119, in block 'content'
+    <a href="{{ url_for('gastos.subir_gastos') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar facturas de gasto</a>
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\werkzeug\routing\map.py", line 901, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'gastos.subir_gastos'. Did you mean 'gastos.subir_mapa' instead?
+127.0.0.1 - - [30/May/2026 22:18:13] "GET /registro_completo/ HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\routes\registro_completo.py", line 28, in index
+    return render_template('registro_completo/index.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\registro_completo\index.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\base.html", line 510, in top-level template code
+    {% block content %}{% endblock %}
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\registro_completo\index.html", line 119, in block 'content'
+    <a href="{{ url_for('gastos.subir_gastos') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar facturas de gasto</a>
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\werkzeug\routing\map.py", line 901, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'gastos.subir_gastos'. Did you mean 'gastos.subir_mapa' instead?
+127.0.0.1 - - [30/May/2026 22:18:13] "GET /registro_completo/ HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\routes\registro_completo.py", line 28, in index
+    return render_template('registro_completo/index.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\registro_completo\index.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\base.html", line 510, in top-level template code
+    {% block content %}{% endblock %}
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\templates\registro_completo\index.html", line 119, in block 'content'
+    <a href="{{ url_for('gastos.subir_gastos') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar facturas de gasto</a>
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\flask\app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\venv\Lib\site-packages\werkzeug\routing\map.py", line 901, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'gastos.subir_gastos'. Did you mean 'gastos.subir_mapa' instead?
+127.0.0.1 - - [30/May/2026 22:24:01] "POST /auth/login HTTP/1.1" 302 -
+127.0.0.1 - - [30/May/2026 22:24:01] "GET /registro_completo/ HTTP/1.1" 200 -
+127.0.0.1 - - [30/May/2026 22:24:01] "GET /registro_completo/ HTTP/1.1" 200 -
+127.0.0.1 - - [30/May/2026 22:24:02] "GET /registro_completo/ HTTP/1.1" 200 -
+ * Detected change in 'C:\\Users\\mapos\\Dropbox\\Programas\\gestor_sri_ice\\routes\\registro_completo.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 802-928-233
+ * Detected change in 'C:\\Users\\mapos\\Dropbox\\Programas\\gestor_sri_ice\\routes\\registro_completo.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 802-928-233

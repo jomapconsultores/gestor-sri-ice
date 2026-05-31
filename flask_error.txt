@@ -1,0 +1,21 @@
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 802-928-233
+127.0.0.1 - - [29/May/2026 20:22:31] "GET / HTTP/1.1" 302 -
+127.0.0.1 - - [29/May/2026 20:22:31] "GET /auth/login?next=/ HTTP/1.1" 200 -
+127.0.0.1 - - [29/May/2026 20:22:33] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [29/May/2026 20:22:51] "POST /auth/login?next=/ HTTP/1.1" 302 -
+127.0.0.1 - - [29/May/2026 20:22:52] "GET / HTTP/1.1" 200 -
+ * Detected change in 'C:\\Users\\mapos\\Dropbox\\Programas\\gestor_sri_ice\\app.py', reloading
+ * Restarting with stat
+Traceback (most recent call last):
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\app.py", line 134, in <module>
+    # IP no autorizada: redirigir a solicitar acceso
+  ^^^^^^^^^^^^
+  File "C:\Users\mapos\Dropbox\Programas\gestor_sri_ice\app.py", line 84, in create_app
+    try:
+    ^^^^^
+NameError: name '_crear_admin_inicial' is not defined

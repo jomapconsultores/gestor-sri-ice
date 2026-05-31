@@ -4,6 +4,7 @@ from routes.payments import usuario_tiene_modulo
 from models import db
 from models.user import Factura, ClasificacionGasto
 from services.xml_parser import parse_xml_factura
+from services.ice_calculator import IceCalculator
 from datetime import datetime
 import io, os
 
@@ -192,6 +193,124 @@ def procesar_gastos():
         'iva_deducible':  round(sum(g['iva'] for g in gastos_data if not g['es_personal']), 2),
     }
     return jsonify({'gastos': gastos_data, 'totales': totales, 'cantidad': len(gastos_data)})
+
+
+@registro_completo_bp.route('/procesar_ice_simple', methods=['POST'])
+@login_required
+def procesar_ice_simple():
+    r = _requiere()
+    if r:
+        return jsonify({'error': 'Sin acceso'}), 403
+    try:
+        data = request.get_json()
+        tipo_producto = data.get('tipo_producto')
+        anio = data.get('anio')
+        precio = float(data.get('precio', 0))
+        capacidad = float(data.get('capacidad', 0))
+        grado = float(data.get('grado', 0))
+        cantidad = int(data.get('cantidad', 1))
+        nombre = data.get('nombre', 'Producto')
+
+        calc = IceCalculator()
+        resultado = calc.calcular_liquidacion_completa(
+            datos={
+                'tipo_producto': tipo_producto,
+                'precio_fabrica_unitario': precio,
+                'volumen_cc': capacidad,
+                'grado_alcoholico': grado,
+                'cantidad': cantidad
+            },
+            anio=anio,
+            iva_tasa=None
+        )
+
+        if resultado:
+            return jsonify({
+                'exito': True,
+                'nombre': nombre,
+                'tipo': tipo_producto,
+                'anio': anio,
+                'precio': precio,
+                'capacidad': capacidad,
+                'grado': grado,
+                'cantidad': cantidad,
+                'ice_especifico_uni': round(resultado.get('ice_especifico_unitario', 0), 2),
+                'ice_advalorem_uni': round(resultado.get('ice_advalorem_unitario', 0), 2),
+                'ice_total_uni': round(resultado.get('ice_total_unitario', 0), 2),
+                'ice_especifico_total': round(resultado.get('ice_especifico_total', 0), 2),
+                'ice_advalorem_total': round(resultado.get('ice_advalorem_total', 0), 2),
+                'ice_total': round(resultado.get('ice_total', 0), 2),
+                'base_iva': round(resultado.get('base_iva', 0), 2),
+                'iva_uni': round(resultado.get('iva_total', 0) / cantidad, 2) if cantidad > 0 else 0,
+                'iva_total': round(resultado.get('iva_total', 0), 2),
+                'pvp_uni': round(resultado.get('pvp', 0), 2),
+                'pvp_total': round(resultado.get('pvp', 0) * cantidad, 2),
+            })
+        else:
+            return jsonify({'error': 'No se pudo calcular ICE para el producto.'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+
+@registro_completo_bp.route('/procesar_ice_multiple', methods=['POST'])
+@login_required
+def procesar_ice_multiple():
+    r = _requiere()
+    if r:
+        return jsonify({'error': 'Sin acceso'}), 403
+    try:
+        data = request.get_json()
+        productos = data.get('productos', [])
+        anio = data.get('anio')
+
+        calc = IceCalculator()
+        resultados = []
+
+        for prod in productos:
+            try:
+                resultado = calc.calcular_liquidacion_completa(
+                    datos={
+                        'tipo_producto': prod.get('tipo_producto'),
+                        'precio_fabrica_unitario': float(prod.get('precio', 0)),
+                        'volumen_cc': float(prod.get('capacidad', 0)),
+                        'grado_alcoholico': float(prod.get('grado', 0)),
+                        'cantidad': int(prod.get('cantidad', 1))
+                    },
+                    anio=anio,
+                    iva_tasa=None
+                )
+
+                if resultado:
+                    cantidad = int(prod.get('cantidad', 1))
+                    resultados.append({
+                        'nombre': prod.get('nombre', 'Producto'),
+                        'tipo': prod.get('tipo_producto'),
+                        'precio': float(prod.get('precio', 0)),
+                        'capacidad': float(prod.get('capacidad', 0)),
+                        'grado': float(prod.get('grado', 0)),
+                        'cantidad': cantidad,
+                        'ice_especifico_uni': round(resultado.get('ice_especifico_unitario', 0), 2),
+                        'ice_advalorem_uni': round(resultado.get('ice_advalorem_unitario', 0), 2),
+                        'ice_total_uni': round(resultado.get('ice_total_unitario', 0), 2),
+                        'ice_especifico_total': round(resultado.get('ice_especifico_total', 0), 2),
+                        'ice_advalorem_total': round(resultado.get('ice_advalorem_total', 0), 2),
+                        'ice_total': round(resultado.get('ice_total', 0), 2),
+                        'base_iva': round(resultado.get('base_iva', 0), 2),
+                        'iva_uni': round(resultado.get('iva_total', 0) / cantidad, 2) if cantidad > 0 else 0,
+                        'iva_total': round(resultado.get('iva_total', 0), 2),
+                        'pvp_uni': round(resultado.get('pvp', 0), 2),
+                        'pvp_total': round(resultado.get('pvp', 0) * cantidad, 2),
+                    })
+            except Exception:
+                continue
+
+        return jsonify({
+            'exito': True,
+            'productos': resultados,
+            'cantidad': len(resultados)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 
 @registro_completo_bp.route('/exportar_excel', methods=['POST'])
