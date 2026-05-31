@@ -95,7 +95,6 @@ def create_app():
         ('routes.anexos_ice',        'anexos_ice',         '/anexos_ice'),
         ('routes.conciliacion',      'conciliacion',        '/conciliacion'),
         ('routes.sri_processor',     'sri_processor',       '/sri_processor'),
-        ('routes.ice_auditoria',     'ice_auditoria',       '/ice_auditoria'),
         ('routes.retenciones',       'retenciones',         '/retenciones'),
         ('routes.registro_completo', 'registro_completo_bp', '/registro_completo'),
     ]
