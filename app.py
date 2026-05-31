@@ -197,7 +197,8 @@ def dashboard():
     return render_template('dashboard.html',
                            total_facturas=total_facturas,
                            modulos_activos=modulos_activos,
-                           modulos_info=modulos_info)
+                           modulos_info=modulos_info,
+                           MODULOS=Config.MODULOS)
 
 
 @app.route('/bienvenido')
