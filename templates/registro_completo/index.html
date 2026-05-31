@@ -47,7 +47,7 @@
                 <div class="card mb-3"><div class="card-body">
                     <h6 class="fw-bold">Tarifas ICE Vigentes 2021–2026</h6>
                     <p class="text-muted small">Las tarifas se actualizan anualmente según resoluciones del SRI.</p>
-                    <a href="{{ url_for('ice.ver_tarifas') }}" class="btn btn-primary btn-sm"><i class="bi bi-eye me-1"></i>Ver tabla completa de tarifas</a>
+                    <a href="{{ safe_url_for('ice.ver_tarifas') }}" class="btn btn-primary btn-sm"><i class="bi bi-eye me-1"></i>Ver tabla completa de tarifas</a>
                 </div></div>
             </div>
 
@@ -55,7 +55,7 @@
                 <div class="card mb-3"><div class="card-header fw-bold" style="background:#eff6ff; border-bottom: 1px solid #bfdbfe; color:#1d4ed8">Cálculo ICE Simple</div>
                 <div class="card-body">
                     <p class="text-muted small mb-3">Calcula el ICE para un producto individual con base legal incluida.</p>
-                    <a href="{{ url_for('ice.calculadora') }}" class="btn btn-primary btn-sm"><i class="bi bi-calculator me-1"></i>Ir a calculadora ICE Simple</a>
+                    <a href="{{ safe_url_for('ice.calculadora') }}" class="btn btn-primary btn-sm"><i class="bi bi-calculator me-1"></i>Ir a calculadora ICE Simple</a>
                 </div></div>
             </div>
 
@@ -63,7 +63,7 @@
                 <div class="card mb-3"><div class="card-header fw-bold" style="background:#eff6ff; border-bottom: 1px solid #bfdbfe; color:#1d4ed8">ICE Múltiple + Mezcla</div>
                 <div class="card-body">
                     <p class="text-muted small mb-3">Calcula ICE para múltiples productos con costos, utilidad, PVP y mezcla total.</p>
-                    <a href="{{ url_for('ice.multiple') }}" class="btn btn-primary btn-sm"><i class="bi bi-calculator-fill me-1"></i>Ir a ICE Múltiple</a>
+                    <a href="{{ safe_url_for('ice.multiple') }}" class="btn btn-primary btn-sm"><i class="bi bi-calculator-fill me-1"></i>Ir a ICE Múltiple</a>
                 </div></div>
             </div>
 
@@ -71,7 +71,7 @@
                 <div class="card mb-3"><div class="card-header fw-bold" style="background:#eff6ff; border-bottom: 1px solid #bfdbfe; color:#1d4ed8">Anexos ICE / PVP (Editor XML)</div>
                 <div class="card-body">
                     <p class="text-muted small mb-3">Carga, edita y genera archivos XML de Anexos ICE y PVP para envío a SRI.</p>
-                    <a href="{{ url_for('ats.editor') }}" class="btn btn-primary btn-sm"><i class="bi bi-file-earmark-text me-1"></i>Abrir editor XML</a>
+                    <a href="{{ safe_url_for('ats.editor') }}" class="btn btn-primary btn-sm"><i class="bi bi-file-earmark-text me-1"></i>Abrir editor XML</a>
                 </div></div>
             </div>
 
@@ -79,7 +79,7 @@
                 <div class="card mb-3"><div class="card-header fw-bold" style="background:#eff6ff; border-bottom: 1px solid #bfdbfe; color:#1d4ed8">Facturas ICE</div>
                 <div class="card-body">
                     <p class="text-muted small mb-3">Carga XMLs de facturas de ingreso. ICE y base ICE se detectan automáticamente.</p>
-                    <a href="{{ url_for('ice_auditoria.index') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Procesar facturas ICE</a>
+                    <a href="{{ safe_url_for('ice_auditoria.index') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Procesar facturas ICE</a>
                 </div></div>
             </div>
         </div>
@@ -100,7 +100,7 @@
                 <div class="card mb-3"><div class="card-header fw-bold" style="background:#faf5ff; border-bottom: 1px solid #c4b5fd; color:#7c3aed">Facturas de Ingreso</div>
                 <div class="card-body">
                     <p class="text-muted small mb-3">Carga XMLs de facturas de venta. Se extraen automáticamente: RUC, emisor, ICE, IVA, totales.</p>
-                    <a href="{{ url_for('invoices.subir_facturas') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar facturas de ingreso</a>
+                    <a href="{{ safe_url_for('invoices.cargar_ingresos') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar facturas de ingreso</a>
                 </div></div>
             </div>
 
@@ -108,7 +108,7 @@
                 <div class="card mb-3"><div class="card-header fw-bold" style="background:#faf5ff; border-bottom: 1px solid #c4b5fd; color:#7c3aed">Retenciones</div>
                 <div class="card-body">
                     <p class="text-muted small mb-3">Carga comprobantes de retención con clasificación Renta, IVA e ISD.</p>
-                    <a href="{{ url_for('retenciones.index') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar retenciones</a>
+                    <a href="{{ safe_url_for('retenciones.index') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar retenciones</a>
                 </div></div>
             </div>
 
@@ -116,7 +116,7 @@
                 <div class="card mb-3"><div class="card-header fw-bold" style="background:#faf5ff; border-bottom: 1px solid #c4b5fd; color:#7c3aed">Facturas de Gasto</div>
                 <div class="card-body">
                     <p class="text-muted small mb-3">Carga facturas de compra. <strong>Yanbal:</strong> descuento automático. <strong>Otros:</strong> descuento opcional. IVA deducible vs. personal.</p>
-                    <a href="{{ url_for('gastos.subir_gastos') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar facturas de gasto</a>
+                    <a href="{{ safe_url_for('gastos.panel') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar facturas de gasto</a>
                 </div></div>
             </div>
         </div>
