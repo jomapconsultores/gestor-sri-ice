@@ -2,9 +2,123 @@
 {% block title %}Dashboard{% endblock %}
 {% block topbar_title %}Dashboard{% endblock %}
 
+{% block head %}
+<style>
+/* ── Module cards ─────────────────────────────── */
+.mod-card {
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+}
+.mod-card .card-body {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    flex: 1;
+}
+.mod-card .mc-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.mod-card .mc-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+.mod-card .mc-title {
+    font-weight: 700;
+    font-size: .88rem;
+    color: #0f172a;
+    line-height: 1.25;
+}
+.mod-card .mc-body {
+    padding: 10px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.mod-card .mc-desc {
+    font-size: .75rem;
+    color: #64748b;
+    line-height: 1.45;
+    /* 2-line clamp */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.mod-card .mc-meta {
+    font-size: .72rem;
+    color: #94a3b8;
+    margin-top: auto;
+}
+.mod-card .mc-footer {
+    padding: 10px 16px 14px;
+    margin-top: auto;
+}
+
+/* ── Section headers ─────────────────────────── */
+.sec-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 6px 0 6px;
+    user-select: none;
+    margin-bottom: 8px;
+}
+.sec-header-label {
+    font-size: .65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+.sec-header-line { flex: 1; height: 1px; background: #e2e8f0; }
+.sec-chev {
+    font-size: .75rem;
+    transition: transform .22s;
+    flex-shrink: 0;
+}
+.sec-chev.rotated { transform: rotate(-90deg); }
+
+/* ── Sub-section headers ─────────────────────── */
+.subsec-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    margin-bottom: 6px;
+    margin-top: 4px;
+    padding: 3px 0;
+    user-select: none;
+}
+.subsec-label {
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    opacity: .65;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.subsec-line { flex: 1; height: 1px; background: #f1f5f9; }
+</style>
+{% endblock %}
+
 {% block content %}
 
-{# ── Bienvenida ──────────────────────────────────────────────────────────── #}
+{# ── Bienvenida ────────────────────────────────────────────────────────── #}
 <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
     <div>
         <h1 style="font-size:1.3rem;font-weight:700;color:#0f172a;margin:0">
@@ -27,7 +141,7 @@
     </div>
 </div>
 
-{# ── KPIs ────────────────────────────────────────────────────────────────── #}
+{# ── KPIs ──────────────────────────────────────────────────────────────── #}
 <div class="row g-3 mb-4">
     <div class="col-6 col-lg-3">
         <div class="card h-100" style="border:none;background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff">
@@ -83,7 +197,7 @@
     </div>
 </div>
 
-{# ── Alerta sin módulos ───────────────────────────────────────────────────── #}
+{# ── Alerta sin módulos ──────────────────────────────────────────────────── #}
 {% if not modulos_activos and not current_user.is_admin %}
 <div class="alert d-flex align-items-center gap-3 mb-4" style="background:#fffbeb;border-left:4px solid #f59e0b;border-radius:10px">
     <i class="bi bi-exclamation-triangle-fill" style="color:#d97706;font-size:1.1rem;flex-shrink:0"></i>
@@ -98,36 +212,97 @@
 {% endif %}
 
 {# ══════════════════════════════════════════════════════════════════════════
-   SECCIÓN ICE
+   MACRO — TARJETA DE MÓDULO GENÉRICA
 ══════════════════════════════════════════════════════════════════════════ #}
-<div class="d-flex align-items-center gap-2 mb-2" style="cursor:pointer"
-     data-bs-toggle="collapse" data-bs-target="#secICE" aria-expanded="true">
-    <span style="font-size:.62rem;font-weight:800;color:#2563eb;text-transform:uppercase;letter-spacing:.1em">
-        <i class="bi bi-fire me-1"></i>Impuesto a los Consumos Especiales (ICE)
+{% macro mod_card(mod_id, activo, info, border_color, bg_color, icon_color, btn_color, btn_label, btn_url, badge_label, badge_bg, badge_fg) %}
+{% set cfg = MODULOS[mod_id] %}
+<div class="col-md-6 col-xl-4">
+    <div class="card mod-card h-100"
+         style="border:1.5px solid {{ border_color }};{% if not activo %}opacity:.75{% else %}background:{{ bg_color }}{% endif %}">
+        <div class="card-body">
+            <div class="mc-header">
+                <div class="mc-icon"
+                     style="background:{{ bg_color }};color:{{ icon_color }}">
+                    <i class="bi bi-{{ cfg.icono }}"></i>
+                </div>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="mc-title">{{ cfg.nombre }}</div>
+                </div>
+                <span class="badge flex-shrink-0"
+                      style="background:{{ badge_bg }};color:{{ badge_fg }};font-size:.62rem;font-weight:700">
+                    {{ badge_label }}
+                </span>
+            </div>
+            <div class="mc-body">
+                <div class="mc-desc">{{ cfg.descripcion }}</div>
+                <div class="mc-meta">
+                    {% if activo and info %}
+                        <i class="bi bi-calendar3 me-1"></i>
+                        Vence: {{ info.fecha_vencimiento.strftime('%d/%m/%Y') if info.fecha_vencimiento else 'Permanente' }}
+                    {% elif not activo %}
+                        <i class="bi bi-tag me-1"></i>
+                        {% if cfg.precio_unico %}${{ "%.2f"|format(cfg.precio) }} pago único
+                        {% elif cfg.gratuito %}Gratuito
+                        {% else %}${{ "%.2f"|format(cfg.precio) }} + IVA / mes
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mc-footer">
+                {% if activo %}
+                <a href="{{ btn_url }}" class="btn btn-sm {{ btn_color }} w-100 fw-600">
+                    <i class="bi bi-{{ cfg.icono }} me-1"></i>{{ btn_label }}
+                </a>
+                {% else %}
+                <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-sm w-100 fw-600"
+                   style="background:#f8fafc;color:#64748b;border:1.5px solid #e2e8f0">
+                    <i class="bi bi-lock me-1"></i>Contratar
+                    {% if cfg.precio_unico %} — ${{ "%.0f"|format(cfg.precio) }} único
+                    {% elif not cfg.gratuito %} — ${{ "%.0f"|format(cfg.precio) }}/mes
+                    {% endif %}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# ══════════════════════════════════════════════════════════════════════════
+   SECCIÓN 1: ICE  (azul)
+══════════════════════════════════════════════════════════════════════════ #}
+<div class="sec-header" id="hdrICE" onclick="toggleSec('ICE')">
+    <span class="sec-header-label" style="color:#2563eb">
+        <i class="bi bi-fire"></i>Impuesto a los Consumos Especiales (ICE)
     </span>
-    <div style="flex:1;height:1px;background:#e2e8f0"></div>
-    <i class="bi bi-chevron-down text-muted" style="font-size:.75rem;transition:transform .2s" id="chevICE"></i>
+    <div class="sec-header-line"></div>
+    <i class="bi bi-chevron-down text-muted sec-chev" id="chevICE"></i>
 </div>
 
-<div id="secICE" class="collapse show mb-1">
+<div id="secICE" class="mb-1">
 <div class="row g-3 mb-4">
 
-    {# ── 1. Tarifas ICE (GRATIS) ──────────────────────────────────────────── #}
+    {# 1. Tarifas ICE — siempre GRATIS #}
+    {% set activo_ti = True %}
+    {% set info_ti = None %}
     <div class="col-md-6 col-xl-4">
-        <div class="card h-100" style="border:1.5px solid #bbf7d0">
-            <div class="card-body p-0">
-                <div class="d-flex align-items-center gap-3 p-3" style="border-bottom:1px solid #dcfce7">
-                    <div style="width:42px;height:42px;border-radius:10px;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#16a34a;flex-shrink:0">
+        <div class="card mod-card h-100" style="border:1.5px solid #bbf7d0;background:#f0fdf4">
+            <div class="card-body">
+                <div class="mc-header" style="border-bottom:1px solid #dcfce7">
+                    <div class="mc-icon" style="background:#dcfce7;color:#16a34a">
                         <i class="bi bi-book"></i>
                     </div>
                     <div class="flex-grow-1 overflow-hidden">
-                        <div style="font-weight:700;font-size:.86rem;color:#0f172a">Tarifas ICE 2021–2026</div>
-                        <div style="font-size:.72rem;color:#64748b">LRTI · Reglamento · NAC · Resoluciones</div>
+                        <div class="mc-title">Tarifas ICE 2021–2026</div>
                     </div>
-                    <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.62rem;font-weight:700">GRATIS</span>
+                    <span class="badge flex-shrink-0" style="background:#dcfce7;color:#15803d;font-size:.62rem;font-weight:700">GRATIS</span>
                 </div>
-                <div class="p-3">
-                    <a href="{{ url_for('ice.ver_tarifas') }}" class="btn btn-sm btn-success w-100">
+                <div class="mc-body">
+                    <div class="mc-desc">{{ MODULOS.tarifas_ice.descripcion }}</div>
+                    <div class="mc-meta"><i class="bi bi-check-circle-fill me-1 text-success"></i>Acceso inmediato sin costo</div>
+                </div>
+                <div class="mc-footer">
+                    <a href="{{ url_for('ice.ver_tarifas') }}" class="btn btn-sm btn-success w-100 fw-bold">
                         <i class="bi bi-book me-1"></i>Ver Tarifas y Reglamentación
                     </a>
                 </div>
@@ -135,284 +310,225 @@
         </div>
     </div>
 
-    {# ── 2. Cálculo ICE Simple ────────────────────────────────────────────── #}
-    {% set activo_simple = 'ice_simple' in modulos_activos %}
-    {% set mod_simple = modulos_info.get('ice_simple') %}
-    <div class="col-md-6 col-xl-4">
-        <div class="card h-100" style="border:1.5px solid {% if activo_simple %}#bfdbfe{% else %}#e2e8f0{% endif %};{% if not activo_simple %}opacity:.85{% endif %}">
-            <div class="card-body p-0">
-                <div class="d-flex align-items-center gap-3 p-3" style="border-bottom:1px solid {% if activo_simple %}#dbeafe{% else %}#f1f5f9{% endif %}">
-                    <div style="width:42px;height:42px;border-radius:10px;background:{% if activo_simple %}#eff6ff{% else %}#f1f5f9{% endif %};display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:{% if activo_simple %}#2563eb{% else %}#94a3b8{% endif %};flex-shrink:0">
-                        <i class="bi bi-calculator"></i>
-                    </div>
-                    <div class="flex-grow-1 overflow-hidden">
-                        <div style="font-weight:700;font-size:.86rem;color:#0f172a">Cálculo ICE Simple</div>
-                        <div style="font-size:.72rem;color:#64748b">
-                            {% if activo_simple and mod_simple %}
-                                Vence: {{ mod_simple.fecha_vencimiento.strftime('%d/%m/%Y') if mod_simple.fecha_vencimiento else 'Permanente' }}
-                            {% else %}
-                                $10.00 + IVA / mes
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% if activo_simple %}
-                    <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.62rem">ACTIVO</span>
-                    {% else %}
-                    <span class="badge" style="background:#f1f5f9;color:#94a3b8;font-size:.62rem">NO ACTIVO</span>
-                    {% endif %}
-                </div>
-                <div class="p-3">
-                    {% if activo_simple %}
-                    <a href="{{ url_for('ice.calculadora') }}" class="btn btn-sm btn-primary w-100">
-                        <i class="bi bi-calculator me-1"></i>Calcular ICE Simple
-                    </a>
-                    {% else %}
-                    <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-sm w-100" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;font-weight:600">
-                        <i class="bi bi-lock me-1"></i>Contratar — $10/mes
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
+    {# 2. ICE Simple #}
+    {% set activo_is = 'ice_simple' in modulos_activos %}
+    {% set info_is = modulos_info.get('ice_simple') %}
+    {{ mod_card('ice_simple', activo_is, info_is,
+        '#bfdbfe' if activo_is else '#e2e8f0',
+        '#eff6ff', '#2563eb', 'btn-primary', 'Calcular ICE Simple',
+        url_for('ice.calculadora'),
+        'ACTIVO' if activo_is else 'BLOQUEADO',
+        '#dcfce7' if activo_is else '#f1f5f9',
+        '#15803d' if activo_is else '#94a3b8') }}
 
-    {# ── 3. ICE Múltiple + Mezcla ─────────────────────────────────────────── #}
-    {% set activo_multi = 'ice_multiple' in modulos_activos %}
-    {% set mod_multi = modulos_info.get('ice_multiple') %}
-    <div class="col-md-6 col-xl-4">
-        <div class="card h-100" style="border:1.5px solid {% if activo_multi %}#fde68a{% else %}#e2e8f0{% endif %};{% if not activo_multi %}opacity:.85{% endif %}">
-            <div class="card-body p-0">
-                <div class="d-flex align-items-center gap-3 p-3" style="border-bottom:1px solid {% if activo_multi %}#fef3c7{% else %}#f1f5f9{% endif %}">
-                    <div style="width:42px;height:42px;border-radius:10px;background:{% if activo_multi %}#fffbeb{% else %}#f1f5f9{% endif %};display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:{% if activo_multi %}#d97706{% else %}#94a3b8{% endif %};flex-shrink:0">
-                        <i class="bi bi-calculator-fill"></i>
-                    </div>
-                    <div class="flex-grow-1 overflow-hidden">
-                        <div style="font-weight:700;font-size:.86rem;color:#0f172a">ICE Múltiple + Mezcla</div>
-                        <div style="font-size:.72rem;color:#64748b">
-                            {% if activo_multi and mod_multi %}
-                                Vence: {{ mod_multi.fecha_vencimiento.strftime('%d/%m/%Y') if mod_multi.fecha_vencimiento else 'Permanente' }}
-                            {% else %}
-                                $15.00 + IVA / mes
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% if activo_multi %}
-                    <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.62rem">ACTIVO</span>
-                    {% else %}
-                    <span class="badge" style="background:#f1f5f9;color:#94a3b8;font-size:.62rem">NO ACTIVO</span>
-                    {% endif %}
-                </div>
-                <div class="p-3">
-                    {% if activo_multi %}
-                    <a href="{{ url_for('ice.multiple') }}" class="btn btn-sm btn-warning text-dark w-100">
-                        <i class="bi bi-calculator-fill me-1"></i>Abrir ICE Múltiple
-                    </a>
-                    {% else %}
-                    <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-sm w-100" style="background:#fffbeb;color:#d97706;border:1px solid #fde68a;font-weight:600">
-                        <i class="bi bi-lock me-1"></i>Contratar — $15/mes
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
+    {# 3. ICE Múltiple #}
+    {% set activo_im = 'ice_multiple' in modulos_activos %}
+    {% set info_im = modulos_info.get('ice_multiple') %}
+    {{ mod_card('ice_multiple', activo_im, info_im,
+        '#fde68a' if activo_im else '#e2e8f0',
+        '#fffbeb', '#d97706', 'btn-warning text-dark', 'Abrir ICE Múltiple',
+        url_for('ice.multiple'),
+        'ACTIVO' if activo_im else 'BLOQUEADO',
+        '#dcfce7' if activo_im else '#f1f5f9',
+        '#15803d' if activo_im else '#94a3b8') }}
 
-    {# ── 4. Anexos ICE / PVP ──────────────────────────────────────────────── #}
-    {% set activo_anexos = 'anexos_ice' in modulos_activos %}
-    {% set mod_anexos = modulos_info.get('anexos_ice') %}
-    <div class="col-md-6 col-xl-4">
-        <div class="card h-100" style="border:1.5px solid {% if activo_anexos %}#bae6fd{% else %}#e2e8f0{% endif %};{% if not activo_anexos %}opacity:.85{% endif %}">
-            <div class="card-body p-0">
-                <div class="d-flex align-items-center gap-3 p-3" style="border-bottom:1px solid {% if activo_anexos %}#e0f2fe{% else %}#f1f5f9{% endif %}">
-                    <div style="width:42px;height:42px;border-radius:10px;background:{% if activo_anexos %}#f0f9ff{% else %}#f1f5f9{% endif %};display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:{% if activo_anexos %}#0284c7{% else %}#94a3b8{% endif %};flex-shrink:0">
-                        <i class="bi bi-file-earmark-code"></i>
-                    </div>
-                    <div class="flex-grow-1 overflow-hidden">
-                        <div style="font-weight:700;font-size:.86rem;color:#0f172a">Anexos ICE / PVP</div>
-                        <div style="font-size:.72rem;color:#64748b">
-                            {% if activo_anexos and mod_anexos %}
-                                Vence: {{ mod_anexos.fecha_vencimiento.strftime('%d/%m/%Y') if mod_anexos.fecha_vencimiento else 'Permanente' }}
-                            {% else %}
-                                $10.00 + IVA / mes
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% if activo_anexos %}
-                    <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.62rem">ACTIVO</span>
-                    {% else %}
-                    <span class="badge" style="background:#f1f5f9;color:#94a3b8;font-size:.62rem">NO ACTIVO</span>
-                    {% endif %}
-                </div>
-                <div class="p-3">
-                    {% if activo_anexos %}
-                    <div class="d-grid gap-2">
-                        <a href="{{ safe_url_for('ats.editor') }}" class="btn btn-sm btn-info text-white">
-                            <i class="bi bi-file-earmark-code me-1"></i>Editor Anexos XML
-                        </a>
-                        <a href="{{ url_for('annexes.historial') }}" class="btn btn-sm btn-outline-info">
-                            <i class="bi bi-clock-history me-1"></i>Historial
-                        </a>
-                    </div>
-                    {% else %}
-                    <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-sm w-100" style="background:#f0f9ff;color:#0284c7;border:1px solid #bae6fd;font-weight:600">
-                        <i class="bi bi-lock me-1"></i>Contratar — $10/mes
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
+    {# 4. Anexos ICE #}
+    {% set activo_ax = 'anexos_ice' in modulos_activos %}
+    {% set info_ax = modulos_info.get('anexos_ice') %}
+    {{ mod_card('anexos_ice', activo_ax, info_ax,
+        '#bae6fd' if activo_ax else '#e2e8f0',
+        '#f0f9ff', '#0284c7', 'btn-info text-white', 'Editor Anexos ICE/PVP',
+        safe_url_for('ats.editor'),
+        'ACTIVO' if activo_ax else 'BLOQUEADO',
+        '#dcfce7' if activo_ax else '#f1f5f9',
+        '#15803d' if activo_ax else '#94a3b8') }}
 
-    {# ── 5. Procesamiento Facturas ICE ────────────────────────────────────── #}
-    {% set activo_fact_ice = 'facturas_ice' in modulos_activos %}
-    {% set mod_fact_ice = modulos_info.get('facturas_ice') %}
-    <div class="col-md-6 col-xl-4">
-        <div class="card h-100" style="border:1.5px solid {% if activo_fact_ice %}#fecaca{% else %}#e2e8f0{% endif %};{% if not activo_fact_ice %}opacity:.85{% endif %}">
-            <div class="card-body p-0">
-                <div class="d-flex align-items-center gap-3 p-3" style="border-bottom:1px solid {% if activo_fact_ice %}#fee2e2{% else %}#f1f5f9{% endif %}">
-                    <div style="width:42px;height:42px;border-radius:10px;background:{% if activo_fact_ice %}#fef2f2{% else %}#f1f5f9{% endif %};display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:{% if activo_fact_ice %}#dc2626{% else %}#94a3b8{% endif %};flex-shrink:0">
-                        <i class="bi bi-file-earmark-arrow-up"></i>
-                    </div>
-                    <div class="flex-grow-1 overflow-hidden">
-                        <div style="font-weight:700;font-size:.86rem;color:#0f172a">Procesamiento Facturas ICE</div>
-                        <div style="font-size:.72rem;color:#64748b">
-                            {% if activo_fact_ice and mod_fact_ice %}
-                                Vence: {{ mod_fact_ice.fecha_vencimiento.strftime('%d/%m/%Y') if mod_fact_ice.fecha_vencimiento else 'Permanente' }}
-                            {% else %}
-                                $15.00 + IVA / mes
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% if activo_fact_ice %}
-                    <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.62rem">ACTIVO</span>
-                    {% else %}
-                    <span class="badge" style="background:#f1f5f9;color:#94a3b8;font-size:.62rem">NO ACTIVO</span>
-                    {% endif %}
-                </div>
-                <div class="p-3">
-                    {% if activo_fact_ice %}
-                    <a href="{{ safe_url_for('ice_auditoria.index') }}" class="btn btn-sm btn-danger w-100">
-                        <i class="bi bi-file-earmark-arrow-up me-1"></i>Procesar Facturas ICE
-                    </a>
-                    {% else %}
-                    <a href="{{ url_for('payments.ver_planes') }}" class="btn btn-sm w-100" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-weight:600">
-                        <i class="bi bi-lock me-1"></i>Contratar — $15/mes
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {# ── Info módulo siguiente ─────────────────────────────────────────────── #}
-    <div class="col-md-6 col-xl-4 d-none d-md-block">
-        <div class="card h-100" style="border:1.5px dashed #e2e8f0;background:#fafafa">
-            <div class="card-body d-flex flex-column align-items-center justify-content-center text-center gap-3 p-4">
-                <div style="width:42px;height:42px;border-radius:10px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#94a3b8">
-                    <i class="bi bi-grid-3x3-gap"></i>
-                </div>
-                <div>
-                    <div style="font-weight:700;font-size:.84rem;color:#94a3b8">Más módulos próximamente</div>
-                    <div style="font-size:.73rem;color:#cbd5e1;margin-top:4px">Facturas, Retenciones,<br>Conciliación Bancaria IA y más</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {# 5. Facturas ICE #}
+    {% set activo_fi = 'facturas_ice' in modulos_activos %}
+    {% set info_fi = modulos_info.get('facturas_ice') %}
+    {{ mod_card('facturas_ice', activo_fi, info_fi,
+        '#fecaca' if activo_fi else '#e2e8f0',
+        '#fef2f2', '#dc2626', 'btn-danger', 'Procesar Facturas ICE',
+        safe_url_for('ice_auditoria.index'),
+        'ACTIVO' if activo_fi else 'BLOQUEADO',
+        '#dcfce7' if activo_fi else '#f1f5f9',
+        '#15803d' if activo_fi else '#94a3b8') }}
 
 </div>
-</div>{# /secICE collapse #}
+</div>
 
 {# ══════════════════════════════════════════════════════════════════════════
-   MÓDULOS GENERALES ACTIVOS (solo si el usuario tiene alguno)
+   SECCIÓN 2: TRIBUTARIA (púrpura) — 3 subsecciones
 ══════════════════════════════════════════════════════════════════════════ #}
-{# ── Módulos Tributaria activos ──────────────────────────────────────────── #}
-{% set trib_activos = ['facturas','exportacion','descarga_sri','retenciones','sri_pro','soporte','registro_completo'] %}
-{% if (modulos_activos | select('in', trib_activos) | list) or current_user.is_admin %}
-<div class="d-flex align-items-center gap-2 mb-2 mt-1" style="cursor:pointer"
-     data-bs-toggle="collapse" data-bs-target="#secTrib" aria-expanded="true">
-    <span style="font-size:.62rem;font-weight:800;color:#7c3aed;text-transform:uppercase;letter-spacing:.1em">
-        <i class="bi bi-journal-text me-1"></i>Tributaria
+<div class="sec-header" id="hdrTrib" onclick="toggleSec('Trib')">
+    <span class="sec-header-label" style="color:#7c3aed">
+        <i class="bi bi-journal-text"></i>Tributaria
     </span>
-    <div style="flex:1;height:1px;background:#e2e8f0"></div>
-    <i class="bi bi-chevron-down text-muted" style="font-size:.75rem;transition:transform .2s" id="chevTrib"></i>
+    <div class="sec-header-line"></div>
+    <i class="bi bi-chevron-down text-muted sec-chev" id="chevTrib"></i>
 </div>
-<div id="secTrib" class="collapse show">
-<div class="row g-3 mb-4">
-    {% for mod_id, mod_icon, mod_nombre, mod_url in [
-        ('facturas',          'bi-receipt',               'Facturas Gastos/Ingresos',    url_for('invoices.pagina_carga')),
-        ('retenciones',       'bi-file-earmark-minus',    'Retenciones XML',             safe_url_for('retenciones.index')),
-        ('sri_pro',           'bi-cloud-arrow-down',      'Gestor SRI Pro',              safe_url_for('sri_processor.index')),
-        ('descarga_sri',      'bi-cloud-download',        'Descarga Masiva SRI',         url_for('downloader.pagina_descarga')),
-        ('exportacion',       'bi-file-earmark-excel',    'Exportación Excel',           url_for('exports.exportar_declaracion')),
-        ('registro_completo', 'bi-journal-richtext',      'Registro Completo',           safe_url_for('registro_completo.index')),
-    ] %}
-    {% if mod_id in modulos_activos or current_user.is_admin %}
-    <div class="col-md-4 col-lg-3">
-        <a href="{{ mod_url }}" class="card h-100 text-decoration-none" style="border:1.5px solid #e9d5ff;background:#faf5ff;transition:box-shadow .15s">
-            <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
-                <div style="width:38px;height:38px;border-radius:9px;background:#ede9fe;display:flex;align-items:center;justify-content:center;font-size:1rem;color:#7c3aed;flex-shrink:0">
-                    <i class="bi {{ mod_icon }}"></i>
-                </div>
-                <div>
-                    <div style="font-weight:600;font-size:.82rem;color:#0f172a">{{ mod_nombre }}</div>
-                    <div style="font-size:.68rem;color:#22c55e;font-weight:600">ACTIVO</div>
-                </div>
-            </div>
-        </a>
-    </div>
-    {% endif %}
-    {% endfor %}
-</div>
-</div>{# /secTrib collapse #}
-{% endif %}
 
-{# ── Módulos Odoo activos ─────────────────────────────────────────────────── #}
-{% if 'conciliacion' in modulos_activos or current_user.is_admin %}
-<div class="d-flex align-items-center gap-2 mb-2 mt-1" style="cursor:pointer"
-     data-bs-toggle="collapse" data-bs-target="#secOdoo" aria-expanded="true">
-    <span style="font-size:.62rem;font-weight:800;color:#059669;text-transform:uppercase;letter-spacing:.1em">
-        <i class="bi bi-box-seam me-1"></i>Odoo
+<div id="secTrib" class="mb-1">
+
+    {# Sub-sección INGRESOS #}
+    <div class="subsec-header" id="hdrTribIng" onclick="toggleSubSec('TribIng')">
+        <span class="subsec-label" style="color:#7c3aed">
+            <i class="bi bi-arrow-right" style="font-size:.5rem"></i>Ingresos
+        </span>
+        <div class="subsec-line"></div>
+        <i class="bi bi-chevron-down sec-chev" style="font-size:.65rem;color:#a78bfa" id="chevTribIng"></i>
+    </div>
+    <div id="secTribIng" class="mb-3">
+    <div class="row g-3">
+        {# Facturas Ingreso #}
+        {% set activo_fing = 'facturas_ingreso' in modulos_activos %}
+        {% set info_fing = modulos_info.get('facturas_ingreso') %}
+        {{ mod_card('facturas_ingreso', activo_fing, info_fing,
+            '#bfdbfe' if activo_fing else '#e2e8f0',
+            '#eff6ff', '#2563eb', 'btn-primary', 'Procesar Facturas Ingreso',
+            url_for('invoices.cargar_ingresos'),
+            'ACTIVO' if activo_fing else 'BLOQUEADO',
+            '#dcfce7' if activo_fing else '#f1f5f9',
+            '#15803d' if activo_fing else '#94a3b8') }}
+
+        {# Retenciones #}
+        {% set activo_ret = 'retenciones' in modulos_activos %}
+        {% set info_ret = modulos_info.get('retenciones') %}
+        {{ mod_card('retenciones', activo_ret, info_ret,
+            '#bae6fd' if activo_ret else '#e2e8f0',
+            '#f0f9ff', '#0284c7', 'btn-info text-white', 'Procesar Retenciones',
+            safe_url_for('retenciones.index'),
+            'ACTIVO' if activo_ret else 'BLOQUEADO',
+            '#dcfce7' if activo_ret else '#f1f5f9',
+            '#15803d' if activo_ret else '#94a3b8') }}
+    </div>
+    </div>
+
+    {# Sub-sección GASTOS #}
+    <div class="subsec-header" id="hdrTribGas" onclick="toggleSubSec('TribGas')">
+        <span class="subsec-label" style="color:#7c3aed">
+            <i class="bi bi-arrow-right" style="font-size:.5rem"></i>Gastos
+        </span>
+        <div class="subsec-line"></div>
+        <i class="bi bi-chevron-down sec-chev" style="font-size:.65rem;color:#a78bfa" id="chevTribGas"></i>
+    </div>
+    <div id="secTribGas" class="mb-3">
+    <div class="row g-3">
+        {# Descarga Masiva SRI #}
+        {% set activo_dsr = 'descarga_sri' in modulos_activos %}
+        {% set info_dsr = modulos_info.get('descarga_sri') %}
+        {{ mod_card('descarga_sri', activo_dsr, info_dsr,
+            '#e2e8f0' if activo_dsr else '#e2e8f0',
+            '#f8fafc', '#475569', 'btn-secondary', 'Ir a Descarga Masiva SRI',
+            url_for('downloader.pagina_descarga'),
+            'ACTIVO' if activo_dsr else 'BLOQUEADO',
+            '#dcfce7' if activo_dsr else '#f1f5f9',
+            '#15803d' if activo_dsr else '#94a3b8') }}
+
+        {# Facturas Gasto #}
+        {% set activo_fgas = 'facturas_gasto' in modulos_activos %}
+        {% set info_fgas = modulos_info.get('facturas_gasto') %}
+        {{ mod_card('facturas_gasto', activo_fgas, info_fgas,
+            '#fecaca' if activo_fgas else '#e2e8f0',
+            '#fef2f2', '#dc2626', 'btn-danger', 'Procesar Facturas de Gasto',
+            url_for('invoices.pagina_carga'),
+            'ACTIVO' if activo_fgas else 'BLOQUEADO',
+            '#dcfce7' if activo_fgas else '#f1f5f9',
+            '#15803d' if activo_fgas else '#94a3b8') }}
+    </div>
+    </div>
+
+    {# Sub-sección COMPLETO #}
+    <div class="subsec-header" id="hdrTribCmp" onclick="toggleSubSec('TribCmp')">
+        <span class="subsec-label" style="color:#7c3aed">
+            <i class="bi bi-arrow-right" style="font-size:.5rem"></i>Completo
+        </span>
+        <div class="subsec-line"></div>
+        <i class="bi bi-chevron-down sec-chev" style="font-size:.65rem;color:#a78bfa" id="chevTribCmp"></i>
+    </div>
+    <div id="secTribCmp" class="mb-3">
+    <div class="row g-3">
+        {# Registro Completo #}
+        {% set activo_rc = 'registro_completo' in modulos_activos %}
+        {% set info_rc = modulos_info.get('registro_completo') %}
+        {{ mod_card('registro_completo', activo_rc, info_rc,
+            '#0d1b2e' if activo_rc else '#e2e8f0',
+            '#f8fafc', '#0d1b2e', 'btn-dark', 'Abrir Registro Completo',
+            url_for('gastos.panel'),
+            'ACTIVO' if activo_rc else 'BLOQUEADO',
+            '#dcfce7' if activo_rc else '#f1f5f9',
+            '#15803d' if activo_rc else '#94a3b8') }}
+    </div>
+    </div>
+
+</div>{# /secTrib #}
+
+{# ══════════════════════════════════════════════════════════════════════════
+   SECCIÓN 3: ODOO (verde)
+══════════════════════════════════════════════════════════════════════════ #}
+<div class="sec-header" id="hdrOdoo" onclick="toggleSec('Odoo')">
+    <span class="sec-header-label" style="color:#059669">
+        <i class="bi bi-box-seam"></i>Odoo
     </span>
-    <div style="flex:1;height:1px;background:#e2e8f0"></div>
-    <i class="bi bi-chevron-down text-muted" style="font-size:.75rem;transition:transform .2s" id="chevOdoo"></i>
+    <div class="sec-header-line"></div>
+    <i class="bi bi-chevron-down text-muted sec-chev" id="chevOdoo"></i>
 </div>
-<div id="secOdoo" class="collapse show">
-<div class="row g-3 mb-4">
-    <div class="col-md-4 col-lg-3">
-        <a href="{{ safe_url_for('conciliacion.index') }}" class="card h-100 text-decoration-none" style="border:1.5px solid #a7f3d0;background:#f0fdf4;transition:box-shadow .15s">
-            <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
-                <div style="width:38px;height:38px;border-radius:9px;background:#d1fae5;display:flex;align-items:center;justify-content:center;font-size:1rem;color:#059669;flex-shrink:0">
-                    <i class="bi bi-bank"></i>
-                </div>
-                <div>
-                    <div style="font-weight:600;font-size:.82rem;color:#0f172a">Conciliación Bancaria IA</div>
-                    <div style="font-size:.68rem;color:#22c55e;font-weight:600">ACTIVO</div>
-                </div>
-            </div>
-        </a>
-    </div>
-</div>
-</div>{# /secOdoo collapse #}
-{% endif %}
 
-{# ── Nota sobre módulos no completados (no se puede cancelar) ─────────────── #}
-{% if modulos_activos %}
-<div class="alert" style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;font-size:.78rem;color:#075985">
+<div id="secOdoo" class="mb-1">
+<div class="row g-3 mb-4">
+    {# Conciliación Bancaria IA #}
+    {% set activo_conc = 'conciliacion' in modulos_activos %}
+    {% set info_conc = modulos_info.get('conciliacion') %}
+    {{ mod_card('conciliacion', activo_conc, info_conc,
+        '#a7f3d0' if activo_conc else '#e2e8f0',
+        '#f0fdf4', '#059669', 'btn-success', 'Abrir Conciliación Bancaria',
+        safe_url_for('conciliacion.index'),
+        'ACTIVO' if activo_conc else 'BLOQUEADO',
+        '#dcfce7' if activo_conc else '#f1f5f9',
+        '#15803d' if activo_conc else '#94a3b8') }}
+</div>
+</div>
+
+{# ── Nota de política ───────────────────────────────────────────────────── #}
+<div class="alert mt-2" style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;font-size:.78rem;color:#075985">
     <i class="bi bi-info-circle-fill me-2" style="color:#0284c7"></i>
     <strong>Política de módulos:</strong> Los módulos contratados son válidos hasta su fecha de vencimiento y no pueden cancelarse antes de esa fecha. Para renovar o agregar nuevos módulos usa el botón
     <a href="{{ url_for('payments.ver_planes') }}" class="fw-bold" style="color:#0284c7">Contratar Módulos</a>.
 </div>
-{% endif %}
 
 <script>
-// Rotate chevron icons when sections collapse/expand
-['ICE','Trib','Odoo'].forEach(key => {
+// ── Collapsible sections with localStorage ──────────────────────────────
+const SECS  = ['ICE', 'Trib', 'Odoo'];
+const SUBSECS = ['TribIng', 'TribGas', 'TribCmp'];
+
+function setSec(key, open, animate) {
+    const el   = document.getElementById('sec' + key);
+    const chev = document.getElementById('chev' + key);
+    if (!el) return;
+    if (open) {
+        el.style.display = '';
+        if (chev) chev.classList.remove('rotated');
+    } else {
+        el.style.display = 'none';
+        if (chev) chev.classList.add('rotated');
+    }
+    localStorage.setItem('dashSec_' + key, open ? '1' : '0');
+}
+
+function toggleSec(key) {
     const el = document.getElementById('sec' + key);
     if (!el) return;
-    const chev = document.getElementById('chev' + key);
-    if (!chev) return;
-    el.addEventListener('hide.bs.collapse', () => { chev.style.transform = 'rotate(-90deg)'; });
-    el.addEventListener('show.bs.collapse', () => { chev.style.transform = 'rotate(0deg)'; });
+    const isOpen = el.style.display !== 'none';
+    setSec(key, !isOpen, true);
+}
+
+function toggleSubSec(key) { toggleSec(key); }
+
+// Restore state on load
+[...SECS, ...SUBSECS].forEach(key => {
+    const stored = localStorage.getItem('dashSec_' + key);
+    // default: open (null or '1')
+    setSec(key, stored !== '0', false);
 });
 </script>
 

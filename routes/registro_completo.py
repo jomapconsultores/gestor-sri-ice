@@ -220,9 +220,45 @@ def exportar_excel():
                 cell.font = s['font']
             cell.border = estilos['border']
 
-        # Hoja 1: Ingresos
-        ws1 = wb.active
-        ws1.title = 'Ingresos'
+        # Hoja 1: ICE Simple
+        ws0 = wb.active
+        ws0.title = 'ICE Simple'
+        hdrs0 = ['Nombre', 'Precio ex-f.', 'Capacidad (L)', 'Grado (%)', 'Cantidad', 'Tipo',
+                 'ICE Esp/u', 'ICE AdVal/u', 'IVA/u', 'PVP/u',
+                 'ICE Esp. Total', 'ICE AdVal. Total', 'PVP Total']
+        for j, h in enumerate(hdrs0, 1):
+            c = ws0.cell(1, j, h); apply(c, 'h')
+        for i, r in enumerate(data.get('ice_simple', []), 2):
+            vals = [r.get('nombre', ''), r.get('precio', 0), r.get('capacidad', 0),
+                    r.get('grado', 0), r.get('cantidad', 1), r.get('tipo', ''),
+                    r.get('ice_especifico_uni', 0), r.get('ice_advalorem_uni', 0),
+                    r.get('iva_uni', 0), r.get('pvp_uni', 0),
+                    r.get('ice_especifico_total', 0), r.get('ice_advalorem_total', 0),
+                    r.get('pvp_total', 0)]
+            for j, v in enumerate(vals, 1):
+                c = ws0.cell(i, j, v); apply(c, 'n')
+                if j > 6: c.number_format = '#,##0.00'
+
+        # Hoja 2: ICE Múltiple
+        ws_im = wb.create_sheet('ICE Multiple')
+        hdrs_im = ['Nombre', 'Precio ex-f.', 'Capacidad (L)', 'Grado (%)', 'Cantidad', 'Tipo',
+                   'ICE Esp/u', 'ICE AdVal/u', 'IVA/u', 'PVP/u',
+                   'ICE Esp. Total', 'ICE AdVal. Total', 'PVP Total']
+        for j, h in enumerate(hdrs_im, 1):
+            c = ws_im.cell(1, j, h); apply(c, 'h')
+        for i, r in enumerate(data.get('ice_multiple', []), 2):
+            vals = [r.get('nombre', ''), r.get('precio', 0), r.get('capacidad', 0),
+                    r.get('grado', 0), r.get('cantidad', 1), r.get('tipo', ''),
+                    r.get('ice_especifico_uni', 0), r.get('ice_advalorem_uni', 0),
+                    r.get('iva_uni', 0), r.get('pvp_uni', 0),
+                    r.get('ice_especifico_total', 0), r.get('ice_advalorem_total', 0),
+                    r.get('pvp_total', 0)]
+            for j, v in enumerate(vals, 1):
+                c = ws_im.cell(i, j, v); apply(c, 'n')
+                if j > 6: c.number_format = '#,##0.00'
+
+        # Hoja 3: Ingresos
+        ws1 = wb.create_sheet('Ingresos')
         hdrs = ['N° Factura', 'Fecha', 'RUC Emisor', 'Emisor', 'Cliente',
                 'Subtotal', 'Base ICE', 'ICE', 'Base IVA', 'IVA', 'Total']
         for j, h in enumerate(hdrs, 1):
@@ -239,7 +275,7 @@ def exportar_excel():
                 if j > 5:
                     c.number_format = '#,##0.00'
 
-        # Hoja 2: Retenciones
+        # Hoja 4: Retenciones
         ws2 = wb.create_sheet('Retenciones')
         hdrs2 = ['Fecha', 'RUC Emisor', 'Emisor', 'Tipo', 'Base', '%', 'Valor Retenido']
         for j, h in enumerate(hdrs2, 1):
@@ -254,7 +290,7 @@ def exportar_excel():
                 if j > 3:
                     c.number_format = '#,##0.00'
 
-        # Hoja 3: Gastos
+        # Hoja 5: Gastos
         ws3 = wb.create_sheet('Gastos')
         hdrs3 = ['N° Factura', 'Fecha', 'RUC Emisor', 'Emisor', 'Base IVA', 'IVA',
                  'Total', 'Descuento', 'Base Imponible', 'Categoría', 'Tipo']
@@ -273,7 +309,7 @@ def exportar_excel():
                 if 4 < j < 10:
                     c.number_format = '#,##0.00'
 
-        # Hoja 4: Liquidación
+        # Hoja 6: Liquidación
         ws4 = wb.create_sheet('Liquidacion')
         liq = data.get('liquidacion', {})
         rows = [

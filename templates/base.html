@@ -411,6 +411,9 @@
         {% if current_user.is_admin %}
         <!-- ── ADMINISTRACIÓN ──────────────────────────── -->
         <div class="sb-section">Administración</div>
+        <a href="{{ url_for('admin_reports.clientes') }}" class="sb-link">
+            <i class="bi bi-people"></i>Gestión de Clientes
+        </a>
         <a href="{{ url_for('admin_reports.reportes') }}" class="sb-link">
             <i class="bi bi-graph-up-arrow"></i>Reportes
         </a>
