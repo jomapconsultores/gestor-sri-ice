@@ -158,7 +158,9 @@ class Config:
             'precio': 120.00, 'precio_unico': False, 'gratuito': False,
             'categoria': 'tributaria', 'subcategoria': 'completo',
             'color': 'dark', 'icono': 'journal-richtext',
-            'tooltip': 'Todo en uno: ICE + Tributaria + Liquidación + Excel completo',
+                        'tooltip': 'Todo en uno: ICE + Tributaria + Liquidación + Excel completo',
+            'incluye': ['tarifas_ice', 'ice_simple', 'ice_multiple', 'anexos_ice', 'facturas_ice', 'facturas_ingreso', 'retenciones', 'facturas_gasto', 'conciliacion'],
+        },
         },
         # ── Módulos Odoo ─────────────────────────────────────────────────────────────
         'conciliacion': {
