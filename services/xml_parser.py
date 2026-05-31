@@ -103,7 +103,8 @@ def parse_xml_factura(ruta_archivo):
         # Procesar detalles
         detalles = find_node(root, 'detalles')
         productos = []
-        
+        total_descuentos = 0.0
+
         if detalles is not None:
             for detalle in detalles.findall('detalle'):
                 codigo = find_text(detalle, 'codigoPrincipal')
@@ -111,27 +112,36 @@ def parse_xml_factura(ruta_archivo):
                 cantidad = float(find_text(detalle, 'cantidad') or 0)
                 precio_unitario = float(find_text(detalle, 'precioUnitario') or 0)
                 precio_total = float(find_text(detalle, 'precioTotalSinImpuesto') or 0)
-                
+
+                descuento_detalle = 0.0
+                try:
+                    descuento_detalle = float(find_text(detalle, 'descuento') or 0)
+                except:
+                    pass
+                total_descuentos += descuento_detalle
+
                 impuestos = extraer_impuestos(find_node(detalle, 'impuestos'))
-                
+
                 productos.append({
                     'codigo': codigo,
                     'descripcion': descripcion[:200] if descripcion else '',
                     'cantidad': cantidad,
                     'precio_unitario': precio_unitario,
                     'precio_total': precio_total,
+                    'descuento': descuento_detalle,
                     'ice': impuestos['ice'],
                     'base_ice': impuestos['base_ice'],
                     'iva': impuestos['iva'],
                     'base_iva': impuestos['base_iva']
                 })
-        
+
         return {
             'clave_acceso': clave_acceso,
             'ruc': ruc,
             'numero_factura': numero_factura,
             'fecha_emision': fecha,
             'importe_total': importe_total,
+            'descuento_total': total_descuentos,
             'tipo_id_cliente': tipo_id,
             'id_cliente': id_cliente,
             'razon_social_cliente': razon_social,

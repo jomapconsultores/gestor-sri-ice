@@ -26,8 +26,8 @@ def _tiene_modulo(modulo_id):
 @login_required
 def pagina_carga():
     """Página para subir facturas de GASTOS (compras/proveedores)."""
-    if not _tiene_modulo('facturas'):
-        flash('Necesitas el módulo "Facturas Ilimitadas" para subir facturas.', 'warning')
+    if not _tiene_modulo('facturas_gasto'):
+        flash('Necesitas el módulo "Facturas de Gasto" para subir facturas de gasto.', 'warning')
         return redirect(url_for('payments.ver_planes'))
     facturas = Factura.query.filter_by(
         usuario_id=current_user.id, tipo='gasto'
@@ -39,9 +39,10 @@ def pagina_carga():
 @login_required
 def subir_facturas():
     tipo = request.form.get('tipo', 'gasto')
-    if not _tiene_modulo('facturas'):
+    modulo_requerido = 'facturas_gasto' if tipo == 'gasto' else 'facturas_ingreso'
+    if not _tiene_modulo(modulo_requerido):
         flash('Módulo no activo.', 'danger')
-        return redirect(url_for('invoices.pagina_carga'))
+        return redirect(url_for('invoices.pagina_carga' if tipo == 'gasto' else 'invoices.cargar_ingresos'))
 
     archivos = request.files.getlist('archivos')
     if not archivos or archivos[0].filename == '':
@@ -63,6 +64,7 @@ def subir_facturas():
             if existente:
                 duplicadas += 1
                 continue
+            descuento_total = datos.get('descuento_total', 0)
             factura = Factura(
                 usuario_id=current_user.id,
                 clave_acceso=datos['clave_acceso'],
@@ -80,6 +82,8 @@ def subir_facturas():
                 valor_iva=sum(p.get('iva', 0) for p in datos.get('productos', [])),
                 xml_original='',
                 tipo=tipo,
+                descuento_total=descuento_total,
+                tiene_descuento=descuento_total > 0,
             )
             db.session.add(factura)
             procesadas += 1
@@ -104,8 +108,8 @@ def subir_facturas():
 @login_required
 def cargar_ingresos():
     """Página para subir facturas de INGRESOS (ventas propias)."""
-    if not _tiene_modulo('facturas'):
-        flash('Necesitas el módulo "Facturas Ilimitadas" para subir facturas.', 'warning')
+    if not _tiene_modulo('facturas_ingreso'):
+        flash('Necesitas el módulo "Facturas de Ingreso" para subir facturas de ingreso.', 'warning')
         return redirect(url_for('payments.ver_planes'))
     facturas = Factura.query.filter_by(
         usuario_id=current_user.id, tipo='ingreso'
@@ -117,7 +121,7 @@ def cargar_ingresos():
 @login_required
 def reporte_ingresos():
     """Reporte de facturas de ingreso con totales ICE/IVA."""
-    if not _tiene_modulo('facturas'):
+    if not _tiene_modulo('facturas_ingreso'):
         flash('Módulo no activo.', 'warning')
         return redirect(url_for('payments.ver_planes'))
     from sqlalchemy import func, extract

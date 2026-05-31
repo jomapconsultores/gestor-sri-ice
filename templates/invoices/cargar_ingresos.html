@@ -1,52 +1,144 @@
 {% extends "base.html" %}
-{% block title %}Facturas de Ingresos{% endblock %}
-{% block content %}
+{% block title %}Facturas de Ingreso{% endblock %}
+{% block topbar_title %}Facturas de Ingreso{% endblock %}
 
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <h4 class="page-title mb-0"><i class="bi bi-cloud-upload me-2 text-success"></i>Facturas de Ingresos (Ventas)</h4>
+{% block head %}
+<style>
+#dropZone {
+    border: 2px dashed #86efac;
+    border-radius: 12px;
+    background: #f0fdf4;
+    padding: 36px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+}
+#dropZone.dragover {
+    border-color: #16a34a;
+    background: #dcfce7;
+}
+#dropZone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.file-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #f0fdf4; border: 1px solid #86efac;
+    border-radius: 20px; padding: 3px 10px 3px 8px;
+    font-size: .72rem; color: #16a34a; margin: 2px;
+}
+.file-chip .rm {
+    cursor: pointer; color: #86efac; font-size: .8rem; line-height: 1;
+}
+.file-chip .rm:hover { color: #dc2626; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <div>
+        <h1 class="page-title"><i class="bi bi-cloud-upload text-success"></i>Facturas de Ingreso</h1>
+        <p class="page-subtitle">Sube o arrastra facturas XML de ventas propias (lo que tú emites a tus clientes)</p>
+    </div>
     <div class="d-flex gap-2">
         <a href="{{ url_for('invoices.reporte_ingresos') }}" class="btn btn-outline-success btn-sm">
             <i class="bi bi-bar-chart me-1"></i>Ver Reporte
         </a>
-        <a href="{{ url_for('invoices.pagina_carga') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-wallet2 me-1"></i>Ir a Gastos
+        <a href="{{ url_for('invoices.pagina_carga') }}" class="btn btn-outline-danger btn-sm">
+            <i class="bi bi-receipt me-1"></i>Ir a Gastos
         </a>
     </div>
 </div>
 
-<div class="alert alert-info small mb-3">
+<div class="alert alert-success small mb-3 py-2">
     <i class="bi bi-info-circle me-1"></i>
-    <strong>Facturas de Ingresos:</strong> Sube aquí tus facturas de <em>ventas propias</em> (lo que tú emites a tus clientes).
-    Los datos alimentarán el reporte de ingresos y podrás generar el <strong>Anexo PVP e ICE</strong> para el SRI.
-    El valor del ICE calculado servirá para tu declaración mensual de ICE.
+    <strong>Facturas de Ingresos:</strong> Los datos alimentarán el reporte de ingresos y podrás generar el
+    <strong>Anexo PVP e ICE</strong> para el SRI. El valor ICE calculado sirve para tu declaración mensual.
 </div>
 
-<!-- Zona de carga -->
-<div class="card mb-4">
-    <div class="card-header bg-success text-white"><i class="bi bi-cloud-upload me-1"></i>Subir Archivos XML</div>
-    <div class="card-body">
-        <form method="POST" action="{{ url_for('invoices.subir_facturas') }}" enctype="multipart/form-data"
-              id="formSubir">
-            <input type="hidden" name="tipo" value="ingreso">
-            <div id="dropZone" class="border-2 border-dashed rounded p-5 text-center mb-3"
-                 style="border:2px dashed #198754; cursor:pointer; background:#f0fdf4;"
-                 ondrop="handleDrop(event)" ondragover="event.preventDefault()"
-                 onclick="document.getElementById('archivos').click()">
-                <i class="bi bi-cloud-arrow-up text-success" style="font-size:2.5rem;"></i>
-                <p class="mb-1 fw-bold text-success mt-2">Arrastra los XML aquí o haz clic para seleccionar</p>
-                <p class="text-muted small mb-0">Solo archivos .xml · Facturas de ventas propias</p>
-                <input type="file" name="archivos" id="archivos" multiple accept=".xml"
-                       onchange="mostrarArchivos(this)" class="d-none">
+<div class="row g-3 mb-4">
+    <div class="col-md-8">
+        <div class="card" style="border:1.5px solid #86efac">
+            <div class="card-header fw-bold" style="background:#f0fdf4;color:#16a34a">
+                <i class="bi bi-upload me-2"></i>Cargar Facturas XML de Ingreso
             </div>
-            <div id="listaArchivos" class="small text-muted mb-2"></div>
-            <button type="submit" class="btn btn-success" id="btnSubir" disabled>
-                <i class="bi bi-upload me-1"></i>Procesar Facturas
-            </button>
-        </form>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('invoices.subir_facturas') }}"
+                      enctype="multipart/form-data" id="formSubir">
+                    <input type="hidden" name="tipo" value="ingreso">
+
+                    <div id="dropZone" onclick="document.getElementById('inputXMLs').click()">
+                        <input type="file" id="inputXMLs" multiple accept=".xml"
+                               onchange="agregarArchivos(this.files)">
+                        <div id="dropIdle">
+                            <i class="bi bi-cloud-upload" style="font-size:2.5rem;color:#86efac"></i>
+                            <div class="fw-bold mt-2" style="color:#16a34a;font-size:.95rem">
+                                Arrastra los archivos XML aquí
+                            </div>
+                            <div class="text-muted" style="font-size:.8rem;margin-top:4px">
+                                o haz clic para seleccionarlos · múltiples archivos permitidos
+                            </div>
+                        </div>
+                        <div id="dropActive" class="d-none" style="pointer-events:none">
+                            <i class="bi bi-file-earmark-arrow-down" style="font-size:2rem;color:#16a34a"></i>
+                            <div class="fw-bold mt-2" style="color:#16a34a">Suelta los archivos aquí</div>
+                        </div>
+                    </div>
+
+                    <div id="listaArchivos" class="mt-3 d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold" style="font-size:.8rem;color:#475569">
+                                <i class="bi bi-files me-1"></i>Archivos seleccionados:
+                                <span id="cntArchivos" class="badge bg-success ms-1">0</span>
+                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2"
+                                    style="font-size:.72rem" onclick="limpiarArchivos()">
+                                <i class="bi bi-x-circle me-1"></i>Limpiar todo
+                            </button>
+                        </div>
+                        <div id="chipsArchivos" style="max-height:100px;overflow-y:auto"></div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-success fw-bold flex-grow-1" id="btnProcesar"
+                                type="submit" disabled>
+                            <i class="bi bi-gear me-1"></i>Procesar Facturas de Ingreso
+                        </button>
+                    </div>
+
+                    <div class="alert alert-success small mt-3 mb-0 py-2"
+                         style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Se detectan duplicados automáticamente. ICE, IVA y descuentos se extraen de cada XML.
+                        Los datos quedan guardados en tu cuenta.
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header fw-bold" style="background:#0d1b2e;color:#fff">
+                <i class="bi bi-info-circle me-1"></i>Información
+            </div>
+            <div class="card-body">
+                <ul class="mb-0 small ps-3">
+                    <li>Formatos aceptados: <strong>XML</strong> de facturas electrónicas del SRI</li>
+                    <li>Se detectan duplicados automáticamente</li>
+                    <li>ICE, IVA y descuentos se extraen automáticamente</li>
+                    <li>Los datos alimentan el <strong>Anexo PVP/ICE</strong></li>
+                    <li>Exporta a Excel con valores reales</li>
+                </ul>
+                <hr>
+                <a href="{{ url_for('invoices.reporte_ingresos') }}" class="btn btn-outline-success btn-sm w-100">
+                    <i class="bi bi-bar-chart me-1"></i>Ver Reporte de Ingresos
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Tabla de facturas cargadas -->
 {% if facturas %}
 <div class="card">
     <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -87,23 +179,78 @@
 {% endif %}
 
 <script>
-function mostrarArchivos(input) {
-    var lista = document.getElementById('listaArchivos');
-    var btn = document.getElementById('btnSubir');
-    if (input.files.length > 0) {
-        var nombres = Array.from(input.files).map(f => '<i class="bi bi-file-earmark-code me-1"></i>' + f.name).join('<br>');
-        lista.innerHTML = '<strong>' + input.files.length + ' archivo(s):</strong><br>' + nombres;
-        btn.disabled = false;
-    } else {
-        lista.innerHTML = '';
-        btn.disabled = true;
-    }
+let archivosSeleccionados = new Map();
+
+const dropZone = document.getElementById('dropZone');
+
+dropZone.addEventListener('dragover', e => {
+    e.preventDefault(); e.stopPropagation();
+    dropZone.classList.add('dragover');
+    document.getElementById('dropIdle').classList.add('d-none');
+    document.getElementById('dropActive').classList.remove('d-none');
+});
+
+['dragleave', 'dragend'].forEach(ev => {
+    dropZone.addEventListener(ev, e => {
+        dropZone.classList.remove('dragover');
+        document.getElementById('dropIdle').classList.remove('d-none');
+        document.getElementById('dropActive').classList.add('d-none');
+    });
+});
+
+dropZone.addEventListener('drop', e => {
+    e.preventDefault(); e.stopPropagation();
+    dropZone.classList.remove('dragover');
+    document.getElementById('dropIdle').classList.remove('d-none');
+    document.getElementById('dropActive').classList.add('d-none');
+    const archivos = [...e.dataTransfer.files].filter(f => f.name.toLowerCase().endsWith('.xml'));
+    if (!archivos.length) { alert('Solo se aceptan archivos .xml'); return; }
+    agregarArchivos(archivos);
+});
+
+function agregarArchivos(files) {
+    [...files].forEach(f => {
+        if (f.name.toLowerCase().endsWith('.xml')) {
+            archivosSeleccionados.set(f.name, f);
+        }
+    });
+    renderChips();
+    sincronizarInput();
 }
-function handleDrop(e) {
-    e.preventDefault();
-    var input = document.getElementById('archivos');
-    input.files = e.dataTransfer.files;
-    mostrarArchivos(input);
+
+function renderChips() {
+    const chips = document.getElementById('chipsArchivos');
+    const lista = document.getElementById('listaArchivos');
+    const cnt   = document.getElementById('cntArchivos');
+    const btn   = document.getElementById('btnProcesar');
+
+    cnt.textContent = archivosSeleccionados.size;
+    btn.disabled = archivosSeleccionados.size === 0;
+    lista.classList.toggle('d-none', archivosSeleccionados.size === 0);
+
+    chips.innerHTML = [...archivosSeleccionados.keys()].map(name => `
+        <span class="file-chip">
+            <i class="bi bi-file-earmark-code"></i>${name}
+            <span class="rm" onclick="quitarArchivo('${name.replace(/'/g,"\\'")}')">✕</span>
+        </span>`).join('');
+}
+
+function sincronizarInput() {
+    const dt = new DataTransfer();
+    archivosSeleccionados.forEach(f => dt.items.add(f));
+    document.getElementById('inputXMLs').files = dt.files;
+}
+
+function quitarArchivo(nombre) {
+    archivosSeleccionados.delete(nombre);
+    renderChips();
+    sincronizarInput();
+}
+
+function limpiarArchivos() {
+    archivosSeleccionados.clear();
+    document.getElementById('inputXMLs').value = '';
+    renderChips();
 }
 </script>
 {% endblock %}

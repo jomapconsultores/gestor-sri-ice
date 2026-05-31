@@ -111,108 +111,57 @@ class Config:
             'tooltip': 'Procesa XMLs de ingresos y genera Anexo ICE/PVP automáticamente',
         },
 
-        # ── Módulos Tributaria ──────────────────────────────────────────────────
-        'facturas': {
-            'nombre': 'Facturas Ilimitadas',
-            'descripcion': (
-                'Sube y procesa facturas XML ilimitadas de gastos e ingresos. '
-                'Clasificación automática con catálogo personalizable. El catálogo de productos está '
-                'incluido sin costo adicional.'
-            ),
-            'precio': 10.00,
-            'precio_unico': False,
-            'gratuito': False,
-            'categoria': 'tributaria',
-            'color': 'secondary',
-            'icono': 'receipt',
-            'tooltip': 'Facturas ilimitadas de gastos e ingresos + catálogo incluido',
-        },
-        'exportacion': {
-            'nombre': 'Exportación Excel',
-            'descripcion': (
-                'Exporta todos tus reportes a Excel con valores calculados, resúmenes por período y '
-                'formato profesional. Compatible con todos los módulos del sistema.'
-            ),
-            'precio': 5.00,
-            'precio_unico': False,
-            'gratuito': False,
-            'categoria': 'tributaria',
-            'color': 'success',
-            'icono': 'file-earmark-excel',
-            'tooltip': 'Exporta reportes de todos los módulos a Excel',
-        },
-        'descarga_sri': {
-            'nombre': 'Descarga Masiva SRI',
-            'descripcion': (
-                'Descarga masivamente tus comprobantes del portal del SRI usando claves de acceso. '
-                'Pago único con acceso permanente a la herramienta.'
-            ),
-            'precio': 15.00,
-            'precio_unico': True,
-            'gratuito': False,
-            'categoria': 'tributaria',
-            'color': 'secondary',
-            'icono': 'cloud-download',
-            'tooltip': 'Descarga masiva desde el SRI — pago único $15',
+        # ── Módulos Tributaria — INGRESOS ───────────────────────────────────────────
+        'facturas_ingreso': {
+            'nombre': 'Facturas de Ingreso',
+            'descripcion': 'Sube o arrastra facturas XML de ingreso (ventas). Obtén detalle completo: cliente, totales, ICE, IVA por factura. Exporta a Excel con valores reales. Datos guardados por usuario.',
+            'precio': 15.00, 'precio_unico': False, 'gratuito': False,
+            'categoria': 'tributaria', 'subcategoria': 'ingresos',
+            'color': 'primary', 'icono': 'cloud-upload',
+            'tooltip': 'Sube facturas de ingreso XML y exporta a Excel',
         },
         'retenciones': {
-            'nombre': 'Procesador de Retenciones',
-            'descripcion': (
-                'Procesa XMLs de comprobantes de retención. Detecta automáticamente Renta, IVA e ISD. '
-                'Exporta a Excel con resumen por agente de retención.'
-            ),
-            'precio': 10.00,
-            'precio_unico': False,
-            'gratuito': False,
-            'categoria': 'tributaria',
-            'color': 'info',
-            'icono': 'file-earmark-minus',
-            'tooltip': 'Procesa XMLs de retenciones y exporta a Excel',
+            'nombre': 'Retenciones',
+            'descripcion': 'Sube o arrastra comprobantes de retención XML. Detecta automáticamente Renta, IVA e ISD. Exporta a Excel (solo valores) con resumen por agente retenedor.',
+            'precio': 5.00, 'precio_unico': False, 'gratuito': False,
+            'categoria': 'tributaria', 'subcategoria': 'ingresos',
+            'color': 'info', 'icono': 'file-earmark-minus',
+            'tooltip': 'Procesa retenciones XML y exporta a Excel',
         },
-        'sri_pro': {
-            'nombre': 'Gestor SRI Pro',
-            'descripcion': (
-                'Descarga XMLs del SRI desde un TXT de claves de acceso (hasta 10 en paralelo) '
-                'o importa XMLs locales. Clasifica y exporta a Excel por categoría.'
-            ),
-            'precio': 15.00,
-            'precio_unico': False,
-            'gratuito': False,
-            'categoria': 'tributaria',
-            'color': 'secondary',
-            'icono': 'cloud-arrow-down',
-            'tooltip': 'Descarga y clasifica XMLs del SRI masivamente',
+        # ── Módulos Tributaria — GASTOS ─────────────────────────────────────────────
+        'descarga_sri': {
+            'nombre': 'Descarga Masiva SRI',
+            'descripcion': 'Bookmarklet que se arrastra al navegador para descargar masivamente facturas de gastos del portal SRI. Pago único, acceso permanente.',
+            'precio': 15.00, 'precio_unico': True, 'gratuito': False,
+            'categoria': 'tributaria', 'subcategoria': 'gastos',
+            'color': 'secondary', 'icono': 'cloud-download',
+            'tooltip': 'Descarga masiva desde el SRI — pago único $15',
         },
-        'soporte': {
-            'nombre': 'Soporte Prioritario',
-            'descripcion': (
-                'Atención preferencial por WhatsApp y correo electrónico. '
-                'Respuesta en menos de 24 horas hábiles.'
-            ),
-            'precio': 5.00,
-            'precio_unico': False,
-            'gratuito': False,
-            'categoria': 'tributaria',
-            'color': 'dark',
-            'icono': 'headset',
-            'tooltip': 'Soporte prioritario por WhatsApp y email',
+        'facturas_gasto': {
+            'nombre': 'Facturas de Gasto',
+            'descripcion': 'Sube o arrastra facturas XML de gasto. Clasifica en gastos generales o gastos personales. Descuentos Yanbal se aplican automáticamente; otros descuentos se marcan en color para que el usuario decida. Exporta a Excel (solo valores).',
+            'precio': 15.00, 'precio_unico': False, 'gratuito': False,
+            'categoria': 'tributaria', 'subcategoria': 'gastos',
+            'color': 'danger', 'icono': 'receipt',
+            'tooltip': 'Sube facturas de gasto, clasifica y exporta a Excel',
         },
-
-        # ── Módulos Odoo ────────────────────────────────────────────────────────
+        # ── Módulos Tributaria — COMPLETO ────────────────────────────────────────────
+        'registro_completo': {
+            'nombre': 'Registro de Ingresos y Gastos',
+            'descripcion': 'Módulo integrado con todos los pasos: ingresos clasificados, retenciones, gastos clasificados, cálculo de IVA (a pagar o crédito tributario), ingresos a crédito (1-3 meses), acumulación de crédito tributario e ICE específico y ad valorem para declaración.',
+            'precio': 120.00, 'precio_unico': False, 'gratuito': False,
+            'categoria': 'tributaria', 'subcategoria': 'completo',
+            'color': 'dark', 'icono': 'journal-check',
+            'tooltip': 'Módulo completo: ingresos + gastos + IVA + ICE para declaración',
+        },
+        # ── Módulos Odoo ─────────────────────────────────────────────────────────────
         'conciliacion': {
             'nombre': 'Conciliación Bancaria IA',
-            'descripcion': (
-                'Sube estados de cuenta bancarios en PDF y extrae transacciones automáticamente '
-                'con Inteligencia Artificial. Exporta en formato Excel compatible con Odoo '
-                'para importación directa sin trabajo manual.'
-            ),
-            'precio': 10.00,
-            'precio_unico': False,
-            'gratuito': False,
-            'categoria': 'odoo',
-            'color': 'primary',
-            'icono': 'bank',
-            'tooltip': 'Extrae transacciones bancarias de PDFs con IA y exporta a Odoo',
+            'descripcion': 'Sube estados de cuenta bancarios en PDF. La IA extrae automáticamente las transacciones y genera Excel compatible con Odoo para importación directa.',
+            'precio': 10.00, 'precio_unico': False, 'gratuito': False,
+            'categoria': 'odoo', 'subcategoria': None,
+            'color': 'primary', 'icono': 'bank',
+            'tooltip': 'Extrae transacciones de PDFs con IA y exporta a Odoo',
         },
     }
 

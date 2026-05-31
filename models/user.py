@@ -57,6 +57,8 @@ class Factura(db.Model):
     xml_original = db.Column(db.Text)
     tipo = db.Column(db.String(20), default="ingreso")
     fecha_procesamiento = db.Column(db.DateTime, default=datetime.utcnow)
+    descuento_total = db.Column(db.Numeric(12, 2), default=0)
+    tiene_descuento = db.Column(db.Boolean, default=False)
 
 @login_manager.user_loader
 def load_user(user_id):

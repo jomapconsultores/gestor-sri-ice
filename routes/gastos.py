@@ -11,6 +11,22 @@ import os
 gastos = Blueprint('gastos', __name__)
 
 GASTOS_PERSONALES = ['ALIMENTACION', 'EDUCACION', 'SALUD', 'VESTIMENTA', 'VIVIENDA', 'TURISMO', 'ARTE Y CULTURA', 'VARIOS']
+
+YANBAL_RUC = '1791246600001'
+YANBAL_NOMBRE = 'YANBAL'
+
+
+def es_yanbal(ruc_emisor, razon_social):
+    ruc = (ruc_emisor or '').strip()
+    nombre = (razon_social or '').upper()
+    return ruc == YANBAL_RUC or YANBAL_NOMBRE in nombre
+
+
+def _tiene_modulo(modulo_id):
+    from routes.payments import get_modulos_activos
+    if current_user.is_admin:
+        return True
+    return modulo_id in get_modulos_activos(current_user.id)
 UPLOAD_MAPAS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'uploads', 'mapas')
 if not os.path.exists(UPLOAD_MAPAS):
     os.makedirs(UPLOAD_MAPAS)
@@ -19,30 +35,35 @@ if not os.path.exists(UPLOAD_MAPAS):
 @gastos.route('/panel')
 @login_required
 def panel():
+    if not _tiene_modulo('facturas_gasto'):
+        flash('Necesitas el módulo "Facturas de Gasto" para acceder a este panel.', 'warning')
+        return redirect(url_for('payments.ver_planes'))
+
     facturas = Factura.query.filter_by(usuario_id=current_user.id, tipo='gasto')\
                            .order_by(Factura.fecha_emision.desc()).limit(50).all()
-    
+
     clasificaciones = ClasificacionGasto.query.filter_by(usuario_id=current_user.id)\
                                              .order_by(ClasificacionGasto.fecha.desc()).all()
-    
+
     resumen = db.session.query(
         ClasificacionGasto.categoria,
         func.sum(ClasificacionGasto.monto).label('total'),
         func.count(ClasificacionGasto.id).label('cantidad')
     ).filter_by(usuario_id=current_user.id).group_by(ClasificacionGasto.categoria).all()
-    
+
     gastos_personales_total = sum(r.total for r in resumen if r.categoria in GASTOS_PERSONALES)
     gastos_ejercicio_total = sum(r.total for r in resumen if r.categoria not in GASTOS_PERSONALES)
-    
+
     mapas = MapaClasificacion.query.filter_by(usuario_id=current_user.id, activo=True)\
                                   .order_by(MapaClasificacion.fecha_subida.desc()).all()
-    
+
     return render_template('gastos/panel.html',
                          facturas=facturas, clasificaciones=clasificaciones,
                          resumen=resumen,
                          gastos_personales_total=gastos_personales_total or 0,
                          gastos_ejercicio_total=gastos_ejercicio_total or 0,
-                         mapas=mapas, categorias=GASTOS_PERSONALES)
+                         mapas=mapas, categorias=GASTOS_PERSONALES,
+                         es_yanbal_fn=es_yanbal)
 
 
 @gastos.route('/subir_mapa', methods=['POST'])
