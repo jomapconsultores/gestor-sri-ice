@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}Anexos ICE / PVP{% endblock %}
+{% block topbar_title %}Anexos ICE / PVP{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+            <span style="background:rgba(2,132,199,.15);border:1px solid rgba(2,132,199,.3);color:#7dd3fc;font-size:.65rem;font-weight:800;padding:4px 12px;border-radius:20px">USD $10/mes</span>
+        </div>
+        <h1 class="page-title"><i class="bi bi-file-earmark-code"></i>Anexos ICE / PVP</h1>
+        <p class="page-subtitle">Editor visual y generador de Anexos ICE/PVP para el SRI</p>
+    </div>
+</div>
+
+<div style="background:rgba(2,132,199,.08);border:1px solid rgba(2,132,199,.2);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:.8rem">
+    <i class="bi bi-person-badge me-1"></i>
+    Desarrollado por <strong>Marco Antonio Posligua San Martín</strong>
+</div>
+
+<div class="row g-4">
+    <!-- Panel Izquierdo: Histórico -->
+    <div class="col-lg-3">
+        <div class="card">
+            <div class="card-header fw-bold" style="background:#0284c7;color:#fff">
+                <i class="bi bi-clock-history me-2"></i>Anexos Guardados
+            </div>
+            <div class="card-body p-2">
+                {% if anexos_guardados %}
+                    <div class="list-group list-group-sm">
+                        {% for anexo in anexos_guardados %}
+                        <a href="#" class="list-group-item list-group-item-action list-group-item-light"
+                           onclick="cargarAnexo({{ anexo.id }}); return false;">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="small">
+                                    <strong>{{ anexo.nombre[:30] }}</strong><br>
+                                    <span class="badge" style="background:rgba(2,132,199,.3);color:#0284c7">{{ anexo.tipo }}</span>
+                                    <span class="text-muted">{{ anexo.periodo_anio }}/{{ anexo.periodo_mes }}</span>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted small text-center py-3">Sin anexos guardados aún</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Central: Editor -->
+    <div class="col-lg-6">
+        <div class="card mb-3">
+            <div class="card-header fw-bold" style="background:#0284c7;color:#fff">
+                <i class="bi bi-upload me-2"></i>Cargar XML
+            </div>
+            <div class="card-body">
+                <div class="border-2 border-dashed p-4 text-center" id="dropZone" style="cursor:pointer;border-color:#cbd5e1;border-radius:8px;background:#f8fafc;transition:all .2s">
+                    <i class="bi bi-cloud-upload" style="font-size:2rem;color:#94a3b8;display:block;margin-bottom:10px"></i>
+                    <p class="mb-2"><strong>Arrastra aquí tu XML</strong></p>
+                    <small class="text-muted">O haz clic para seleccionar</small>
+                    <input type="file" id="xmlInput" accept=".xml" style="display:none">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header fw-bold" style="background:#0284c7;color:#fff">
+                <i class="bi bi-pencil me-2"></i>Editor de Campos
+            </div>
+            <div class="card-body p-2" id="editorContent" style="max-height:400px;overflow-y:auto">
+                <p class="text-muted small text-center py-3">Carga un XML para editar</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Derecho: Preview & Botones -->
+    <div class="col-lg-3">
+        <div class="card sticky-top" style="top:80px">
+            <div class="card-header fw-bold" style="background:#0284c7;color:#fff">
+                <i class="bi bi-eye me-2"></i>Vista Previa XML
+            </div>
+            <div class="card-body p-2">
+                <textarea id="xmlPreview" class="form-control form-control-sm" rows="8" readonly
+                          style="font-family:monospace;font-size:.75rem;background:#f8fafc;border:1px solid #e2e8f0"></textarea>
+            </div>
+            <div class="card-footer d-flex flex-column gap-2">
+                <button type="button" class="btn btn-sm btn-primary w-100" onclick="generarXML()" id="btnGenerar" disabled>
+                    <i class="bi bi-check-circle me-1"></i>Generar XML
+                </button>
+                <button type="button" class="btn btn-sm btn-success w-100" onclick="descargarXML()" id="btnDescargar" disabled>
+                    <i class="bi bi-download me-1"></i>Descargar XML
+                </button>
+                <button type="button" class="btn btn-sm btn-info w-100" onclick="descargarZIP()" id="btnZip" disabled>
+                    <i class="bi bi-file-zip me-1"></i>Descargar ZIP
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="guardarEnBD()" id="btnGuardar" disabled>
+                    <i class="bi bi-floppy me-1"></i>Guardar en BD
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const dropZone = document.getElementById('dropZone');
+const xmlInput = document.getElementById('xmlInput');
+let xmlGenerado = null;
+
+// Drag & drop
+dropZone.addEventListener('click', () => xmlInput.click());
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
+    dropZone.addEventListener(e, preventDefaults, false);
+});
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+dropZone.addEventListener('dragover', () => {
+    dropZone.style.borderColor = '#0284c7';
+    dropZone.style.backgroundColor = '#ecf0f1';
+});
+
+dropZone.addEventListener('dragleave', () => {
+    dropZone.style.borderColor = '#cbd5e1';
+    dropZone.style.backgroundColor = '#f8fafc';
+});
+
+dropZone.addEventListener('drop', (e) => {
+    dropZone.style.borderColor = '#cbd5e1';
+    dropZone.style.backgroundColor = '#f8fafc';
+    const files = e.dataTransfer.files;
+    if (files.length) procesarXML(files[0]);
+});
+
+xmlInput.addEventListener('change', (e) => {
+    if (e.target.files.length) procesarXML(e.target.files[0]);
+});
+
+function procesarXML(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const contenido = e.target.result;
+        fetch('{{ url_for("anexos_ice.parsear_xml") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ xml: contenido })
+        })
+        .catch(err => {
+            const formData = new FormData();
+            formData.append('archivo', file);
+            return fetch('{{ url_for("anexos_ice.parsear_xml") }}', { method: 'POST', body: formData });
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error: ' + data.error);
+                return;
+            }
+            mostrarEditor(data);
+            document.getElementById('xmlPreview').value = contenido;
+            document.getElementById('btnGenerar').disabled = false;
+        });
+    };
+    reader.readAsText(file);
+}
+
+function mostrarEditor(datos) {
+    // Implementar editor de campos aquí
+    let html = `<form id="editorForm"><div class="mb-2">
+        <label>RUC:</label>
+        <input type="text" class="form-control form-control-sm" name="ruc" value="${datos.ruc || ''}" />
+    </div>`;
+    document.getElementById('editorContent').innerHTML = html + '</form>';
+    document.getElementById('btnDescargar').disabled = false;
+    document.getElementById('btnZip').disabled = false;
+}
+
+function generarXML() {
+    alert('Función en desarrollo');
+}
+
+function descargarXML() {
+    if (!document.getElementById('xmlPreview').value) {
+        alert('Genera o carga un XML primero');
+        return;
+    }
+    const xml = document.getElementById('xmlPreview').value;
+    const blob = new Blob([xml], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'anexo.xml';
+    a.click();
+}
+
+function descargarZIP() {
+    alert('Función en desarrollo');
+}
+
+function guardarEnBD() {
+    alert('Función en desarrollo');
+}
+
+function cargarAnexo(id) {
+    alert('Función en desarrollo');
+}
+</script>
+{% endblock %}
