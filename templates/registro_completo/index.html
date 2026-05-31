@@ -1,1462 +1,171 @@
 {% extends "base.html" %}
-{% block title %}Registro de Ingresos y Gastos{% endblock %}
-{% block topbar_title %}Registro Completo{% endblock %}
-
-{% block head %}
-<style>
-/* ── Stepper ─────────────────────────────────────────────────── */
-.rc-stepper {
-    display: flex;
-    gap: 0;
-    margin-bottom: 24px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-}
-.rc-step {
-    flex: 1; min-width: 90px;
-    padding: 9px 8px 9px 22px;
-    font-size: .7rem; font-weight: 600;
-    background: #f1f5f9; color: #94a3b8; cursor: pointer;
-    clip-path: polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%);
-    text-align: center; transition: all .2s; position: relative;
-}
-.rc-step:first-child {
-    clip-path: polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%);
-    padding-left: 8px;
-}
-.rc-step.active-ice     { background: #1d4ed8; color: #fff; }
-.rc-step.active-trib    { background: #7c3aed; color: #fff; }
-.rc-step.active-liq     { background: #ea580c; color: #fff; }
-.rc-step.active-report  { background: #15803d; color: #fff; }
-.rc-step.done           { background: #16a34a; color: #fff; }
-.rc-step .step-num      { display: block; font-size: .6rem; opacity: .75; }
-
-/* ── Drop zones ──────────────────────────────────────────────── */
-.drop-zone {
-    border: 2px dashed #bfdbfe; border-radius: 12px; background: #f8fafc;
-    padding: 28px 20px; text-align: center; cursor: pointer;
-    transition: all .2s; position: relative;
-}
-.drop-zone.dragover { border-color: #2563eb; background: #eff6ff; }
-.drop-zone input[type=file] {
-    position: absolute; inset: 0; opacity: 0; cursor: pointer;
-    width: 100%; height: 100%;
-}
-
-/* ── Chips ───────────────────────────────────────────────────── */
-.file-chip {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 20px;
-    padding: 2px 9px 2px 7px; font-size: .7rem; color: #1d4ed8; margin: 2px;
-}
-.file-chip .rm { cursor: pointer; color: #93c5fd; }
-.file-chip .rm:hover { color: #dc2626; }
-
-/* ── Tables ──────────────────────────────────────────────────── */
-.rc-table { font-size: .78rem; }
-.rc-table th { background: #0d1b2e; color: #fff; font-size: .72rem; position: sticky; top: 0; }
-.rc-total-row td { background: #dcfce7; font-weight: 700; color: #15803d; }
-
-/* ── Liquidación cards ───────────────────────────────────────── */
-.liq-card { border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
-.liq-ventas  { background: #eff6ff; border: 1.5px solid #bfdbfe; color: #1e40af; }
-.liq-compras { background: #fff7ed; border: 1.5px solid #fed7aa; color: #9a3412; }
-.liq-ret     { background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #15803d; }
-.liq-neto    { border: 2px solid #0d1b2e; background: #0d1b2e; color: #fff; }
-
-/* ── ICE calc ────────────────────────────────────────────────── */
-.ice-result-card { border-radius: 10px; padding: 12px 14px; }
-
-/* ── Yanbal / discount rows ──────────────────────────────────── */
-tr.yanbal-row { background: #f0fdf4 !important; }
-tr.desc-row   { background: #fffbeb !important; }
-</style>
-{% endblock %}
+{% block title %}Declaración ICE + IVA{% endblock %}
+{% block topbar_title %}Declaración ICE + IVA{% endblock %}
 
 {% block content %}
-<div class="page-header mb-3">
+<div class="page-header mb-4">
     <div>
         <h1 class="page-title">
-            <i class="bi bi-journal-richtext text-primary me-2"></i>Registro de Ingresos y Gastos
+            <i class="bi bi-journal-richtext text-primary me-2"></i>Declaración ICE + IVA
         </h1>
-        <p class="page-subtitle">Wizard de 7 pasos: ICE · Ingresos · Retenciones · Gastos · Liquidación · Reporte</p>
+        <p class="page-subtitle">Módulo completo integrado: ICE + Tributaria + Liquidación + Reportes en un solo lugar</p>
     </div>
-    <div class="d-flex align-items-center gap-2">
-        <span class="badge" style="background:#7c3aed;font-size:.78rem;padding:6px 12px">$120 / mes</span>
-        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i>Volver
-        </a>
+    <div>
+        <span class="badge" style="background:#7c3aed; font-size:.82rem; padding:6px 14px; color:#fff">$120 / mes</span>
     </div>
 </div>
 
-<!-- ── Stepper ─────────────────────────────────────────────────────────────── -->
-<div class="rc-stepper" id="stepper">
-    <div class="rc-step active-ice" onclick="irPaso(1)" id="step1">
-        <span class="step-num">Paso 1</span>ICE Simple
-    </div>
-    <div class="rc-step" onclick="irPaso(2)" id="step2">
-        <span class="step-num">Paso 2</span>ICE Múltiple
-    </div>
-    <div class="rc-step" onclick="irPaso(3)" id="step3">
-        <span class="step-num">Paso 3</span>Ingresos
-    </div>
-    <div class="rc-step" onclick="irPaso(4)" id="step4">
-        <span class="step-num">Paso 4</span>Retenciones
-    </div>
-    <div class="rc-step" onclick="irPaso(5)" id="step5">
-        <span class="step-num">Paso 5</span>Gastos
-    </div>
-    <div class="rc-step" onclick="irPaso(6)" id="step6">
-        <span class="step-num">Paso 6</span>Liquidación
-    </div>
-    <div class="rc-step" onclick="irPaso(7)" id="step7">
-        <span class="step-num">Paso 7</span>Reporte
-    </div>
+<div class="alert alert-info mb-4">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Tu módulo incluye:</strong> Tarifas ICE • Cálculo ICE Simple • ICE Múltiple • Anexos ICE/PVP • Facturas ICE • Facturas de Ingreso • Retenciones • Facturas de Gasto • Liquidación IVA • Reportes Excel
 </div>
 
-<!-- ══════════════════════════════════════════════════════════════════════════
-     PASO 1 — ICE SIMPLE (opcional)
-══════════════════════════════════════════════════════════════════════════ -->
-<div id="panel1">
-    <div class="card mb-3" style="border:1.5px solid #bfdbfe">
-        <div class="card-header fw-bold" style="background:#eff6ff;color:#1d4ed8">
-            <i class="bi bi-calculator me-2"></i>Paso 1 — Cálculo ICE Simple (opcional)
-        </div>
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Precio ex-fábrica ($)</label>
-                    <input type="number" step="0.01" id="icesPrecio" class="form-control form-control-sm" placeholder="Ej: 2.50">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Capacidad (litros)</label>
-                    <input type="number" step="0.001" id="icesCapacidad" class="form-control form-control-sm" placeholder="Ej: 0.75">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Grado alcohólico (%)</label>
-                    <input type="number" step="0.01" id="icesGrado" class="form-control form-control-sm" placeholder="Ej: 40">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Cantidad (unidades)</label>
-                    <input type="number" step="1" id="icesCantidad" class="form-control form-control-sm" value="1">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Tipo de producto</label>
-                    <select id="icesTipo" class="form-select form-select-sm">
-                        <option value="licor">Licor / Destilado</option>
-                        <option value="cerveza_artesanal">Cerveza Artesanal</option>
-                        <option value="cerveza_industrial">Cerveza Industrial</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Período</label>
-                    <select id="icesPeriodo" class="form-select form-select-sm">
-                        <option value="2026">2026</option>
-                        <option value="2025">2025</option>
-                        <option value="2024">2024</option>
-                    </select>
-                </div>
-            </div>
-            <div class="d-flex gap-2 mt-3">
-                <button class="btn btn-primary btn-sm fw-bold" onclick="calcularIceSimple()">
-                    <i class="bi bi-calculator me-1"></i>Calcular ICE Simple
-                </button>
-                <button class="btn btn-outline-secondary btn-sm" onclick="limpiarIceSimple()">
-                    <i class="bi bi-x-circle me-1"></i>Limpiar
-                </button>
+<!-- Tabs principales -->
+<ul class="nav nav-tabs mb-4" role="tablist" style="border-bottom: 2px solid #e2e8f0">
+    <li class="nav-item"><a class="nav-link active" id="tab-ice" data-bs-toggle="tab" href="#sec-ice" style="border-bottom: 3px solid transparent; padding-bottom: 12px"><i class="bi bi-fire me-1"></i>ICE</a></li>
+    <li class="nav-item"><a class="nav-link" id="tab-tributaria" data-bs-toggle="tab" href="#sec-tributaria" style="border-bottom: 3px solid transparent; padding-bottom: 12px"><i class="bi bi-journal-text me-1"></i>Tributaria</a></li>
+    <li class="nav-item"><a class="nav-link" id="tab-liquidacion" data-bs-toggle="tab" href="#sec-liquidacion" style="border-bottom: 3px solid transparent; padding-bottom: 12px"><i class="bi bi-calculator me-1"></i>Liquidación</a></li>
+</ul>
+
+<div class="tab-content">
+
+    <!-- SECCIÓN ICE -->
+    <div id="sec-ice" class="tab-pane fade show active">
+        <h5 class="mb-3" style="color:#1e40af"><i class="bi bi-fire me-2"></i>ICE — Impuesto a los Consumos Especiales</h5>
+
+        <!-- Sub-tabs ICE -->
+        <ul class="nav nav-pills mb-3" role="tablist">
+            <li class="nav-item"><a class="nav-link active" id="subtab-tarifas" data-bs-toggle="pill" href="#ice-tarifas" style="font-size:.82rem">Tarifas 2021–2026</a></li>
+            <li class="nav-item"><a class="nav-link" id="subtab-simple" data-bs-toggle="pill" href="#ice-simple" style="font-size:.82rem">ICE Simple</a></li>
+            <li class="nav-item"><a class="nav-link" id="subtab-multiple" data-bs-toggle="pill" href="#ice-multiple" style="font-size:.82rem">ICE Múltiple</a></li>
+            <li class="nav-item"><a class="nav-link" id="subtab-anexos" data-bs-toggle="pill" href="#ice-anexos" style="font-size:.82rem">Anexos ICE/PVP</a></li>
+            <li class="nav-item"><a class="nav-link" id="subtab-facturas" data-bs-toggle="pill" href="#ice-facturas" style="font-size:.82rem">Facturas ICE</a></li>
+        </ul>
+
+        <div class="pill-content">
+            <div id="ice-tarifas" class="pill-pane fade show active">
+                <div class="card mb-3"><div class="card-body">
+                    <h6 class="fw-bold">Tarifas ICE Vigentes 2021–2026</h6>
+                    <p class="text-muted small">Las tarifas se actualizan anualmente según resoluciones del SRI.</p>
+                    <a href="{{ url_for('ice.ver_tarifas') }}" class="btn btn-primary btn-sm"><i class="bi bi-eye me-1"></i>Ver tabla completa de tarifas</a>
+                </div></div>
             </div>
 
-            <!-- Resultados ICE Simple -->
-            <div id="resIceSimple" class="d-none mt-3">
-                <div class="row g-2">
-                    <div class="col-6 col-md-3">
-                        <div class="ice-result-card" style="background:#eff6ff;border:1px solid #bfdbfe">
-                            <div class="small text-muted">ICE Específico/u</div>
-                            <div class="fw-bold text-primary" id="isEspecUni">$0.00</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="ice-result-card" style="background:#fff7ed;border:1px solid #fed7aa">
-                            <div class="small text-muted">ICE Ad Valorem/u</div>
-                            <div class="fw-bold text-warning" id="isAdValUni">$0.00</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="ice-result-card" style="background:#f0fdf4;border:1px solid #bbf7d0">
-                            <div class="small text-muted">IVA/u</div>
-                            <div class="fw-bold text-success" id="isIvaUni">$0.00</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="ice-result-card" style="background:#faf5ff;border:1px solid #e9d5ff">
-                            <div class="small text-muted">PVP/u</div>
-                            <div class="fw-bold text-purple" id="isPvpUni">$0.00</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row g-2 mt-1">
-                    <div class="col-6 col-md-3">
-                        <div class="ice-result-card" style="background:#0d1b2e;border:1px solid #0d1b2e">
-                            <div class="small text-white opacity-75">ICE Esp. Total</div>
-                            <div class="fw-bold text-white" id="isEspecTot">$0.00</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="ice-result-card" style="background:#0d1b2e;border:1px solid #0d1b2e">
-                            <div class="small text-white opacity-75">ICE AdVal. Total</div>
-                            <div class="fw-bold text-white" id="isAdValTot">$0.00</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="ice-result-card" style="background:#0d1b2e;border:1px solid #0d1b2e">
-                            <div class="small text-white opacity-75">IVA Total</div>
-                            <div class="fw-bold text-white" id="isIvaTot">$0.00</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="ice-result-card" style="background:#1d4ed8;border:1px solid #1d4ed8">
-                            <div class="small text-white opacity-75">PVP Total</div>
-                            <div class="fw-bold text-white" id="isPvpTot">$0.00</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="d-flex justify-content-between">
-        <span></span>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary btn-sm" onclick="irPaso(2)">
-                Omitir <i class="bi bi-arrow-right ms-1"></i>
-            </button>
-            <button class="btn btn-primary btn-sm" onclick="irPaso(2)">
-                Siguiente: ICE Múltiple <i class="bi bi-arrow-right ms-1"></i>
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     PASO 2 — ICE MÚLTIPLE (opcional)
-══════════════════════════════════════════════════════════════════════════ -->
-<div id="panel2" class="d-none">
-    <div class="card mb-3" style="border:1.5px solid #bfdbfe">
-        <div class="card-header fw-bold d-flex justify-content-between align-items-center" style="background:#eff6ff;color:#1d4ed8">
-            <span><i class="bi bi-calculator-fill me-2"></i>Paso 2 — ICE Múltiple (opcional)</span>
-            <button class="btn btn-primary btn-sm" onclick="agregarProductoICE()">
-                <i class="bi bi-plus-circle me-1"></i>Agregar Producto
-            </button>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-sm mb-0" id="tablaIceMultiple">
-                    <thead class="rc-table">
-                        <tr>
-                            <th>Nombre</th><th>Precio ex-f. ($)</th><th>Cap. (L)</th>
-                            <th>Grado (%)</th><th>Cantidad</th><th>Tipo</th><th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbodyIceMultiple">
-                        <tr id="rowIceEmpty">
-                            <td colspan="7" class="text-center text-muted py-3" style="font-size:.8rem">
-                                Haz clic en "Agregar Producto" para comenzar
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="d-flex gap-2 mt-3">
-                <button class="btn btn-primary btn-sm fw-bold" onclick="calcularIceMultiple()">
-                    <i class="bi bi-calculator me-1"></i>Calcular ICE de todos
-                </button>
-                <button class="btn btn-outline-danger btn-sm" onclick="limpiarIceMultiple()">
-                    <i class="bi bi-x-circle me-1"></i>Limpiar todo
-                </button>
-            </div>
-
-            <!-- Resultados ICE Múltiple -->
-            <div id="resIceMultiple" class="d-none mt-3">
-                <div class="table-responsive" style="max-height:280px;overflow-y:auto">
-                    <table class="table table-sm mb-0 rc-table">
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th class="text-end">ICE Esp/u</th>
-                                <th class="text-end">ICE AdVal/u</th>
-                                <th class="text-end">IVA/u</th>
-                                <th class="text-end">PVP/u</th>
-                                <th class="text-end">ICE Esp. Total</th>
-                                <th class="text-end">ICE AdVal. Total</th>
-                                <th class="text-end">PVP Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbodyIceMultRes"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="d-flex justify-content-between">
-        <button class="btn btn-outline-secondary btn-sm" onclick="irPaso(1)">
-            <i class="bi bi-arrow-left me-1"></i>Anterior
-        </button>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary btn-sm" onclick="irPaso(3)">
-                Omitir <i class="bi bi-arrow-right ms-1"></i>
-            </button>
-            <button class="btn btn-primary btn-sm" onclick="irPaso(3)">
-                Siguiente: Ingresos <i class="bi bi-arrow-right ms-1"></i>
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     PASO 3 — INGRESOS
-══════════════════════════════════════════════════════════════════════════ -->
-<div id="panel3" class="d-none">
-    <div class="card mb-3" style="border:1.5px solid #e9d5ff">
-        <div class="card-header fw-bold" style="background:#faf5ff;color:#7c3aed">
-            <i class="bi bi-file-earmark-arrow-up me-2"></i>Paso 3 — Facturas de Ingreso (XML)
-        </div>
-        <div class="card-body">
-            <div class="drop-zone" id="dzIngresos" onclick="document.getElementById('inpIngresos').click()">
-                <input type="file" id="inpIngresos" multiple accept=".xml" onchange="agregarArchivos('ingresos',this.files)">
-                <div id="dzIngIdle">
-                    <i class="bi bi-cloud-upload" style="font-size:2.5rem;color:#a78bfa"></i>
-                    <div class="fw-bold mt-2" style="color:#7c3aed">Arrastra XMLs de facturas aquí</div>
-                    <div class="text-muted" style="font-size:.8rem;margin-top:4px">o haz clic · múltiples archivos</div>
-                </div>
-                <div id="dzIngActive" class="d-none" style="pointer-events:none">
-                    <i class="bi bi-file-earmark-arrow-down" style="font-size:2rem;color:#7c3aed"></i>
-                    <div class="fw-bold mt-2" style="color:#7c3aed">Suelta aquí</div>
-                </div>
-            </div>
-            <div id="chipsIngresos" class="mt-2"></div>
-            <div class="d-flex gap-2 mt-3">
-                <button class="btn btn-primary fw-bold flex-grow-1" id="btnProcIng" disabled
-                        onclick="procesarIngresos()">
-                    <i class="bi bi-gear me-1"></i>Procesar Ingresos
-                </button>
-                <button class="btn btn-outline-danger btn-sm" onclick="limpiarZona('ingresos')" title="Limpiar">
-                    <i class="bi bi-x-circle"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="resIngresos" class="d-none">
-        <div class="card mb-3">
-            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <span class="fw-bold"><i class="bi bi-table me-1"></i>Facturas de Ingreso</span>
-                <span class="badge bg-primary" id="cntIng">0</span>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive" style="max-height:320px;overflow-y:auto">
-                    <table class="table table-sm table-hover mb-0 rc-table">
-                        <thead>
-                            <tr>
-                                <th>N° Factura</th><th>Fecha</th><th>Emisor</th>
-                                <th class="text-end">Subtotal</th><th class="text-end">Base ICE</th>
-                                <th class="text-end">ICE</th><th class="text-end">Base IVA</th>
-                                <th class="text-end">IVA</th><th class="text-end">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbodyIng"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div class="d-flex justify-content-end mt-2">
-            <button class="btn btn-primary px-4" onclick="irPaso(4)">
-                Siguiente: Retenciones <i class="bi bi-arrow-right ms-1"></i>
-            </button>
-        </div>
-    </div>
-
-    <div class="mt-2 d-flex justify-content-between">
-        <button class="btn btn-outline-secondary btn-sm" onclick="irPaso(2)">
-            <i class="bi bi-arrow-left me-1"></i>Anterior
-        </button>
-        <button class="btn btn-outline-primary btn-sm" onclick="irPaso(4)">
-            Omitir ingresos <i class="bi bi-arrow-right ms-1"></i>
-        </button>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     PASO 4 — RETENCIONES
-══════════════════════════════════════════════════════════════════════════ -->
-<div id="panel4" class="d-none">
-    <div class="card mb-3" style="border:1.5px solid #e9d5ff">
-        <div class="card-header fw-bold" style="background:#faf5ff;color:#7c3aed">
-            <i class="bi bi-file-earmark-minus me-2"></i>Paso 4 — Comprobantes de Retención (XML)
-        </div>
-        <div class="card-body">
-            <div class="drop-zone" id="dzRet" onclick="document.getElementById('inpRet').click()">
-                <input type="file" id="inpRet" multiple accept=".xml" onchange="agregarArchivos('ret',this.files)">
-                <div id="dzRetIdle">
-                    <i class="bi bi-cloud-upload" style="font-size:2.5rem;color:#a78bfa"></i>
-                    <div class="fw-bold mt-2" style="color:#7c3aed">Arrastra XMLs de retenciones aquí</div>
-                    <div class="text-muted" style="font-size:.8rem;margin-top:4px">o haz clic · múltiples archivos</div>
-                </div>
-                <div id="dzRetActive" class="d-none" style="pointer-events:none">
-                    <i class="bi bi-file-earmark-arrow-down" style="font-size:2rem;color:#7c3aed"></i>
-                    <div class="fw-bold mt-2" style="color:#7c3aed">Suelta aquí</div>
-                </div>
-            </div>
-            <div id="chipsRet" class="mt-2"></div>
-            <div class="d-flex gap-2 mt-3">
-                <button class="btn btn-primary fw-bold flex-grow-1" id="btnProcRet" disabled
-                        onclick="procesarRetenciones()">
-                    <i class="bi bi-gear me-1"></i>Procesar Retenciones
-                </button>
-                <button class="btn btn-outline-danger btn-sm" onclick="limpiarZona('ret')" title="Limpiar">
-                    <i class="bi bi-x-circle"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="resRet" class="d-none">
-        <div class="card mb-3">
-            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <span class="fw-bold"><i class="bi bi-table me-1"></i>Retenciones</span>
-                <span class="badge bg-primary" id="cntRet">0</span>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive" style="max-height:280px;overflow-y:auto">
-                    <table class="table table-sm table-hover mb-0 rc-table">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th><th>Emisor</th><th>Tipo</th>
-                                <th class="text-end">Base</th><th class="text-end">%</th>
-                                <th class="text-end">Valor</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbodyRet"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div class="row g-2 mb-3">
-            <div class="col-3">
-                <div class="card text-center border-danger">
-                    <div class="card-body py-2">
-                        <div class="small text-muted">Ret. Renta</div>
-                        <div class="fw-bold text-danger" id="retRenta">$0.00</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-3">
-                <div class="card text-center border-warning">
-                    <div class="card-body py-2">
-                        <div class="small text-muted">Ret. IVA</div>
-                        <div class="fw-bold text-warning" id="retIva">$0.00</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-3">
-                <div class="card text-center border-info">
-                    <div class="card-body py-2">
-                        <div class="small text-muted">Ret. ISD</div>
-                        <div class="fw-bold text-info" id="retIsd">$0.00</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-3">
-                <div class="card text-center border-success">
-                    <div class="card-body py-2">
-                        <div class="small text-muted">Total Ret.</div>
-                        <div class="fw-bold text-success" id="retTotal">$0.00</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="d-flex justify-content-between mt-2">
-            <button class="btn btn-outline-secondary btn-sm" onclick="irPaso(3)">
-                <i class="bi bi-arrow-left me-1"></i>Anterior
-            </button>
-            <button class="btn btn-primary px-4" onclick="irPaso(5)">
-                Siguiente: Gastos <i class="bi bi-arrow-right ms-1"></i>
-            </button>
-        </div>
-    </div>
-
-    <div class="mt-2 d-flex justify-content-between">
-        <button class="btn btn-outline-secondary btn-sm" onclick="irPaso(3)">
-            <i class="bi bi-arrow-left me-1"></i>Anterior
-        </button>
-        <button class="btn btn-outline-primary btn-sm" onclick="irPaso(5)">
-            Omitir retenciones <i class="bi bi-arrow-right ms-1"></i>
-        </button>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     PASO 5 — GASTOS
-══════════════════════════════════════════════════════════════════════════ -->
-<div id="panel5" class="d-none">
-    <div class="card mb-3" style="border:1.5px solid #e9d5ff">
-        <div class="card-header fw-bold" style="background:#faf5ff;color:#7c3aed">
-            <i class="bi bi-receipt me-2"></i>Paso 5 — Facturas de Gasto (XML)
-        </div>
-        <div class="card-body">
-            <div class="drop-zone" id="dzGastos" onclick="document.getElementById('inpGastos').click()">
-                <input type="file" id="inpGastos" multiple accept=".xml" onchange="agregarArchivos('gastos',this.files)">
-                <div id="dzGastosIdle">
-                    <i class="bi bi-cloud-upload" style="font-size:2.5rem;color:#a78bfa"></i>
-                    <div class="fw-bold mt-2" style="color:#7c3aed">Arrastra XMLs de facturas de gasto aquí</div>
-                    <div class="text-muted" style="font-size:.8rem;margin-top:4px">o haz clic · múltiples archivos</div>
-                </div>
-                <div id="dzGastosActive" class="d-none" style="pointer-events:none">
-                    <i class="bi bi-file-earmark-arrow-down" style="font-size:2rem;color:#7c3aed"></i>
-                    <div class="fw-bold mt-2" style="color:#7c3aed">Suelta aquí</div>
-                </div>
-            </div>
-            <div id="chipsGastos" class="mt-2"></div>
-            <div class="d-flex gap-2 mt-3">
-                <button class="btn btn-primary fw-bold flex-grow-1" id="btnProcGastos" disabled
-                        onclick="procesarGastos()">
-                    <i class="bi bi-gear me-1"></i>Procesar Gastos
-                </button>
-                <button class="btn btn-outline-danger btn-sm" onclick="limpiarZona('gastos')" title="Limpiar">
-                    <i class="bi bi-x-circle"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="resGastos" class="d-none">
-        <div class="alert alert-info small py-2 mb-2">
-            <i class="bi bi-info-circle me-1"></i>
-            <strong>Yanbal</strong>: descuento aplicado automáticamente (fondo verde).
-            <strong>Otras con descuento</strong>: fondo amarillo — usa el checkbox para activarlo.
-        </div>
-        <div class="card mb-3">
-            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <span class="fw-bold"><i class="bi bi-table me-1"></i>Facturas de Gasto</span>
-                <span class="badge bg-primary" id="cntGastos">0</span>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive" style="max-height:340px;overflow-y:auto">
-                    <table class="table table-sm table-hover mb-0 rc-table">
-                        <thead>
-                            <tr>
-                                <th>N° Factura</th><th>Fecha</th><th>Emisor</th>
-                                <th class="text-end">Base IVA</th><th class="text-end">IVA</th>
-                                <th class="text-end">Total</th><th class="text-end">Descuento</th>
-                                <th class="text-end">Base Imp.</th><th>Categ.</th>
-                                <th title="Personal">Pers.</th><th title="Aplicar descuento">Dto.</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbodyGastos"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div class="row g-2 mb-3">
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body py-2">
-                        <div class="small text-muted">Base IVA total</div>
-                        <div class="fw-bold" id="gBaseIva">$0.00</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body py-2">
-                        <div class="small text-muted">IVA total</div>
-                        <div class="fw-bold" id="gIva">$0.00</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body py-2">
-                        <div class="small text-muted">Dto. Yanbal</div>
-                        <div class="fw-bold text-success" id="gDescuento">$0.00</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body py-2">
-                        <div class="small text-muted">Base Imp. (Gral.)</div>
-                        <div class="fw-bold text-primary" id="gBaseImp">$0.00</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="d-flex justify-content-between mt-2">
-            <button class="btn btn-outline-secondary btn-sm" onclick="irPaso(4)">
-                <i class="bi bi-arrow-left me-1"></i>Anterior
-            </button>
-            <button class="btn btn-primary px-4" onclick="calcularLiquidacion(); irPaso(6);">
-                Siguiente: Liquidación <i class="bi bi-arrow-right ms-1"></i>
-            </button>
-        </div>
-    </div>
-
-    <div class="mt-2 d-flex justify-content-between" id="navP5">
-        <button class="btn btn-outline-secondary btn-sm" onclick="irPaso(4)">
-            <i class="bi bi-arrow-left me-1"></i>Anterior
-        </button>
-        <button class="btn btn-outline-primary btn-sm" onclick="calcularLiquidacion(); irPaso(6);">
-            Omitir gastos <i class="bi bi-arrow-right ms-1"></i>
-        </button>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     PASO 6 — LIQUIDACIÓN IVA
-══════════════════════════════════════════════════════════════════════════ -->
-<div id="panel6" class="d-none">
-    <div class="row g-3 mb-3">
-        <div class="col-md-8">
-            <h5 class="fw-bold mb-3" style="color:#ea580c">
-                <i class="bi bi-calculator me-2"></i>Liquidación IVA
-            </h5>
-
-            <div class="liq-card liq-ventas d-flex justify-content-between align-items-center">
-                <div>
-                    <div style="font-size:.72rem;font-weight:600;opacity:.7">IVA EN VENTAS (INGRESOS)</div>
-                    <div style="font-size:1.4rem;font-weight:800" id="liqIvaVentas">$0.00</div>
-                </div>
-                <i class="bi bi-arrow-up-circle" style="font-size:2rem;opacity:.3"></i>
-            </div>
-            <div class="liq-card liq-compras d-flex justify-content-between align-items-center">
-                <div>
-                    <div style="font-size:.72rem;font-weight:600;opacity:.7">IVA EN COMPRAS (GASTOS GENERALES)</div>
-                    <div style="font-size:1.4rem;font-weight:800" id="liqIvaCompras">$0.00</div>
-                </div>
-                <i class="bi bi-arrow-down-circle" style="font-size:2rem;opacity:.3"></i>
-            </div>
-            <div class="liq-card liq-ret d-flex justify-content-between align-items-center">
-                <div>
-                    <div style="font-size:.72rem;font-weight:600;opacity:.7">RETENCIONES IVA RECIBIDAS</div>
-                    <div style="font-size:1.4rem;font-weight:800" id="liqRetIva">$0.00</div>
-                </div>
-                <i class="bi bi-shield-check" style="font-size:2rem;opacity:.3"></i>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label small fw-bold">Crédito tributario acumulado mes anterior ($):</label>
-                <input type="number" step="0.01" class="form-control form-control-sm"
-                       id="creditoAnterior" value="0" oninput="recalcularNeto()">
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label small fw-bold">¿Ingresos a crédito? (meses pendientes de cobro):</label>
-                <select class="form-select form-select-sm" id="ingresosCredito" onchange="recalcularNeto()">
-                    <option value="0">No — todos los ingresos son al contado</option>
-                    <option value="1">1 mes a crédito</option>
-                    <option value="2">2 meses a crédito</option>
-                    <option value="3">3 meses a crédito</option>
-                </select>
-                <div class="form-text" id="notaCredito" style="display:none;color:#0284c7">
-                    El IVA de ingresos a crédito se pospone. Solo se declara el IVA percibido este mes.
-                </div>
-            </div>
-
-            <hr>
-            <div class="liq-card liq-neto">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div style="font-size:.72rem;font-weight:600;opacity:.7">IVA NETO</div>
-                        <div style="font-size:1.8rem;font-weight:800" id="liqIvaNeto">$0.00</div>
-                    </div>
-                    <div id="estadoIva" style="font-size:.88rem;font-weight:700;text-align:right"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-header fw-bold" style="background:#0d1b2e;color:#fff;font-size:.8rem">
-                    <i class="bi bi-info-circle me-1"></i>Fórmula de Cálculo
-                </div>
-                <div class="card-body" style="font-size:.8rem">
-                    <p class="text-muted mb-2">IVA Neto =</p>
-                    <div class="d-flex flex-column gap-1">
-                        <div class="d-flex justify-content-between">
-                            <span>IVA Ventas</span>
-                            <span class="fw-bold text-primary" id="fIvaVentas">$0.00</span>
-                        </div>
-                        <div class="d-flex justify-content-between text-danger">
-                            <span>− IVA Compras</span>
-                            <span class="fw-bold" id="fIvaCompras">$0.00</span>
-                        </div>
-                        <div class="d-flex justify-content-between text-success">
-                            <span>− Ret. IVA</span>
-                            <span class="fw-bold" id="fRetIva">$0.00</span>
-                        </div>
-                        <div class="d-flex justify-content-between text-success">
-                            <span>− Crédito anterior</span>
-                            <span class="fw-bold" id="fCreditoAnt">$0.00</span>
-                        </div>
-                        <div class="d-flex justify-content-between text-info">
-                            <span>− IVA crédito pospuesto</span>
-                            <span class="fw-bold" id="fIvaCredito">$0.00</span>
-                        </div>
-                        <hr class="my-1">
-                        <div class="d-flex justify-content-between fw-bold">
-                            <span>= IVA Neto</span>
-                            <span id="fNeto">$0.00</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="d-flex justify-content-between mt-2">
-        <button class="btn btn-outline-secondary btn-sm" onclick="irPaso(5)">
-            <i class="bi bi-arrow-left me-1"></i>Anterior
-        </button>
-        <button class="btn btn-success px-4 fw-bold" onclick="irPaso(7)">
-            Siguiente: Reporte Final <i class="bi bi-arrow-right ms-1"></i>
-        </button>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     PASO 7 — REPORTE FINAL
-══════════════════════════════════════════════════════════════════════════ -->
-<div id="panel7" class="d-none">
-    <h5 class="fw-bold mb-3" style="color:#15803d">
-        <i class="bi bi-file-earmark-check me-2"></i>Reporte Final
-    </h5>
-
-    <!-- ICE Summary cards -->
-    <div class="row g-3 mb-3">
-        <div class="col-md-6">
-            <div class="card" style="border:1.5px solid #bfdbfe">
-                <div class="card-header fw-bold" style="background:#eff6ff;color:#1d4ed8;font-size:.82rem">
-                    <i class="bi bi-fire me-1"></i>ICE — Calculadoras (Pasos 1 y 2)
-                </div>
+            <div id="ice-simple" class="pill-pane fade">
+                <div class="card mb-3"><div class="card-header fw-bold" style="background:#eff6ff; border-bottom: 1px solid #bfdbfe; color:#1d4ed8">Cálculo ICE Simple</div>
                 <div class="card-body">
-                    <table class="table table-sm mb-0">
-                        <tbody>
-                            <tr>
-                                <td class="text-muted small">ICE Específico Simple</td>
-                                <td class="text-end fw-bold text-primary" id="rIceSesp">$0.00</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted small">ICE Ad Valorem Simple</td>
-                                <td class="text-end fw-bold text-primary" id="rIceSadv">$0.00</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted small">ICE Específico Múltiple</td>
-                                <td class="text-end fw-bold text-primary" id="rIceMesp">$0.00</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted small">ICE Ad Valorem Múltiple</td>
-                                <td class="text-end fw-bold text-primary" id="rIceMadv">$0.00</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                    <p class="text-muted small mb-3">Calcula el ICE para un producto individual con base legal incluida.</p>
+                    <a href="{{ url_for('ice.calculadora') }}" class="btn btn-primary btn-sm"><i class="bi bi-calculator me-1"></i>Ir a calculadora ICE Simple</a>
+                </div></div>
             </div>
-        </div>
 
-        <div class="col-md-6">
-            <div class="card" style="border:1.5px solid #fecaca">
-                <div class="card-header fw-bold" style="background:#fef2f2;color:#dc2626;font-size:.82rem">
-                    <i class="bi bi-receipt me-1"></i>ICE — Facturas de Ingreso (Paso 3)
-                </div>
+            <div id="ice-multiple" class="pill-pane fade">
+                <div class="card mb-3"><div class="card-header fw-bold" style="background:#eff6ff; border-bottom: 1px solid #bfdbfe; color:#1d4ed8">ICE Múltiple + Mezcla</div>
                 <div class="card-body">
-                    <table class="table table-sm mb-0">
-                        <tbody>
-                            <tr>
-                                <td class="text-muted small">ICE Específico declarado</td>
-                                <td class="text-end fw-bold text-danger" id="iceEspec">$0.00</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted small">ICE Ad Valorem (75% base)</td>
-                                <td class="text-end fw-bold text-danger" id="iceAdVal">$0.00</td>
-                            </tr>
-                            <tr style="background:#fef2f2">
-                                <td class="fw-bold small">Total ICE Facturas</td>
-                                <td class="text-end fw-bold text-danger" id="iceTotal">$0.00</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                    <p class="text-muted small mb-3">Calcula ICE para múltiples productos con costos, utilidad, PVP y mezcla total.</p>
+                    <a href="{{ url_for('ice.multiple') }}" class="btn btn-primary btn-sm"><i class="bi bi-calculator-fill me-1"></i>Ir a ICE Múltiple</a>
+                </div></div>
+            </div>
+
+            <div id="ice-anexos" class="pill-pane fade">
+                <div class="card mb-3"><div class="card-header fw-bold" style="background:#eff6ff; border-bottom: 1px solid #bfdbfe; color:#1d4ed8">Anexos ICE / PVP (Editor XML)</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Carga, edita y genera archivos XML de Anexos ICE y PVP para envío a SRI.</p>
+                    <a href="{{ url_for('ats.editor') }}" class="btn btn-primary btn-sm"><i class="bi bi-file-earmark-text me-1"></i>Abrir editor XML</a>
+                </div></div>
+            </div>
+
+            <div id="ice-facturas" class="pill-pane fade">
+                <div class="card mb-3"><div class="card-header fw-bold" style="background:#eff6ff; border-bottom: 1px solid #bfdbfe; color:#1d4ed8">Facturas ICE</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Carga XMLs de facturas de ingreso. ICE y base ICE se detectan automáticamente.</p>
+                    <a href="{{ url_for('ice_auditoria.index') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Procesar facturas ICE</a>
+                </div></div>
             </div>
         </div>
     </div>
 
-    <!-- Grand total ICE -->
-    <div class="card mb-3" style="border:2px solid #1d4ed8;background:#0d1b2e">
-        <div class="card-body py-2">
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="text-white fw-bold" style="font-size:.9rem">
-                    <i class="bi bi-fire me-2"></i>TOTAL ICE A DECLARAR
-                </span>
-                <span class="text-white fw-bold" style="font-size:1.6rem" id="iceTotalGlobal">$0.00</span>
+    <!-- SECCIÓN TRIBUTARIA -->
+    <div id="sec-tributaria" class="tab-pane fade">
+        <h5 class="mb-3" style="color:#6d28d9"><i class="bi bi-journal-text me-2"></i>Tributaria — Ingresos y Gastos</h5>
+
+        <ul class="nav nav-pills mb-3" role="tablist">
+            <li class="nav-item"><a class="nav-link active" id="subtab-ingresos" data-bs-toggle="pill" href="#trib-ingresos" style="font-size:.82rem">Facturas de Ingreso</a></li>
+            <li class="nav-item"><a class="nav-link" id="subtab-retenciones" data-bs-toggle="pill" href="#trib-retenciones" style="font-size:.82rem">Retenciones</a></li>
+            <li class="nav-item"><a class="nav-link" id="subtab-gastos" data-bs-toggle="pill" href="#trib-gastos" style="font-size:.82rem">Facturas de Gasto</a></li>
+        </ul>
+
+        <div class="pill-content">
+            <div id="trib-ingresos" class="pill-pane fade show active">
+                <div class="card mb-3"><div class="card-header fw-bold" style="background:#faf5ff; border-bottom: 1px solid #c4b5fd; color:#7c3aed">Facturas de Ingreso</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Carga XMLs de facturas de venta. Se extraen automáticamente: RUC, emisor, ICE, IVA, totales.</p>
+                    <a href="{{ url_for('invoices.subir_facturas') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar facturas de ingreso</a>
+                </div></div>
+            </div>
+
+            <div id="trib-retenciones" class="pill-pane fade">
+                <div class="card mb-3"><div class="card-header fw-bold" style="background:#faf5ff; border-bottom: 1px solid #c4b5fd; color:#7c3aed">Retenciones</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Carga comprobantes de retención con clasificación Renta, IVA e ISD.</p>
+                    <a href="{{ url_for('retenciones.index') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar retenciones</a>
+                </div></div>
+            </div>
+
+            <div id="trib-gastos" class="pill-pane fade">
+                <div class="card mb-3"><div class="card-header fw-bold" style="background:#faf5ff; border-bottom: 1px solid #c4b5fd; color:#7c3aed">Facturas de Gasto</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Carga facturas de compra. <strong>Yanbal:</strong> descuento automático. <strong>Otros:</strong> descuento opcional. IVA deducible vs. personal.</p>
+                    <a href="{{ url_for('gastos.subir_gastos') }}" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i>Cargar facturas de gasto</a>
+                </div></div>
             </div>
         </div>
     </div>
 
-    <!-- IVA summary -->
-    <div class="card mb-3" style="border:1.5px solid #e9d5ff">
-        <div class="card-header fw-bold" style="background:#faf5ff;color:#7c3aed;font-size:.82rem">
-            <i class="bi bi-percent me-1"></i>Resumen IVA (Paso 6)
-        </div>
-        <div class="card-body">
-            <div class="row g-2">
-                <div class="col-6 col-md-3">
-                    <div class="text-center p-2" style="background:#eff6ff;border-radius:8px">
-                        <div class="small text-muted">IVA Ventas</div>
-                        <div class="fw-bold text-primary" id="rIvaVentas">$0.00</div>
-                    </div>
+    <!-- SECCIÓN LIQUIDACIÓN -->
+    <div id="sec-liquidacion" class="tab-pane fade">
+        <h5 class="mb-3" style="color:#92400e"><i class="bi bi-calculator me-2"></i>Liquidación IVA + ICE</h5>
+        <div class="card">
+            <div class="card-body">
+                <p class="text-muted mb-3">Después de cargar todos tus documentos (ingresos, retenciones, gastos), descargarás un reporte Excel completo con 6 hojas:</p>
+                <ul class="mb-3" style="font-size:.88rem">
+                    <li><strong>Ingresos:</strong> Tabla de facturas de venta con ICE, IVA, totales</li>
+                    <li><strong>Retenciones:</strong> Clasificación Renta, IVA, ISD</li>
+                    <li><strong>Gastos:</strong> Gastos generales y personales, con IVA deducible/no deducible</li>
+                    <li><strong>Liquidación IVA:</strong> Cálculo de IVA neto (a pagar o crédito tributario)</li>
+                    <li><strong>ICE a Declarar:</strong> ICE Específico + Ad Valorem (75%)</li>
+                    <li><strong>Resumen Ejecutivo:</strong> Totales y estado de declaración</li>
+                </ul>
+                <div class="alert alert-success mb-3" style="font-size:.82rem">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <strong>Todas tus funcionalidades ICE + Tributaria en un solo lugar.</strong> No necesitas ir a módulos separados.
                 </div>
-                <div class="col-6 col-md-3">
-                    <div class="text-center p-2" style="background:#fff7ed;border-radius:8px">
-                        <div class="small text-muted">IVA Compras</div>
-                        <div class="fw-bold" style="color:#c2410c" id="rIvaCompras">$0.00</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="text-center p-2" style="background:#f0fdf4;border-radius:8px">
-                        <div class="small text-muted">Ret. IVA</div>
-                        <div class="fw-bold text-success" id="rRetIva">$0.00</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="text-center p-2" style="background:#0d1b2e;border-radius:8px">
-                        <div class="small text-white opacity-75">IVA Neto</div>
-                        <div class="fw-bold text-white" id="rNeto">$0.00</div>
-                    </div>
-                </div>
+                <a href="#" class="btn btn-success btn-lg" disabled><i class="bi bi-file-earmark-excel me-2"></i>Descargar Reporte Completo (próximamente)</a>
             </div>
         </div>
     </div>
 
-    <!-- Counters -->
-    <div class="row g-2 mb-3">
-        <div class="col-6 col-md-3">
-            <div class="card text-center">
-                <div class="card-body py-2">
-                    <div class="small text-muted">Facturas ingreso</div>
-                    <div class="fw-bold text-primary" id="rIng">0</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card text-center">
-                <div class="card-body py-2">
-                    <div class="small text-muted">Retenciones</div>
-                    <div class="fw-bold text-warning" id="rRet">0</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card text-center">
-                <div class="card-body py-2">
-                    <div class="small text-muted">Facturas gasto</div>
-                    <div class="fw-bold" style="color:#7c3aed" id="rGas">0</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card text-center" style="background:#f0fdf4;border:1.5px solid #bbf7d0">
-                <div class="card-body py-2">
-                    <div class="small text-muted">Productos ICE Múltiple</div>
-                    <div class="fw-bold text-success" id="rProdIce">0</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Excel download -->
-    <div class="card mb-3" style="border:1.5px solid #bbf7d0">
-        <div class="card-header fw-bold" style="background:#f0fdf4;color:#15803d">
-            <i class="bi bi-file-earmark-excel me-1"></i>Descargar Reporte Excel Completo
-        </div>
-        <div class="card-body">
-            <p class="small text-muted mb-3">
-                El reporte contiene <strong>6 hojas</strong>:
-                ICE Simple · ICE Múltiple · Ingresos · Retenciones · Gastos · Liquidación
-            </p>
-            <button class="btn btn-success fw-bold px-4" onclick="descargarExcel()">
-                <i class="bi bi-file-earmark-excel me-2"></i>Descargar Excel Completo
-            </button>
-        </div>
-    </div>
-
-    <div class="d-flex justify-content-start mt-2">
-        <button class="btn btn-outline-secondary btn-sm" onclick="irPaso(6)">
-            <i class="bi bi-arrow-left me-1"></i>Anterior
-        </button>
-    </div>
 </div>
 
-<!-- ── Spinner ─────────────────────────────────────────────────────────────── -->
-<div class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center d-none"
-     id="spinner" style="background:rgba(0,0,0,0.5);z-index:9999">
-    <div class="card p-4 text-center shadow-lg">
-        <div class="spinner-border text-primary mb-3" style="width:3rem;height:3rem"></div>
-        <p class="mb-0 fw-bold" id="spinnerMsg">Procesando...</p>
-    </div>
-</div>
+<style>
+    .nav-tabs .nav-link.active { border-bottom-color: #2563eb !important; color: #2563eb !important; font-weight: 600; }
+    .nav-pills .nav-link.active { background-color: #2563eb; }
+    .pill-content > .pill-pane { display: none; }
+    .pill-content > .pill-pane.active { display: block; }
+</style>
 
 <script>
-// ── Tarifas ICE por período ─────────────────────────────────────────────
-const ICE_TARIFAS = {
-    2026: { licor: 10.41, cerveza_artesanal: 8.11, cerveza_industrial: 8.11 },
-    2025: { licor: 9.92,  cerveza_artesanal: 7.73, cerveza_industrial: 7.73 },
-    2024: { licor: 9.47,  cerveza_artesanal: 7.38, cerveza_industrial: 7.38 },
-};
-const IVA_RATE = 0.15;
-
-// ── Estado global ───────────────────────────────────────────────────────
-const state = {
-    ingresos: { files: [], datos: null },
-    ret:      { files: [], datos: null },
-    gastos:   { files: [], datos: null },
-    iceSimple: { datos: null },
-    iceMultiple: { productos: [], resultados: null },
-};
-
-// ── Drag & Drop config ─────────────────────────────────────────────────
-const dzMap = {
-    ingresos: { dz:'dzIngresos', idle:'dzIngIdle',    active:'dzIngActive',    chips:'chipsIngresos', btn:'btnProcIng' },
-    ret:      { dz:'dzRet',      idle:'dzRetIdle',    active:'dzRetActive',    chips:'chipsRet',      btn:'btnProcRet' },
-    gastos:   { dz:'dzGastos',   idle:'dzGastosIdle', active:'dzGastosActive', chips:'chipsGastos',   btn:'btnProcGastos' },
-};
-
-Object.entries(dzMap).forEach(([key, cfg]) => {
-    const el = document.getElementById(cfg.dz);
-    el.addEventListener('dragover', e => {
-        e.preventDefault(); el.classList.add('dragover');
-        document.getElementById(cfg.idle).classList.add('d-none');
-        document.getElementById(cfg.active).classList.remove('d-none');
-    });
-    el.addEventListener('dragleave', () => {
-        el.classList.remove('dragover');
-        document.getElementById(cfg.idle).classList.remove('d-none');
-        document.getElementById(cfg.active).classList.add('d-none');
-    });
-    el.addEventListener('drop', e => {
-        e.preventDefault(); el.classList.remove('dragover');
-        document.getElementById(cfg.idle).classList.remove('d-none');
-        document.getElementById(cfg.active).classList.add('d-none');
-        agregarArchivos(key, e.dataTransfer.files);
-    });
-});
-
-function agregarArchivos(key, files) {
-    [...files].forEach(f => {
-        if (f.name.toLowerCase().endsWith('.xml') &&
-            !state[key].files.find(x => x.name === f.name && x.size === f.size))
-            state[key].files.push(f);
-    });
-    renderChips(key);
-}
-
-function renderChips(key) {
-    const cfg   = dzMap[key];
-    const files = state[key].files;
-    const chips = document.getElementById(cfg.chips);
-    const btn   = document.getElementById(cfg.btn);
-    if (!files.length) { chips.innerHTML = ''; btn.disabled = true; return; }
-    btn.disabled = false;
-    chips.innerHTML = `<div class="d-flex justify-content-between align-items-center mb-1">
-        <small class="text-muted"><i class="bi bi-files me-1"></i>${files.length} archivo(s)</small>
-        <button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:.7rem" onclick="limpiarZona('${key}')">
-            <i class="bi bi-x-circle me-1"></i>Limpiar todo
-        </button>
-    </div>` + files.map((f, i) =>
-        `<span class="file-chip"><i class="bi bi-file-earmark-code me-1"></i>${f.name}
-         <span class="rm" onclick="quitarArchivo('${key}',${i})">✕</span></span>`
-    ).join('');
-}
-
-function quitarArchivo(key, idx) { state[key].files.splice(idx, 1); renderChips(key); }
-function limpiarZona(key) {
-    state[key].files = [];
-    const inputMap = { ingresos:'inpIngresos', ret:'inpRet', gastos:'inpGastos' };
-    const inp = document.getElementById(inputMap[key]);
-    if (inp) inp.value = '';
-    renderChips(key);
-}
-
-// ── Stepper ────────────────────────────────────────────────────────────
-const STEP_CLASSES = ['active-ice','active-ice','active-trib','active-trib','active-trib','active-liq','active-report'];
-let pasoActual = 1;
-
-function irPaso(n) {
-    for (let i = 1; i <= 7; i++) {
-        document.getElementById('panel' + i).classList.toggle('d-none', i !== n);
-        const st = document.getElementById('step' + i);
-        st.className = 'rc-step';
-        if (i < n) st.classList.add('done');
-        else if (i === n) st.classList.add(STEP_CLASSES[i - 1]);
-    }
-    pasoActual = n;
-    window.scrollTo(0, 0);
-}
-
-// ── Helpers ─────────────────────────────────────────────────────────────
-const fmt = v => '$' + (parseFloat(v) || 0).toFixed(2);
-function mostrarSpinner(msg) {
-    document.getElementById('spinnerMsg').textContent = msg;
-    document.getElementById('spinner').classList.remove('d-none');
-}
-function ocultarSpinner() { document.getElementById('spinner').classList.add('d-none'); }
-
-// ── ICE Simple calc ──────────────────────────────────────────────────────
-function calcularIceSimple() {
-    const precio    = parseFloat(document.getElementById('icesPrecio').value) || 0;
-    const cap       = parseFloat(document.getElementById('icesCapacidad').value) || 0;
-    const grado     = parseFloat(document.getElementById('icesGrado').value) || 0;
-    const cant      = parseFloat(document.getElementById('icesCantidad').value) || 1;
-    const tipo      = document.getElementById('icesTipo').value;
-    const periodo   = parseInt(document.getElementById('icesPeriodo').value);
-    const tarifa    = ICE_TARIFAS[periodo]?.[tipo] || 10.41;
-
-    const litrosAlc  = cap * (grado / 100);
-    const iceEsp     = litrosAlc * tarifa;
-    const iceAdVal   = precio * 0.75;
-    const precioMasIce = precio + iceEsp + iceAdVal;
-    const iva        = precioMasIce * IVA_RATE;
-    const pvp        = precioMasIce + iva;
-
-    const d = {
-        iceEsp, iceAdVal, iva, pvp,
-        iceEspTot: iceEsp * cant,
-        iceAdValTot: iceAdVal * cant,
-        ivaTot: iva * cant,
-        pvpTot: pvp * cant,
-    };
-    state.iceSimple.datos = d;
-
-    document.getElementById('isEspecUni').textContent  = fmt(iceEsp);
-    document.getElementById('isAdValUni').textContent  = fmt(iceAdVal);
-    document.getElementById('isIvaUni').textContent    = fmt(iva);
-    document.getElementById('isPvpUni').textContent    = fmt(pvp);
-    document.getElementById('isEspecTot').textContent  = fmt(d.iceEspTot);
-    document.getElementById('isAdValTot').textContent  = fmt(d.iceAdValTot);
-    document.getElementById('isIvaTot').textContent    = fmt(d.ivaTot);
-    document.getElementById('isPvpTot').textContent    = fmt(d.pvpTot);
-    document.getElementById('resIceSimple').classList.remove('d-none');
-    document.getElementById('step1').classList.add('done');
-}
-
-function limpiarIceSimple() {
-    ['icesPrecio','icesCapacidad','icesGrado'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('icesCantidad').value = '1';
-    document.getElementById('resIceSimple').classList.add('d-none');
-    state.iceSimple.datos = null;
-}
-
-// ── ICE Múltiple ─────────────────────────────────────────────────────────
-let iceMultiIdx = 0;
-function agregarProductoICE() {
-    document.getElementById('rowIceEmpty')?.remove();
-    const idx = iceMultiIdx++;
-    const tr = document.createElement('tr');
-    tr.id = 'rowIceProd' + idx;
-    tr.innerHTML = `
-        <td><input type="text" class="form-control form-control-sm" id="imNombre${idx}" placeholder="Producto ${idx+1}"></td>
-        <td><input type="number" step="0.01" class="form-control form-control-sm" id="imPrecio${idx}" placeholder="0.00"></td>
-        <td><input type="number" step="0.001" class="form-control form-control-sm" id="imCap${idx}" placeholder="0.750"></td>
-        <td><input type="number" step="0.01" class="form-control form-control-sm" id="imGrado${idx}" placeholder="40"></td>
-        <td><input type="number" step="1" class="form-control form-control-sm" id="imCant${idx}" value="1"></td>
-        <td>
-            <select class="form-select form-select-sm" id="imTipo${idx}">
-                <option value="licor">Licor</option>
-                <option value="cerveza_artesanal">Cerv. Art.</option>
-                <option value="cerveza_industrial">Cerv. Ind.</option>
-            </select>
-        </td>
-        <td>
-            <button class="btn btn-sm btn-outline-danger py-0 px-1"
-                    onclick="document.getElementById('rowIceProd${idx}').remove()">
-                <i class="bi bi-trash"></i>
-            </button>
-        </td>`;
-    document.getElementById('tbodyIceMultiple').appendChild(tr);
-}
-
-function calcularIceMultiple() {
-    const periodo = 2026;
-    const rows = document.querySelectorAll('#tbodyIceMultiple tr[id^="rowIceProd"]');
-    if (!rows.length) { alert('Agrega al menos un producto.'); return; }
-    const resultados = [];
-    rows.forEach(tr => {
-        const idx   = tr.id.replace('rowIceProd', '');
-        const nombre = document.getElementById('imNombre' + idx).value || ('Producto ' + (parseInt(idx)+1));
-        const precio = parseFloat(document.getElementById('imPrecio' + idx).value) || 0;
-        const cap    = parseFloat(document.getElementById('imCap' + idx).value) || 0;
-        const grado  = parseFloat(document.getElementById('imGrado' + idx).value) || 0;
-        const cant   = parseFloat(document.getElementById('imCant' + idx).value) || 1;
-        const tipo   = document.getElementById('imTipo' + idx).value;
-        const tarifa = ICE_TARIFAS[periodo]?.[tipo] || 10.41;
-        const litrosAlc = cap * (grado / 100);
-        const iceEsp  = litrosAlc * tarifa;
-        const iceAdVal = precio * 0.75;
-        const base     = precio + iceEsp + iceAdVal;
-        const iva      = base * IVA_RATE;
-        const pvp      = base + iva;
-        resultados.push({
-            nombre, precio, cap, grado, cant, tipo,
-            iceEspUni: iceEsp, iceAdValUni: iceAdVal, ivaUni: iva, pvpUni: pvp,
-            iceEspTot: iceEsp * cant, iceAdValTot: iceAdVal * cant, pvpTot: pvp * cant,
+    // Habilitar pills (sub-tabs)
+    document.addEventListener('DOMContentLoaded', function() {
+        const pillLinks = document.querySelectorAll('[data-bs-toggle="pill"]');
+        pillLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = this.getAttribute('href');
+                document.querySelectorAll('.pill-pane').forEach(p => p.classList.remove('active'));
+                document.querySelector(target).classList.add('active');
+            });
         });
     });
-    state.iceMultiple.resultados = resultados;
-
-    const totEsp = resultados.reduce((s, r) => s + r.iceEspTot, 0);
-    const totAdv = resultados.reduce((s, r) => s + r.iceAdValTot, 0);
-
-    document.getElementById('tbodyIceMultRes').innerHTML = resultados.map(r => `
-        <tr>
-            <td class="small fw-600">${r.nombre}</td>
-            <td class="text-end small">${fmt(r.iceEspUni)}</td>
-            <td class="text-end small">${fmt(r.iceAdValUni)}</td>
-            <td class="text-end small">${fmt(r.ivaUni)}</td>
-            <td class="text-end small">${fmt(r.pvpUni)}</td>
-            <td class="text-end small fw-bold text-primary">${fmt(r.iceEspTot)}</td>
-            <td class="text-end small fw-bold text-primary">${fmt(r.iceAdValTot)}</td>
-            <td class="text-end small fw-bold">${fmt(r.pvpTot)}</td>
-        </tr>`).join('') + `
-        <tr class="rc-total-row">
-            <td colspan="5">TOTALES</td>
-            <td class="text-end">${fmt(totEsp)}</td>
-            <td class="text-end">${fmt(totAdv)}</td>
-            <td class="text-end">${fmt(resultados.reduce((s,r) => s + r.pvpTot, 0))}</td>
-        </tr>`;
-    document.getElementById('resIceMultiple').classList.remove('d-none');
-    document.getElementById('step2').classList.add('done');
-}
-
-function limpiarIceMultiple() {
-    document.getElementById('tbodyIceMultiple').innerHTML =
-        `<tr id="rowIceEmpty"><td colspan="7" class="text-center text-muted py-3" style="font-size:.8rem">Haz clic en "Agregar Producto" para comenzar</td></tr>`;
-    document.getElementById('resIceMultiple').classList.add('d-none');
-    state.iceMultiple.resultados = null;
-    iceMultiIdx = 0;
-}
-
-// ── Procesar Ingresos ────────────────────────────────────────────────────
-async function procesarIngresos() {
-    if (!state.ingresos.files.length) return;
-    const fd = new FormData();
-    state.ingresos.files.forEach(f => fd.append('archivos_xml', f));
-    mostrarSpinner('Procesando facturas de ingreso...');
-    try {
-        const resp = await fetch('{{ url_for("registro_completo.procesar_ingresos") }}',
-            { method: 'POST', body: fd });
-        const data = await resp.json();
-        if (data.error) { alert(data.error); return; }
-        state.ingresos.datos = data;
-        renderTablaIngresos(data);
-        document.getElementById('resIngresos').classList.remove('d-none');
-        document.getElementById('step3').classList.add('done');
-    } catch (e) { alert('Error: ' + e.message); }
-    finally { ocultarSpinner(); }
-}
-
-function renderTablaIngresos(data) {
-    document.getElementById('cntIng').textContent = data.cantidad;
-    const t = data.totales;
-    document.getElementById('tbodyIng').innerHTML = data.facturas.map(f => `
-        <tr>
-            <td class="small">${f.numero}</td><td class="small">${f.fecha}</td>
-            <td class="small">${f.emisor}</td>
-            <td class="text-end small">${fmt(f.subtotal)}</td>
-            <td class="text-end small">${fmt(f.base_ice)}</td>
-            <td class="text-end small text-danger">${fmt(f.ice)}</td>
-            <td class="text-end small">${fmt(f.base_iva)}</td>
-            <td class="text-end small">${fmt(f.iva)}</td>
-            <td class="text-end small fw-bold">${fmt(f.total)}</td>
-        </tr>`).join('') + `
-        <tr class="rc-total-row">
-            <td colspan="3">TOTALES</td>
-            <td class="text-end">${fmt(t.subtotal)}</td>
-            <td class="text-end">${fmt(t.base_ice)}</td>
-            <td class="text-end">${fmt(t.ice)}</td>
-            <td class="text-end">${fmt(t.base_iva)}</td>
-            <td class="text-end">${fmt(t.iva)}</td>
-            <td class="text-end">${fmt(t.total)}</td>
-        </tr>`;
-}
-
-// ── Procesar Retenciones ─────────────────────────────────────────────────
-async function procesarRetenciones() {
-    if (!state.ret.files.length) return;
-    const fd = new FormData();
-    state.ret.files.forEach(f => fd.append('archivos_xml', f));
-    mostrarSpinner('Procesando retenciones...');
-    try {
-        const resp = await fetch('{{ url_for("registro_completo.procesar_retenciones") }}',
-            { method: 'POST', body: fd });
-        const data = await resp.json();
-        if (data.error) { alert(data.error); return; }
-        state.ret.datos = data;
-        renderTablaRet(data);
-        document.getElementById('resRet').classList.remove('d-none');
-        document.getElementById('step4').classList.add('done');
-    } catch (e) { alert('Error: ' + e.message); }
-    finally { ocultarSpinner(); }
-}
-
-function renderTablaRet(data) {
-    const t = data.totales;
-    document.getElementById('cntRet').textContent = data.cantidad;
-    document.getElementById('tbodyRet').innerHTML = data.retenciones.map(r => `
-        <tr>
-            <td class="small">${r.fecha}</td><td class="small">${r.emisor}</td>
-            <td class="small">
-                <span class="badge ${r.tipo==='Renta'?'bg-danger':r.tipo==='IVA'?'bg-warning text-dark':'bg-info'}">${r.tipo}</span>
-            </td>
-            <td class="text-end small">${fmt(r.base)}</td>
-            <td class="text-end small">${(parseFloat(r.porcentaje)||0).toFixed(1)}%</td>
-            <td class="text-end small fw-bold">${fmt(r.valor)}</td>
-        </tr>`).join('');
-    document.getElementById('retRenta').textContent = fmt(t.renta);
-    document.getElementById('retIva').textContent   = fmt(t.iva);
-    document.getElementById('retIsd').textContent   = fmt(t.isd);
-    document.getElementById('retTotal').textContent = fmt(t.total);
-}
-
-// ── Procesar Gastos ──────────────────────────────────────────────────────
-async function procesarGastos() {
-    if (!state.gastos.files.length) return;
-    const fd = new FormData();
-    state.gastos.files.forEach(f => fd.append('archivos_xml', f));
-    mostrarSpinner('Procesando facturas de gasto...');
-    try {
-        const resp = await fetch('{{ url_for("registro_completo.procesar_gastos") }}',
-            { method: 'POST', body: fd });
-        const data = await resp.json();
-        if (data.error) { alert(data.error); return; }
-        state.gastos.datos = data;
-        renderTablaGastos(data);
-        document.getElementById('resGastos').classList.remove('d-none');
-        document.getElementById('navP5').classList.add('d-none');
-        document.getElementById('step5').classList.add('done');
-    } catch (e) { alert('Error: ' + e.message); }
-    finally { ocultarSpinner(); }
-}
-
-function renderTablaGastos(data) {
-    const t = data.totales;
-    document.getElementById('cntGastos').textContent = data.cantidad;
-    document.getElementById('tbodyGastos').innerHTML = data.gastos.map((g, i) => {
-        const rowClass = g.es_yanbal ? 'yanbal-row' : (g.tiene_descuento ? 'desc-row' : '');
-        const dtoCheck = g.es_yanbal
-            ? `<span class="text-success fw-bold" title="Yanbal: descuento auto">✓</span>`
-            : (g.tiene_descuento
-                ? `<input type="checkbox" class="form-check-input" onchange="toggleDescuento(${i}, this.checked)">`
-                : `<span class="text-muted">—</span>`);
-        const persCheck = `<input type="checkbox" class="form-check-input" onchange="togglePersonal(${i}, this.checked)" ${g.es_personal ? 'checked' : ''}>`;
-        return `<tr class="${rowClass}" id="rowGasto${i}">
-            <td class="small">${g.numero}</td>
-            <td class="small">${g.fecha}</td>
-            <td class="small">${g.emisor}${g.es_yanbal ? ' <span class="badge bg-success" style="font-size:.6rem">Yanbal</span>' : ''}</td>
-            <td class="text-end small">${fmt(g.base_iva)}</td>
-            <td class="text-end small">${fmt(g.iva)}</td>
-            <td class="text-end small">${fmt(g.total)}</td>
-            <td class="text-end small text-success">${g.descuento > 0 ? fmt(g.descuento) : '—'}</td>
-            <td class="text-end small fw-bold" id="baseImp${i}">${fmt(g.base_imponible)}</td>
-            <td class="small">
-                <select class="form-select form-select-sm p-0" style="font-size:.68rem;width:90px"
-                        onchange="state.gastos.datos.gastos[${i}].categoria=this.value;recalcTotGastos()">
-                    ${['VARIOS','ALIMENTACION','EDUCACION','SALUD','VESTIMENTA','VIVIENDA','TURISMO','ARTE Y CULTURA'].map(c =>
-                        `<option ${g.categoria===c?'selected':''}>${c}</option>`).join('')}
-                </select>
-            </td>
-            <td class="text-center">${persCheck}</td>
-            <td class="text-center">${dtoCheck}</td>
-        </tr>`;
-    }).join('');
-    recalcTotGastos();
-}
-
-function toggleDescuento(i, aplicar) {
-    const g = state.gastos.datos.gastos[i];
-    g.aplica_descuento = aplicar;
-    g.base_imponible = aplicar ? g.base_iva - g.descuento : g.base_iva;
-    document.getElementById('baseImp' + i).textContent = fmt(g.base_imponible);
-    recalcTotGastos();
-}
-function togglePersonal(i, esPersonal) {
-    state.gastos.datos.gastos[i].es_personal = esPersonal;
-    recalcTotGastos();
-}
-function recalcTotGastos() {
-    const gastos = state.gastos.datos?.gastos || [];
-    const t = { base_iva: 0, iva: 0, descuento: 0, base_imponible: 0 };
-    gastos.forEach(g => {
-        t.base_iva += g.base_iva; t.iva += g.iva;
-        if (g.es_yanbal || g.aplica_descuento) t.descuento += g.descuento;
-        if (!g.es_personal) t.base_imponible += g.base_imponible;
-    });
-    document.getElementById('gBaseIva').textContent   = fmt(t.base_iva);
-    document.getElementById('gIva').textContent       = fmt(t.iva);
-    document.getElementById('gDescuento').textContent = fmt(t.descuento);
-    document.getElementById('gBaseImp').textContent   = fmt(t.base_imponible);
-}
-
-// ── Liquidación IVA ──────────────────────────────────────────────────────
-function calcularLiquidacion() {
-    const ivaVentas  = state.ingresos.datos?.totales?.iva || 0;
-    const ivaCompras = (() => {
-        const gastos = state.gastos.datos?.gastos || [];
-        return gastos.filter(g => !g.es_personal).reduce((s, g) => s + g.iva, 0);
-    })();
-    const retIva     = state.ret.datos?.totales?.iva || 0;
-    const credAnt    = parseFloat(document.getElementById('creditoAnterior').value) || 0;
-    const mesesCred  = parseInt(document.getElementById('ingresosCredito').value) || 0;
-    const ivaPospuesto = mesesCred > 0 ? ivaVentas * (mesesCred / 3) : 0;
-    const ivaEfectivo  = ivaVentas - ivaPospuesto;
-    const neto = ivaEfectivo - ivaCompras - retIva - credAnt;
-
-    document.getElementById('liqIvaVentas').textContent  = fmt(ivaVentas);
-    document.getElementById('liqIvaCompras').textContent = fmt(ivaCompras);
-    document.getElementById('liqRetIva').textContent     = fmt(retIva);
-    document.getElementById('liqIvaNeto').textContent    = fmt(neto);
-    document.getElementById('fIvaVentas').textContent    = fmt(ivaEfectivo);
-    document.getElementById('fIvaCompras').textContent   = fmt(ivaCompras);
-    document.getElementById('fRetIva').textContent       = fmt(retIva);
-    document.getElementById('fCreditoAnt').textContent   = fmt(credAnt);
-    document.getElementById('fIvaCredito').textContent   = fmt(ivaPospuesto);
-    document.getElementById('fNeto').textContent         = fmt(neto);
-
-    const estadoEl = document.getElementById('estadoIva');
-    if (neto > 0) {
-        estadoEl.innerHTML = `<span style="color:#fca5a5">Valor a PAGAR<br><big>$${neto.toFixed(2)}</big></span>`;
-        document.getElementById('liqIvaNeto').style.color = '#fca5a5';
-    } else {
-        estadoEl.innerHTML = `<span style="color:#86efac">Crédito tributario<br><big>$${Math.abs(neto).toFixed(2)}</big></span>`;
-        document.getElementById('liqIvaNeto').style.color = '#86efac';
-    }
-
-    // ICE desde facturas ingreso
-    const iceEsp   = state.ingresos.datos?.totales?.ice || 0;
-    const baseAdVal = state.ingresos.datos?.totales?.base_ice || 0;
-    const iceAdVal  = baseAdVal * 0.75;
-    const iceTotal  = iceEsp + iceAdVal;
-    document.getElementById('iceEspec').textContent  = fmt(iceEsp);
-    document.getElementById('iceAdVal').textContent  = fmt(iceAdVal);
-    document.getElementById('iceTotal').textContent  = fmt(iceTotal);
-
-    // ICE calculadoras
-    const iceSesp = state.iceSimple.datos?.iceEspTot || 0;
-    const iceSadv = state.iceSimple.datos?.iceAdValTot || 0;
-    const iceMesp = state.iceMultiple.resultados?.reduce((s,r) => s + r.iceEspTot, 0) || 0;
-    const iceMadv = state.iceMultiple.resultados?.reduce((s,r) => s + r.iceAdValTot, 0) || 0;
-    document.getElementById('rIceSesp').textContent = fmt(iceSesp);
-    document.getElementById('rIceSadv').textContent = fmt(iceSadv);
-    document.getElementById('rIceMesp').textContent = fmt(iceMesp);
-    document.getElementById('rIceMadv').textContent = fmt(iceMadv);
-
-    const iceGlobal = iceSesp + iceSadv + iceMesp + iceMadv + iceTotal;
-    document.getElementById('iceTotalGlobal').textContent = fmt(iceGlobal);
-
-    // IVA summary
-    document.getElementById('rIvaVentas').textContent  = fmt(ivaVentas);
-    document.getElementById('rIvaCompras').textContent = fmt(ivaCompras);
-    document.getElementById('rRetIva').textContent     = fmt(retIva);
-    document.getElementById('rNeto').textContent       = fmt(neto);
-
-    // Counters
-    document.getElementById('rIng').textContent  = state.ingresos.datos?.cantidad || 0;
-    document.getElementById('rRet').textContent  = state.ret.datos?.cantidad || 0;
-    document.getElementById('rGas').textContent  = state.gastos.datos?.cantidad || 0;
-    document.getElementById('rProdIce').textContent = state.iceMultiple.resultados?.length || 0;
-}
-
-function recalcularNeto() {
-    calcularLiquidacion();
-    const meses = parseInt(document.getElementById('ingresosCredito').value);
-    document.getElementById('notaCredito').style.display = meses > 0 ? 'block' : 'none';
-}
-
-// ── Descargar Excel ──────────────────────────────────────────────────────
-async function descargarExcel() {
-    mostrarSpinner('Generando Excel...');
-    try {
-        const ivaVentas  = state.ingresos.datos?.totales?.iva || 0;
-        const ivaCompras = (state.gastos.datos?.gastos || [])
-            .filter(g => !g.es_personal).reduce((s, g) => s + g.iva, 0);
-        const retIva     = state.ret.datos?.totales?.iva || 0;
-        const credAnt    = parseFloat(document.getElementById('creditoAnterior').value) || 0;
-        const mesesCred  = parseInt(document.getElementById('ingresosCredito').value) || 0;
-        const ivaPospuesto = mesesCred > 0 ? ivaVentas * (mesesCred / 3) : 0;
-        const ivaEfectivo  = ivaVentas - ivaPospuesto;
-        const neto         = ivaEfectivo - ivaCompras - retIva - credAnt;
-        const iceEsp    = state.ingresos.datos?.totales?.ice || 0;
-        const iceAdVal  = (state.ingresos.datos?.totales?.base_ice || 0) * 0.75;
-
-        // ICE Simple data
-        const iceSimpleData = state.iceSimple.datos ? [{
-            nombre: 'Producto Simple',
-            precio: parseFloat(document.getElementById('icesPrecio').value) || 0,
-            capacidad: parseFloat(document.getElementById('icesCapacidad').value) || 0,
-            grado: parseFloat(document.getElementById('icesGrado').value) || 0,
-            cantidad: parseFloat(document.getElementById('icesCantidad').value) || 1,
-            tipo: document.getElementById('icesTipo').value,
-            ice_especifico_uni: state.iceSimple.datos.iceEsp,
-            ice_advalorem_uni: state.iceSimple.datos.iceAdVal,
-            iva_uni: state.iceSimple.datos.iva,
-            pvp_uni: state.iceSimple.datos.pvp,
-            ice_especifico_total: state.iceSimple.datos.iceEspTot,
-            ice_advalorem_total: state.iceSimple.datos.iceAdValTot,
-            pvp_total: state.iceSimple.datos.pvpTot,
-        }] : [];
-
-        const iceMultipleData = (state.iceMultiple.resultados || []).map(r => ({
-            nombre: r.nombre,
-            precio: r.precio,
-            capacidad: r.cap,
-            grado: r.grado,
-            cantidad: r.cant,
-            tipo: r.tipo,
-            ice_especifico_uni: r.iceEspUni,
-            ice_advalorem_uni: r.iceAdValUni,
-            iva_uni: r.ivaUni,
-            pvp_uni: r.pvpUni,
-            ice_especifico_total: r.iceEspTot,
-            ice_advalorem_total: r.iceAdValTot,
-            pvp_total: r.pvpTot,
-        }));
-
-        const payload = {
-            ice_simple:   iceSimpleData,
-            ice_multiple: iceMultipleData,
-            ingresos:     state.ingresos.datos?.facturas   || [],
-            retenciones:  state.ret.datos?.retenciones     || [],
-            gastos:       state.gastos.datos?.gastos       || [],
-            liquidacion: {
-                iva_ventas:       ivaEfectivo,
-                iva_compras:      ivaCompras,
-                ret_iva:          retIva,
-                iva_neto:         neto,
-                ice_especifico:   iceEsp,
-                ice_advalorem:    iceAdVal,
-                total_ice:        iceEsp + iceAdVal,
-                estado:           neto > 0 ? 'A PAGAR' : 'CRÉDITO TRIBUTARIO',
-                credito_anterior: credAnt,
-            }
-        };
-        const resp = await fetch('{{ url_for("registro_completo.exportar_excel") }}', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
-        if (!resp.ok) { const e = await resp.json(); alert(e.error); return; }
-        const blob = await resp.blob();
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'Registro_Completo.xlsx';
-        a.click();
-    } catch (e) { alert('Error: ' + e.message); }
-    finally { ocultarSpinner(); }
-}
 </script>
 {% endblock %}
