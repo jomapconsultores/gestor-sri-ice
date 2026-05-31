@@ -86,6 +86,9 @@ def create_app():
     app.register_blueprint(empresas, url_prefix='/empresas')
     app.register_blueprint(security, url_prefix='/security')
 
+    from routes.facturas_ingreso import facturas_ingreso
+    app.register_blueprint(facturas_ingreso, url_prefix='/facturas_ingreso')
+
     # Módulos Pro – importados aquí para capturar cualquier error de importación
     _pro_modules = [
         ('routes.ats',               'ats',                '/ats'),
