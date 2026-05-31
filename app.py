@@ -22,6 +22,31 @@ RUTAS_LIBRES = {
     '/security/solicitar_ip', '/static',
 }
 
+def _migrar_bd():
+    """Agrega columnas nuevas a tablas existentes sin borrar datos."""
+    from sqlalchemy import text, inspect
+    engine = db.engine
+    inspector = inspect(engine)
+    is_pg = engine.dialect.name == 'postgresql'
+
+    # ── Tabla factura ──────────────────────────────────────────────────────────
+    cols_factura = {c['name'] for c in inspector.get_columns('factura')}
+    migraciones_factura = [
+        ('descuento_total',  'NUMERIC(12,2) DEFAULT 0'),
+        ('tiene_descuento',  'BOOLEAN DEFAULT FALSE'),
+    ]
+    with engine.begin() as conn:
+        for col, tipo in migraciones_factura:
+            if col not in cols_factura:
+                if is_pg:
+                    conn.execute(text(
+                        f'ALTER TABLE factura ADD COLUMN IF NOT EXISTS {col} {tipo}'))
+                else:
+                    conn.execute(text(
+                        f'ALTER TABLE factura ADD COLUMN {col} {tipo}'))
+                print(f'[MIGRACIÓN] factura.{col} añadida')
+
+
 def _crear_admin_inicial():
     from models.user import Usuario
     email = 'jomapconsultores@outlook.com'
@@ -99,6 +124,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        _migrar_bd()
         _crear_admin_inicial()
 
     # ── Middleware de validación de IP ────────────────────────────────────────
