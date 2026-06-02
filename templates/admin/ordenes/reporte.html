@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte {{ orden.numero }}</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: 'Inter', system-ui, sans-serif;
+        background: #f8fafc;
+        color: #0f172a;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .page {
+        max-width: 820px;
+        margin: 30px auto;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    /* ── Cabecera ── */
+    .doc-header {
+        background: linear-gradient(135deg, #0d1b2e 0%, #1e3a5f 60%, #2563eb 100%);
+        color: #fff;
+        padding: 32px 40px 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+    }
+    .empresa-nombre { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px; }
+    .empresa-sub { font-size: .78rem; color: rgba(255,255,255,0.6); margin-top: 3px; }
+    .doc-numero { text-align: right; }
+    .doc-tipo { font-size: .65rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+    .doc-num { font-size: 1.6rem; font-weight: 800; color: #fff; }
+    .doc-fecha { font-size: .75rem; color: rgba(255,255,255,.65); margin-top: 4px; }
+
+    /* ── Estado ── */
+    .estado-bar {
+        padding: 8px 40px;
+        font-size: .72rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .estado-borrador   { background: #f1f5f9; color: #475569; }
+    .estado-completada { background: #eff6ff; color: #1e40af; }
+    .estado-facturada  { background: #fef9c3; color: #854d0e; }
+    .estado-pagada     { background: #dcfce7; color: #15803d; }
+
+    /* ── Cuerpo ── */
+    .doc-body { padding: 32px 40px; }
+
+    /* Dos columnas: emisor / receptor */
+    .partes { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+    .parte-titulo {
+        font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
+        color: #94a3b8; margin-bottom: 6px;
+    }
+    .parte-nombre { font-size: .98rem; font-weight: 700; color: #0f172a; }
+    .parte-dato { font-size: .78rem; color: #475569; margin-top: 2px; }
+
+    .divider { height: 1px; background: #e2e8f0; margin: 24px 0; }
+
+    /* Tabla de servicios */
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+        background: #0d1b2e;
+        color: #fff;
+        padding: 8px 10px;
+        font-size: .68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+    }
+    thead th:first-child { border-radius: 6px 0 0 6px; }
+    thead th:last-child  { border-radius: 0 6px 6px 0; }
+
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    tbody td { padding: 9px 10px; font-size: .8rem; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    .td-r { text-align: right; }
+    .td-c { text-align: center; }
+
+    .tipo-chip {
+        display: inline-block;
+        font-size: .6rem; font-weight: 700;
+        padding: 2px 7px; border-radius: 10px;
+        background: #f1f5f9; color: #475569;
+    }
+    .item-desc { font-weight: 600; color: #0f172a; }
+    .item-nota { font-size: .7rem; color: #94a3b8; margin-top: 2px; }
+
+    /* Totales */
+    .totales-wrap { display: flex; justify-content: flex-end; margin-top: 16px; }
+    .totales-table { min-width: 260px; }
+    .totales-table tr td { padding: 4px 8px; font-size: .82rem; }
+    .totales-table .tot-label { text-align: right; color: #64748b; }
+    .totales-table .tot-val   { text-align: right; font-weight: 600; }
+    .total-final td { background: #0d1b2e !important; color: #fff !important;
+                      padding: 10px 8px !important; font-size: .95rem !important;
+                      font-weight: 800 !important; }
+    .total-final td:first-child { border-radius: 6px 0 0 6px; }
+    .total-final td:last-child  { border-radius: 0 6px 6px 0; }
+
+    /* Pie */
+    .doc-footer {
+        margin-top: 32px;
+        padding-top: 20px;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 20px;
+    }
+    .footer-nota { font-size: .72rem; color: #94a3b8; max-width: 400px; }
+    .footer-firma { text-align: center; min-width: 180px; }
+    .firma-linea { border-top: 1px solid #0d1b2e; margin-bottom: 6px; }
+    .firma-nombre { font-size: .78rem; font-weight: 700; }
+    .firma-cargo { font-size: .68rem; color: #64748b; }
+
+    /* Botones de impresión */
+    .no-print .print-bar {
+        background: #0d1b2e;
+        padding: 12px 40px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: flex-end;
+    }
+    .btn-print {
+        background: #2563eb; color: #fff; border: none;
+        padding: 8px 20px; border-radius: 7px; font-weight: 600;
+        font-size: .82rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+    }
+    .btn-close-tab {
+        background: transparent; color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.2);
+        padding: 8px 16px; border-radius: 7px; font-size: .82rem; cursor: pointer; text-decoration: none;
+    }
+
+    @media print {
+        body { background: #fff; }
+        .page { margin: 0; box-shadow: none; border-radius: 0; }
+        .no-print { display: none !important; }
+    }
+</style>
+</head>
+<body>
+
+{# Barra de herramientas (solo pantalla, no imprime) #}
+<div class="no-print">
+    <div class="print-bar">
+        <a href="javascript:history.back()" class="btn-close-tab">← Volver</a>
+        <button class="btn-print" onclick="window.print()">
+            🖨️ Imprimir / Guardar PDF
+        </button>
+    </div>
+</div>
+
+<div class="page">
+
+    {# ── Cabecera ─────────────────────────────────────────────────────────── #}
+    <div class="doc-header">
+        <div>
+            <div class="empresa-nombre">CMAJ Asociados SAS</div>
+            <div class="empresa-sub">RUC: 0195146942001</div>
+            <div class="empresa-sub">jomapconsultores@gmail.com</div>
+            <div class="empresa-sub" style="margin-top:6px">Servicios Tributarios y Contables</div>
+        </div>
+        <div class="doc-numero">
+            <div class="doc-tipo">Orden de Trabajo</div>
+            <div class="doc-num">{{ orden.numero }}</div>
+            <div class="doc-fecha">Emitida: {{ orden.fecha_creacion.strftime('%d de %B de %Y') if orden.fecha_creacion else '' }}</div>
+            {% if orden.fecha_completada %}
+            <div class="doc-fecha">Completada: {{ orden.fecha_completada.strftime('%d de %B de %Y') }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ── Estado ──────────────────────────────────────────────────────────── #}
+    <div class="estado-bar estado-{{ orden.estado }}">
+        {% if orden.estado == 'borrador' %}📝 BORRADOR — En proceso
+        {% elif orden.estado == 'completada' %}✅ TRABAJO COMPLETADO
+        {% elif orden.estado == 'facturada' %}🧾 FACTURADO — Pendiente de pago
+        {% elif orden.estado == 'pagada' %}💰 PAGADO{% endif %}
+    </div>
+
+    {# ── Cuerpo ──────────────────────────────────────────────────────────── #}
+    <div class="doc-body">
+
+        {# Partes #}
+        <div class="partes">
+            <div>
+                <div class="parte-titulo">Prestador del servicio</div>
+                <div class="parte-nombre">CMAJ Asociados SAS</div>
+                <div class="parte-dato">RUC: 0195146942001</div>
+                <div class="parte-dato">jomapconsultores@gmail.com</div>
+                <div class="parte-dato">Marco Antonio Posligua San Martin</div>
+            </div>
+            <div>
+                <div class="parte-titulo">Cliente</div>
+                <div class="parte-nombre">{{ orden.cliente_nombre }}</div>
+                {% if orden.cliente_empresa and orden.cliente_empresa != orden.cliente_nombre %}
+                <div class="parte-dato">{{ orden.cliente_empresa }}</div>
+                {% endif %}
+                {% if orden.cliente_ruc %}
+                <div class="parte-dato">RUC: {{ orden.cliente_ruc }}</div>
+                {% endif %}
+                {% if orden.cliente_email %}
+                <div class="parte-dato">{{ orden.cliente_email }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        {# Servicios #}
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:42%">Descripción del servicio</th>
+                    <th style="width:16%">Tipo</th>
+                    <th style="width:11%;text-align:center">Período</th>
+                    <th style="width:8%;text-align:center">Cant.</th>
+                    <th style="width:11%;text-align:right">P. Unit.</th>
+                    <th style="width:12%;text-align:right">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in orden.items %}
+            {% set tipo = TIPOS_MAP.get(item.tipo_servicio, ('otro','Otro','bi-wrench','#64748b')) %}
+            <tr>
+                <td>
+                    <div class="item-desc">{{ item.descripcion }}</div>
+                    {% if item.notas %}<div class="item-nota">{{ item.notas }}</div>{% endif %}
+                </td>
+                <td><span class="tipo-chip">{{ tipo[1] }}</span></td>
+                <td class="td-c">
+                    {% if item.periodo_mes and item.periodo_anio %}{{ item.periodo_mes }}/{{ item.periodo_anio }}
+                    {% elif item.periodo_anio %}{{ item.periodo_anio }}
+                    {% else %}—{% endif %}
+                </td>
+                <td class="td-c">{{ item.cantidad }}</td>
+                <td class="td-r">${{ "%.2f"|format(item.precio_unitario or 0) }}</td>
+                <td class="td-r" style="font-weight:600">${{ "%.2f"|format(item.subtotal or 0) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">Sin servicios registrados</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        {# Totales #}
+        <div class="totales-wrap">
+            <table class="totales-table">
+                <tr>
+                    <td class="tot-label">Subtotal:</td>
+                    <td class="tot-val">${{ "%.2f"|format(orden.subtotal or 0) }}</td>
+                </tr>
+                {% if orden.aplica_iva %}
+                <tr>
+                    <td class="tot-label">IVA 15%:</td>
+                    <td class="tot-val">${{ "%.2f"|format(orden.iva or 0) }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td class="tot-label" style="color:#94a3b8">IVA:</td>
+                    <td class="tot-val" style="color:#94a3b8">No aplica</td>
+                </tr>
+                {% endif %}
+                <tr class="total-final">
+                    <td class="tot-label" style="color:#fff;font-size:.85rem">TOTAL A PAGAR:</td>
+                    <td class="tot-val" style="color:#fff;font-size:1rem">${{ "%.2f"|format(orden.total or 0) }}</td>
+                </tr>
+            </table>
+        </div>
+
+        {% if orden.notas %}
+        <div style="margin-top:20px;padding:12px 16px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:6px;font-size:.78rem;color:#92400e">
+            <strong>Nota:</strong> {{ orden.notas }}
+        </div>
+        {% endif %}
+
+        {# ── Pie ─────────────────────────────────────────────────────────── #}
+        <div class="doc-footer">
+            <div class="footer-nota">
+                <div style="font-weight:600;color:#0f172a;margin-bottom:4px">Formas de pago</div>
+                Banco: Produbanco · Titular: CMAJ ASOCIADOS SAS<br>
+                Cuenta: 27059106889 · RUC: 0195146942001<br>
+                <span style="margin-top:4px;display:block">
+                    Generado el {{ ahora.strftime('%d/%m/%Y %H:%M') }} · Sistema Gestor SRI + ICE
+                </span>
+            </div>
+            <div class="footer-firma">
+                <div class="firma-linea"></div>
+                <div class="firma-nombre">Marco Antonio Posligua</div>
+                <div class="firma-cargo">Administrador — CMAJ Asociados SAS</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

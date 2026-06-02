@@ -276,6 +276,58 @@ class FacturaICEProcesada(db.Model):
     usuario = db.relationship("Usuario", backref="facturas_ice_procesadas", lazy=True)
 
 
+class OrdenTrabajo(db.Model):
+    """Orden de trabajo del admin para servicios profesionales a clientes."""
+    __tablename__ = "orden_trabajo"
+    id = db.Column(db.Integer, primary_key=True)
+    # Cliente puede ser usuario del sistema o externo (solo nombre/RUC)
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=True)
+    cliente_nombre = db.Column(db.String(300), nullable=False)
+    cliente_ruc = db.Column(db.String(13))
+    cliente_email = db.Column(db.String(120))
+    cliente_empresa = db.Column(db.String(300))
+    # Metadatos
+    numero = db.Column(db.String(30), unique=True)  # OT-2025-001
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_completada = db.Column(db.DateTime)
+    estado = db.Column(db.String(20), default='borrador')  # borrador, completada, facturada, pagada
+    notas = db.Column(db.Text)
+    # Totales calculados al guardar
+    subtotal = db.Column(db.Numeric(12, 2), default=0)
+    iva = db.Column(db.Numeric(12, 2), default=0)
+    total = db.Column(db.Numeric(12, 2), default=0)
+    aplica_iva = db.Column(db.Boolean, default=True)
+    # Relaciones
+    items = db.relationship("ItemOrdenTrabajo", backref="orden", lazy=True,
+                            cascade="all, delete-orphan", order_by="ItemOrdenTrabajo.id")
+    usuario = db.relationship("Usuario", backref="ordenes_trabajo", lazy=True)
+
+    def recalcular_totales(self):
+        subtotal = sum((i.subtotal or 0) for i in self.items)
+        iva = round(float(subtotal) * 0.15, 2) if self.aplica_iva else 0
+        self.subtotal = subtotal
+        self.iva = iva
+        self.total = float(subtotal) + iva
+
+
+class ItemOrdenTrabajo(db.Model):
+    """Línea de servicio dentro de una orden de trabajo."""
+    __tablename__ = "item_orden_trabajo"
+    id = db.Column(db.Integer, primary_key=True)
+    orden_id = db.Column(db.Integer, db.ForeignKey("orden_trabajo.id"), nullable=False)
+    descripcion = db.Column(db.String(500), nullable=False)
+    tipo_servicio = db.Column(db.String(50), default='otro')
+    # declaracion_iva | declaracion_ice | anexo_ice | anexo_pvp |
+    # calculo_ice_simple | calculo_ice_multiple | retenciones | ats | otro
+    periodo_mes = db.Column(db.String(2))
+    periodo_anio = db.Column(db.String(4))
+    cantidad = db.Column(db.Numeric(10, 2), default=1)
+    precio_unitario = db.Column(db.Numeric(12, 2), default=0)
+    subtotal = db.Column(db.Numeric(12, 2), default=0)
+    notas = db.Column(db.Text)
+    fecha_realizacion = db.Column(db.DateTime, default=datetime.utcnow)
+
+
 class SolicitudAcceso(db.Model):
     """Comprobante de pago subido por el usuario para que el admin apruebe."""
     __tablename__ = "solicitud_acceso"

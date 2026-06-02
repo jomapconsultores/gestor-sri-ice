@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Órdenes de Trabajo{% endblock %}
+{% block topbar_title %}Órdenes de Trabajo{% endblock %}
+
+{% block head %}
+<style>
+.estado-badge { font-size:.68rem; padding:3px 10px; border-radius:20px; font-weight:700; }
+.estado-borrador  { background:#f1f5f9; color:#475569; }
+.estado-completada{ background:#eff6ff; color:#1d4ed8; }
+.estado-facturada { background:#fef9c3; color:#854d0e; }
+.estado-pagada    { background:#dcfce7; color:#15803d; }
+.kpi { border-radius:12px; padding:18px 20px; color:#fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <div>
+        <h1 class="page-title"><i class="bi bi-briefcase"></i>Órdenes de Trabajo</h1>
+        <p class="page-subtitle">Servicios profesionales realizados para clientes y su facturación</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('ordenes.nueva') }}" class="btn btn-primary btn-sm fw-bold">
+            <i class="bi bi-plus-circle me-1"></i>Nueva Orden
+        </a>
+        <a href="{{ url_for('admin_reports.espacio') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-layout-wtf me-1"></i>Espacio
+        </a>
+    </div>
+</div>
+
+{# ── KPIs ─────────────────────────────────────────────────────────────────── #}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="kpi" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">
+            <div style="font-size:1.6rem;font-weight:800">${{ "%.2f"|format(total_pendiente) }}</div>
+            <div style="font-size:.72rem;opacity:.8"><i class="bi bi-hourglass-split me-1"></i>Por cobrar</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi" style="background:linear-gradient(135deg,#92400e,#f59e0b)">
+            <div style="font-size:1.6rem;font-weight:800">${{ "%.2f"|format(total_facturado) }}</div>
+            <div style="font-size:.72rem;opacity:.8"><i class="bi bi-receipt me-1"></i>Facturado</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi" style="background:linear-gradient(135deg,#065f46,#10b981)">
+            <div style="font-size:1.6rem;font-weight:800">${{ "%.2f"|format(total_cobrado) }}</div>
+            <div style="font-size:.72rem;opacity:.8"><i class="bi bi-check-circle-fill me-1"></i>Cobrado</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi" style="background:linear-gradient(135deg,#4c1d95,#7c3aed)">
+            <div style="font-size:1.6rem;font-weight:800">{{ ordenes|length }}</div>
+            <div style="font-size:.72rem;opacity:.8"><i class="bi bi-briefcase-fill me-1"></i>Total órdenes</div>
+        </div>
+    </div>
+</div>
+
+{# ── Tabla ────────────────────────────────────────────────────────────────── #}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center" style="background:#0d1b2e;color:#fff">
+        <span class="fw-bold"><i class="bi bi-list-check me-1"></i>Todas las órdenes</span>
+        <span class="badge bg-secondary">{{ ordenes|length }}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>N° Orden</th>
+                        <th>Cliente</th>
+                        <th>Empresa</th>
+                        <th class="text-center">Servicios</th>
+                        <th class="text-end">Subtotal</th>
+                        <th class="text-end">IVA</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-center">Estado</th>
+                        <th>Fecha</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for o in ordenes %}
+                <tr style="cursor:pointer" onclick="if(!event.target.closest('a,button'))window.location='{{ url_for('ordenes.detalle', oid=o.id) }}'">
+                    <td class="small fw-bold" style="color:#2563eb">{{ o.numero }}</td>
+                    <td class="small fw-600">{{ o.cliente_nombre }}</td>
+                    <td class="small text-muted">{{ o.cliente_empresa or '—' }}</td>
+                    <td class="small text-center">
+                        <span class="badge" style="background:#eff6ff;color:#1d4ed8">{{ o.items|length }}</span>
+                    </td>
+                    <td class="small text-end">${{ "%.2f"|format(o.subtotal or 0) }}</td>
+                    <td class="small text-end text-muted">${{ "%.2f"|format(o.iva or 0) }}</td>
+                    <td class="small text-end fw-bold">${{ "%.2f"|format(o.total or 0) }}</td>
+                    <td class="text-center">
+                        <span class="estado-badge estado-{{ o.estado }}">
+                            {% if o.estado == 'borrador' %}Borrador
+                            {% elif o.estado == 'completada' %}Completada
+                            {% elif o.estado == 'facturada' %}Facturada
+                            {% elif o.estado == 'pagada' %}Pagada
+                            {% else %}{{ o.estado }}{% endif %}
+                        </span>
+                    </td>
+                    <td class="small text-muted">{{ o.fecha_creacion.strftime('%d/%m/%Y') if o.fecha_creacion else '—' }}</td>
+                    <td class="text-center" style="white-space:nowrap">
+                        <a href="{{ url_for('ordenes.detalle', oid=o.id) }}"
+                           class="btn btn-sm btn-outline-primary py-0 px-2 me-1" title="Ver / editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{{ url_for('ordenes.reporte', oid=o.id) }}" target="_blank"
+                           class="btn btn-sm btn-outline-secondary py-0 px-2" title="Ver reporte / factura">
+                            <i class="bi bi-printer"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="10" class="text-center py-5 text-muted">
+                        <i class="bi bi-briefcase" style="font-size:2rem;display:block;margin-bottom:10px"></i>
+                        No hay órdenes de trabajo aún.
+                        <a href="{{ url_for('ordenes.nueva') }}" class="d-block mt-2 fw-bold">Crear la primera orden</a>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Nueva Orden de Trabajo{% endblock %}
+{% block topbar_title %}Nueva Orden de Trabajo{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <div>
+        <h1 class="page-title"><i class="bi bi-briefcase-fill"></i>Nueva Orden de Trabajo</h1>
+        <p class="page-subtitle">Registra los datos del cliente para esta orden de servicios</p>
+    </div>
+    <a href="{{ url_for('ordenes.lista') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Volver
+    </a>
+</div>
+
+<div class="row g-4">
+<div class="col-lg-7">
+<form method="post" action="{{ url_for('ordenes.nueva') }}">
+
+    {# ── Seleccionar cliente del sistema (opcional) ──────────────────────── #}
+    <div class="card mb-4">
+        <div class="card-header fw-bold" style="background:#0d1b2e;color:#fff">
+            <i class="bi bi-people me-1"></i>Cliente
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Cliente registrado en el sistema <span class="text-muted small">(opcional)</span></label>
+                <select name="usuario_id" class="form-select form-select-sm" id="selectCliente"
+                        onchange="precargarCliente(this)">
+                    <option value="">— Cliente externo (llenar manualmente) —</option>
+                    {% for u in clientes %}
+                    <option value="{{ u.id }}"
+                            data-nombre="{{ u.nombre }}"
+                            data-ruc="{{ u.ruc or '' }}"
+                            data-email="{{ u.email }}"
+                            data-empresa="{{ u.empresa or '' }}"
+                            {% if form.get('usuario_id')|string == u.id|string %}selected{% endif %}>
+                        {{ u.nombre }} {% if u.empresa %}– {{ u.empresa }}{% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">Si seleccionas un cliente del sistema se prellena la información. También puedes llenarla manualmente para clientes externos.</div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nombre completo <span class="text-danger">*</span></label>
+                    <input name="cliente_nombre" id="inpNombre" type="text" class="form-control form-control-sm"
+                           value="{{ form.get('cliente_nombre','') }}" required placeholder="Nombre del cliente">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">RUC / Cédula</label>
+                    <input name="cliente_ruc" id="inpRuc" type="text" class="form-control form-control-sm"
+                           value="{{ form.get('cliente_ruc','') }}" placeholder="0123456789001">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input name="cliente_email" id="inpEmail" type="email" class="form-control form-control-sm"
+                           value="{{ form.get('cliente_email','') }}" placeholder="correo@empresa.com">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Empresa / Razón social</label>
+                    <input name="cliente_empresa" id="inpEmpresa" type="text" class="form-control form-control-sm"
+                           value="{{ form.get('cliente_empresa','') }}" placeholder="Empresa S.A.">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Configuración ──────────────────────────────────────────────────── #}
+    <div class="card mb-4">
+        <div class="card-header fw-bold" style="background:#1e40af;color:#fff">
+            <i class="bi bi-gear me-1"></i>Configuración de la orden
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">¿Aplica IVA (15%)?</label>
+                    <select name="aplica_iva" class="form-select form-select-sm">
+                        <option value="1">Sí — incluir IVA 15%</option>
+                        <option value="0">No — precio sin IVA</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Notas internas</label>
+                    <input name="notas" type="text" class="form-control form-control-sm"
+                           value="{{ form.get('notas','') }}" placeholder="Observaciones opcionales">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary fw-bold">
+            <i class="bi bi-briefcase me-1"></i>Crear Orden y Agregar Servicios
+        </button>
+        <a href="{{ url_for('ordenes.lista') }}" class="btn btn-outline-secondary">Cancelar</a>
+    </div>
+</form>
+</div>
+
+<div class="col-lg-5">
+    <div class="card" style="border:1.5px solid #bfdbfe">
+        <div class="card-header fw-bold" style="background:#eff6ff;color:#1e40af">
+            <i class="bi bi-info-circle me-1"></i>¿Cómo funciona?
+        </div>
+        <div class="card-body small">
+            <ol style="line-height:2.2;margin:0;padding-left:18px">
+                <li>Creas la orden con los datos del cliente</li>
+                <li>Agregas los servicios que realizaste (declaraciones, cálculos, etc.) con su precio</li>
+                <li>El sistema calcula automáticamente el subtotal, IVA y total</li>
+                <li>Marcas la orden como <strong>Completada</strong> cuando terminas el trabajo</li>
+                <li>Imprimes o envías el <strong>reporte/factura</strong> al cliente</li>
+                <li>Cuando el cliente paga, marcas como <strong>Pagada</strong></li>
+            </ol>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+const clientes = {
+    {% for u in clientes %}
+    "{{ u.id }}": {
+        nombre: "{{ u.nombre|replace('"','') }}",
+        ruc: "{{ u.ruc or '' }}",
+        email: "{{ u.email }}",
+        empresa: "{{ (u.empresa or '')|replace('"','') }}"
+    },
+    {% endfor %}
+};
+function precargarCliente(sel) {
+    const d = clientes[sel.value] || {};
+    document.getElementById('inpNombre').value  = d.nombre  || '';
+    document.getElementById('inpRuc').value     = d.ruc     || '';
+    document.getElementById('inpEmail').value   = d.email   || '';
+    document.getElementById('inpEmpresa').value = d.empresa || '';
+}
+</script>
+{% endblock %}

@@ -239,15 +239,20 @@
         {# Pie de tarjeta #}
         <div class="cliente-footer mt-auto">
             <a href="{{ url_for('admin_reports.impersonar', uid=u.id) }}"
-               class="btn btn-sm flex-grow-1 fw-bold"
-               style="background:#0d1b2e;color:#fff;font-size:.72rem;border:none"
+               class="btn btn-sm fw-bold"
+               style="background:#0d1b2e;color:#fff;font-size:.72rem;border:none;flex:1"
                onclick="return confirm('¿Ingresar al sistema como {{ u.nombre }}?')">
                 <i class="bi bi-incognito me-1"></i>Ingresar libre
+            </a>
+            <a href="{{ url_for('ordenes.nueva') }}?uid={{ u.id }}"
+               class="btn btn-sm btn-primary fw-bold"
+               style="font-size:.72rem" title="Crear orden de trabajo para este cliente">
+                <i class="bi bi-briefcase"></i>
             </a>
             <a href="{{ url_for('admin_reports.ver_cliente', uid=u.id) }}"
                class="btn btn-sm btn-outline-secondary"
                style="font-size:.72rem" title="Ver ficha completa del cliente">
-                <i class="bi bi-person-lines-fill me-1"></i>Ficha
+                <i class="bi bi-person-lines-fill"></i>
             </a>
         </div>
 

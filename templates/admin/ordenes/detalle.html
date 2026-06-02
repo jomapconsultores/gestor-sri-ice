@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+{% block title %}Orden {{ orden.numero }}{% endblock %}
+{% block topbar_title %}Orden {{ orden.numero }}{% endblock %}
+
+{% block head %}
+<style>
+.estado-badge { font-size:.72rem; padding:4px 12px; border-radius:20px; font-weight:700; }
+.estado-borrador  { background:#f1f5f9; color:#475569; }
+.estado-completada{ background:#eff6ff; color:#1d4ed8; }
+.estado-facturada { background:#fef9c3; color:#854d0e; }
+.estado-pagada    { background:#dcfce7; color:#15803d; }
+.tipo-chip { font-size:.65rem; padding:2px 8px; border-radius:10px; font-weight:600; display:inline-flex; align-items:center; gap:4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+{# ── Header ───────────────────────────────────────────────────────────────── #}
+<div class="page-header mb-4">
+    <div>
+        <h1 class="page-title">
+            <i class="bi bi-briefcase-fill"></i>{{ orden.numero }}
+            <span class="estado-badge estado-{{ orden.estado }} ms-2">
+                {% if orden.estado == 'borrador' %}Borrador
+                {% elif orden.estado == 'completada' %}Completada
+                {% elif orden.estado == 'facturada' %}Facturada
+                {% elif orden.estado == 'pagada' %}Pagada
+                {% else %}{{ orden.estado }}{% endif %}
+            </span>
+        </h1>
+        <p class="page-subtitle">
+            {{ orden.cliente_nombre }}
+            {% if orden.cliente_empresa %} · {{ orden.cliente_empresa }}{% endif %}
+            {% if orden.cliente_ruc %} · RUC: {{ orden.cliente_ruc }}{% endif %}
+        </p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('ordenes.reporte', oid=orden.id) }}" target="_blank"
+           class="btn btn-sm btn-outline-dark fw-bold">
+            <i class="bi bi-printer me-1"></i>Ver Reporte / Factura
+        </a>
+        <a href="{{ url_for('ordenes.lista') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Volver
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+{# ── Columna principal ─────────────────────────────────────────────────────── #}
+<div class="col-lg-8">
+
+    {# Totales #}
+    <div class="row g-3 mb-4">
+        <div class="col-4">
+            <div class="card text-center">
+                <div class="card-body py-3">
+                    <div style="font-size:1.5rem;font-weight:800;color:#1e40af">${{ "%.2f"|format(orden.subtotal or 0) }}</div>
+                    <div class="small text-muted">Subtotal</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="card text-center">
+                <div class="card-body py-3">
+                    <div style="font-size:1.5rem;font-weight:800;color:#b45309">
+                        {% if orden.aplica_iva %}${{ "%.2f"|format(orden.iva or 0) }}{% else %}<span style="font-size:1rem">Sin IVA</span>{% endif %}
+                    </div>
+                    <div class="small text-muted">IVA 15%</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="card text-center" style="border:2px solid #2563eb">
+                <div class="card-body py-3">
+                    <div style="font-size:1.5rem;font-weight:800;color:#2563eb">${{ "%.2f"|format(orden.total or 0) }}</div>
+                    <div class="small text-muted fw-bold">TOTAL</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Servicios realizados #}
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center" style="background:#0d1b2e;color:#fff">
+            <span class="fw-bold"><i class="bi bi-list-check me-1"></i>Servicios realizados</span>
+            <span class="badge bg-primary">{{ orden.items|length }}</span>
+        </div>
+        <div class="card-body p-0">
+            {% if orden.items %}
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Descripción</th>
+                            <th>Tipo</th>
+                            <th class="text-center">Período</th>
+                            <th class="text-center">Cant.</th>
+                            <th class="text-end">P. Unitario</th>
+                            <th class="text-end">Subtotal</th>
+                            <th class="text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in orden.items %}
+                    {% set tipo = TIPOS_MAP.get(item.tipo_servicio, ('otro','Otro','bi-wrench','#64748b')) %}
+                    <tr>
+                        <td class="small">
+                            <div class="fw-600">{{ item.descripcion }}</div>
+                            {% if item.notas %}<div class="text-muted" style="font-size:.68rem">{{ item.notas }}</div>{% endif %}
+                        </td>
+                        <td>
+                            <span class="tipo-chip" style="background:#f1f5f9;color:{{ tipo[3] }}">
+                                <i class="{{ tipo[2] }}"></i>{{ tipo[1] }}
+                            </span>
+                        </td>
+                        <td class="small text-center text-muted">
+                            {% if item.periodo_mes and item.periodo_anio %}{{ item.periodo_mes }}/{{ item.periodo_anio }}
+                            {% elif item.periodo_anio %}{{ item.periodo_anio }}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="small text-center">{{ item.cantidad }}</td>
+                        <td class="small text-end">${{ "%.2f"|format(item.precio_unitario or 0) }}</td>
+                        <td class="small text-end fw-bold">${{ "%.2f"|format(item.subtotal or 0) }}</td>
+                        <td class="text-center">
+                            {% if orden.estado != 'pagada' %}
+                            <form method="post" action="{{ url_for('ordenes.eliminar_item', oid=orden.id, iid=item.id) }}"
+                                  onsubmit="return confirm('¿Eliminar este servicio?')">
+                                <button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:.65rem">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                    <tfoot style="background:#f8fafc">
+                        <tr>
+                            <td colspan="5" class="text-end small fw-bold text-muted">Subtotal:</td>
+                            <td class="text-end small fw-bold">${{ "%.2f"|format(orden.subtotal or 0) }}</td>
+                            <td></td>
+                        </tr>
+                        {% if orden.aplica_iva %}
+                        <tr>
+                            <td colspan="5" class="text-end small text-muted">IVA 15%:</td>
+                            <td class="text-end small">${{ "%.2f"|format(orden.iva or 0) }}</td>
+                            <td></td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td colspan="5" class="text-end fw-bold" style="color:#2563eb">TOTAL:</td>
+                            <td class="text-end fw-bold" style="color:#2563eb;font-size:1rem">${{ "%.2f"|format(orden.total or 0) }}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:8px"></i>
+                Sin servicios aún. Agrega el primer servicio abajo.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Formulario agregar servicio #}
+    {% if orden.estado != 'pagada' %}
+    <div class="card mb-4" style="border:1.5px solid #bfdbfe">
+        <div class="card-header fw-bold" style="background:#eff6ff;color:#1e40af">
+            <i class="bi bi-plus-circle me-1"></i>Agregar Servicio
+        </div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('ordenes.agregar_item', oid=orden.id) }}">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Tipo de servicio</label>
+                        <select name="tipo_servicio" class="form-select form-select-sm"
+                                onchange="autoDescripcion(this)">
+                            {% for tid, tlabel, ticono, tcolor in TIPOS_SERVICIO %}
+                            <option value="{{ tid }}">{{ tlabel }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Mes</label>
+                        <select name="periodo_mes" class="form-select form-select-sm">
+                            <option value="">— Mes —</option>
+                            {% for m in range(1,13) %}
+                            <option value="{{ '%02d'|format(m) }}">{{ '%02d'|format(m) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Año</label>
+                        <select name="periodo_anio" class="form-select form-select-sm">
+                            <option value="">— Año —</option>
+                            {% for y in range(2024, 2028) %}
+                            <option value="{{ y }}" {% if y == 2025 %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Descripción detallada <span class="text-danger">*</span></label>
+                        <input name="descripcion" id="inpDesc" type="text" class="form-control form-control-sm"
+                               required placeholder="Ej: Declaración ICE período marzo 2025">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Cantidad</label>
+                        <input name="cantidad" type="number" step="0.01" min="0.01"
+                               class="form-control form-control-sm" value="1"
+                               oninput="calcSubtotal()">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Precio unitario ($)</label>
+                        <input name="precio_unitario" id="inpPrecio" type="number" step="0.01" min="0"
+                               class="form-control form-control-sm" value=""
+                               placeholder="0.00" oninput="calcSubtotal()">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Subtotal</label>
+                        <div class="form-control form-control-sm bg-light" id="lblSubtotal"
+                             style="font-weight:700;color:#1e40af">$0.00</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Notas adicionales <span class="text-muted small">(opcional)</span></label>
+                        <input name="notas_item" type="text" class="form-control form-control-sm"
+                               placeholder="Ej: Incluye revisión de facturas electrónicas">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary btn-sm fw-bold">
+                            <i class="bi bi-plus-circle me-1"></i>Agregar Servicio
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+{# ── Panel lateral ─────────────────────────────────────────────────────────── #}
+<div class="col-lg-4">
+
+    {# Info cliente #}
+    <div class="card mb-3">
+        <div class="card-header fw-bold" style="background:#0d1b2e;color:#fff">
+            <i class="bi bi-person-circle me-1"></i>Datos del cliente
+        </div>
+        <div class="card-body small">
+            <div class="mb-2"><span class="text-muted">Nombre:</span><br>
+                <strong>{{ orden.cliente_nombre }}</strong></div>
+            {% if orden.cliente_empresa %}
+            <div class="mb-2"><span class="text-muted">Empresa:</span><br>{{ orden.cliente_empresa }}</div>
+            {% endif %}
+            {% if orden.cliente_ruc %}
+            <div class="mb-2"><span class="text-muted">RUC:</span><br>{{ orden.cliente_ruc }}</div>
+            {% endif %}
+            {% if orden.cliente_email %}
+            <div class="mb-2"><span class="text-muted">Email:</span><br>{{ orden.cliente_email }}</div>
+            {% endif %}
+            {% if orden.notas %}
+            <div class="mt-2 p-2 rounded" style="background:#fffbeb;color:#92400e;font-size:.72rem">
+                <i class="bi bi-sticky me-1"></i>{{ orden.notas }}
+            </div>
+            {% endif %}
+            {% if orden.usuario_id %}
+            <a href="{{ url_for('admin_reports.ver_cliente', uid=orden.usuario_id) }}"
+               class="btn btn-outline-secondary btn-sm w-100 mt-2" style="font-size:.72rem">
+                <i class="bi bi-person-lines-fill me-1"></i>Ver ficha del cliente
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Cambiar estado #}
+    <div class="card mb-3">
+        <div class="card-header fw-bold" style="background:#1e40af;color:#fff">
+            <i class="bi bi-arrow-repeat me-1"></i>Estado de la orden
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <div class="text-muted small mb-2">Estado actual:</div>
+                <span class="estado-badge estado-{{ orden.estado }}" style="font-size:.8rem">
+                    {% if orden.estado == 'borrador' %}📝 Borrador
+                    {% elif orden.estado == 'completada' %}✅ Completada
+                    {% elif orden.estado == 'facturada' %}🧾 Facturada
+                    {% elif orden.estado == 'pagada' %}💰 Pagada{% endif %}
+                </span>
+            </div>
+            <form method="post" action="{{ url_for('ordenes.cambiar_estado', oid=orden.id) }}">
+                <div class="mb-2">
+                    <select name="estado" class="form-select form-select-sm">
+                        <option value="borrador" {% if orden.estado=='borrador' %}selected{% endif %}>📝 Borrador (en proceso)</option>
+                        <option value="completada" {% if orden.estado=='completada' %}selected{% endif %}>✅ Completada (trabajo hecho)</option>
+                        <option value="facturada" {% if orden.estado=='facturada' %}selected{% endif %}>🧾 Facturada (enviado al cliente)</option>
+                        <option value="pagada" {% if orden.estado=='pagada' %}selected{% endif %}>💰 Pagada (cobrada)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">
+                    <i class="bi bi-check2 me-1"></i>Actualizar Estado
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {# Acciones #}
+    <div class="card mb-3">
+        <div class="card-body d-flex flex-column gap-2">
+            <a href="{{ url_for('ordenes.reporte', oid=orden.id) }}" target="_blank"
+               class="btn btn-dark btn-sm fw-bold">
+                <i class="bi bi-printer me-1"></i>Imprimir Reporte / Factura
+            </a>
+            {% if orden.estado == 'borrador' %}
+            <form method="post" action="{{ url_for('ordenes.eliminar_orden', oid=orden.id) }}"
+                  onsubmit="return confirm('¿Eliminar esta orden permanentemente?')">
+                <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                    <i class="bi bi-trash me-1"></i>Eliminar orden
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Fechas #}
+    <div class="card">
+        <div class="card-body small text-muted">
+            <div><i class="bi bi-calendar-plus me-1"></i>Creada: {{ orden.fecha_creacion.strftime('%d/%m/%Y %H:%M') if orden.fecha_creacion else '—' }}</div>
+            {% if orden.fecha_completada %}
+            <div class="mt-1"><i class="bi bi-calendar-check me-1"></i>Completada: {{ orden.fecha_completada.strftime('%d/%m/%Y %H:%M') }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+</div>
+
+<script>
+const TIPOS_DESC = {
+    'declaracion_iva':       'Declaración IVA período ',
+    'declaracion_ice':       'Declaración ICE período ',
+    'anexo_ice':             'Anexo ICE período ',
+    'anexo_pvp':             'Anexo PVP período ',
+    'calculo_ice_simple':    'Cálculo ICE Simple — ',
+    'calculo_ice_multiple':  'Cálculo ICE Múltiple — ',
+    'retenciones':           'Retenciones período ',
+    'ats':                   'ATS período ',
+    'conciliacion':          'Conciliación Bancaria ',
+    'otro':                  '',
+};
+function autoDescripcion(sel) {
+    const inp = document.getElementById('inpDesc');
+    const mes = document.querySelector('[name=periodo_mes]').value;
+    const anio = document.querySelector('[name=periodo_anio]').value;
+    const periodo = mes && anio ? mes + '/' + anio : (anio || '');
+    inp.value = (TIPOS_DESC[sel.value] || '') + periodo;
+}
+function calcSubtotal() {
+    const cant = parseFloat(document.querySelector('[name=cantidad]').value) || 0;
+    const precio = parseFloat(document.getElementById('inpPrecio').value) || 0;
+    document.getElementById('lblSubtotal').textContent = '$' + (cant * precio).toFixed(2);
+}
+// Actualizar descripción cuando cambia el mes/año también
+document.querySelector('[name=periodo_mes]').addEventListener('change', function() {
+    autoDescripcion(document.querySelector('[name=tipo_servicio]'));
+});
+document.querySelector('[name=periodo_anio]').addEventListener('change', function() {
+    autoDescripcion(document.querySelector('[name=tipo_servicio]'));
+});
+</script>
+{% endblock %}

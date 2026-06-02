@@ -11,6 +11,7 @@ from routes.annexes import annexes
 from routes.exports import exports
 from routes.downloader import downloader
 from routes.admin_reports import admin_reports
+from routes.ordenes import ordenes
 from routes.gastos import gastos
 from routes.empresas import empresas
 from routes.security import security, obtener_ip
@@ -99,6 +100,7 @@ def create_app():
     app.register_blueprint(exports, url_prefix='/exports')
     app.register_blueprint(downloader, url_prefix='/downloader')
     app.register_blueprint(admin_reports, url_prefix='/admin')
+    app.register_blueprint(ordenes, url_prefix='/admin/ordenes')
     app.register_blueprint(gastos, url_prefix='/gastos')
     app.register_blueprint(empresas, url_prefix='/empresas')
     app.register_blueprint(security, url_prefix='/security')
