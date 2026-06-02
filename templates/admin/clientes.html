@@ -16,9 +16,14 @@
         <h1 class="page-title"><i class="bi bi-people"></i>Gestión de Clientes</h1>
         <p class="page-subtitle">Lista completa de clientes registrados (sin administradores)</p>
     </div>
-    <a href="{{ url_for('admin_reports.reportes') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-graph-up-arrow me-1"></i>Ver Reportes
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin_reports.crear_usuario') }}" class="btn btn-primary btn-sm fw-bold">
+            <i class="bi bi-person-plus me-1"></i>Nuevo Cliente
+        </a>
+        <a href="{{ url_for('admin_reports.reportes') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-graph-up-arrow me-1"></i>Reportes
+        </a>
+    </div>
 </div>
 
 {# ── KPIs ──────────────────────────────────────────────────── #}
@@ -108,23 +113,36 @@
                         <th style="color:#fff;font-size:.72rem">Email</th>
                         <th style="color:#fff;font-size:.72rem">Empresa</th>
                         <th style="color:#fff;font-size:.72rem">RUC</th>
-                        <th style="color:#fff;font-size:.72rem;text-align:center">Módulos activos</th>
-                        <th style="color:#fff;font-size:.72rem;text-align:center">Facturas</th>
+                        <th style="color:#fff;font-size:.72rem;text-align:center">Rol</th>
+                        <th style="color:#fff;font-size:.72rem;text-align:center">Módulos</th>
                         <th style="color:#fff;font-size:.72rem">Registro</th>
                         <th style="color:#fff;font-size:.72rem;text-align:center">Estado</th>
+                        <th style="color:#fff;font-size:.72rem;text-align:center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="tbodyClientes">
                 {% for u in usuarios %}
                 {% set mods_activos_u = u.modulos_suscritos|selectattr('estado','equalto','activo')|list %}
-                {% set n_facts = u.facturas|length %}
+                {% set rol_u = MODULOS.get(u.rol) if u.rol in (MODULOS or {}) else None %}
                 <tr class="client-row"
-                    onclick="window.location='{{ url_for('admin_reports.ver_cliente', uid=u.id) }}'"
+                    onclick="if(!event.target.closest('a,button'))window.location='{{ url_for('admin_reports.ver_cliente', uid=u.id) }}'"
                     data-search="{{ (u.nombre + ' ' + u.email + ' ' + (u.empresa or '') + ' ' + (u.ruc or ''))|lower }}">
                     <td class="small fw-600">{{ u.nombre }}</td>
                     <td class="small text-muted">{{ u.email }}</td>
                     <td class="small">{{ u.empresa or '—' }}</td>
                     <td class="small">{{ u.ruc or '—' }}</td>
+                    <td class="small text-center">
+                        {% set rol_key = u.rol or 'cliente' %}
+                        {% if rol_key == 'gerente' %}
+                        <span class="badge" style="background:#eff6ff;color:#1d4ed8;font-size:.6rem">Gerente</span>
+                        {% elif rol_key == 'contador' %}
+                        <span class="badge" style="background:#f0fdf4;color:#15803d;font-size:.6rem">Contador</span>
+                        {% elif rol_key == 'analista' %}
+                        <span class="badge" style="background:#fff7ed;color:#c2410c;font-size:.6rem">Analista</span>
+                        {% else %}
+                        <span class="badge" style="background:#f1f5f9;color:#475569;font-size:.6rem">Cliente</span>
+                        {% endif %}
+                    </td>
                     <td class="small text-center">
                         {% if mods_activos_u %}
                         <span class="badge" style="background:#dcfce7;color:#15803d">{{ mods_activos_u|length }}</span>
@@ -132,7 +150,6 @@
                         <span class="badge" style="background:#f1f5f9;color:#94a3b8">0</span>
                         {% endif %}
                     </td>
-                    <td class="small text-center">{{ n_facts }}</td>
                     <td class="small text-muted">
                         {{ u.fecha_registro.strftime('%d/%m/%Y') if u.fecha_registro else '—' }}
                     </td>
@@ -143,9 +160,23 @@
                         <span class="badge" style="background:#fef2f2;color:#dc2626;font-size:.65rem">Inactivo</span>
                         {% endif %}
                     </td>
+                    <td class="text-center" style="white-space:nowrap">
+                        <a href="{{ url_for('admin_reports.impersonar', uid=u.id) }}"
+                           class="btn btn-sm py-0 px-2 me-1 fw-bold"
+                           style="background:#0d1b2e;color:#fff;font-size:.65rem;border:none"
+                           title="Ingresar como este cliente"
+                           onclick="return confirm('¿Entrar al sistema como {{ u.nombre }}?')">
+                            <i class="bi bi-incognito"></i>
+                        </a>
+                        <a href="{{ url_for('admin_reports.ver_cliente', uid=u.id) }}"
+                           class="btn btn-outline-secondary btn-sm py-0 px-2"
+                           style="font-size:.65rem" title="Ver detalle">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="8" class="text-center text-muted py-4">No hay clientes registrados</td></tr>
+                <tr><td colspan="9" class="text-center text-muted py-4">No hay clientes registrados</td></tr>
                 {% endfor %}
                 </tbody>
             </table>

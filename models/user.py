@@ -15,6 +15,8 @@ class Usuario(UserMixin, db.Model):
     activo = db.Column(db.Boolean, default=True)
     is_admin = db.Column(db.Boolean, default=False)
     stripe_customer_id = db.Column(db.String(100))
+    rol = db.Column(db.String(20), default='cliente')  # admin, gerente, contador, cliente
+    notas_admin = db.Column(db.Text)
     suscripcion = db.relationship("Suscripcion", backref="usuario", lazy=True, uselist=False)
     facturas = db.relationship("Factura", backref="usuario", lazy=True)
     def set_password(self, password):

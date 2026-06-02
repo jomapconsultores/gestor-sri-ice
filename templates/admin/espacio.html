@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% block title %}Espacio de Trabajo — Admin{% endblock %}
+{% block topbar_title %}Mi Espacio de Trabajo{% endblock %}
+
+{% block head %}
+<style>
+    .espacio-header {
+        background: linear-gradient(135deg, #0d1b2e 0%, #1e3a5f 60%, #2563eb 100%);
+        border-radius: 14px;
+        padding: 26px 28px;
+        margin-bottom: 24px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+    .espacio-header::before {
+        content: '';
+        position: absolute;
+        right: -30px; top: -30px;
+        width: 200px; height: 200px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.04);
+    }
+    .espacio-header::after {
+        content: '';
+        position: absolute;
+        right: 40px; bottom: -60px;
+        width: 140px; height: 140px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.03);
+    }
+
+    .cliente-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: box-shadow 0.18s, transform 0.18s;
+        background: #fff;
+    }
+    .cliente-card:hover {
+        box-shadow: 0 8px 24px rgba(37,99,235,0.12);
+        transform: translateY(-2px);
+    }
+    .cliente-card-header {
+        padding: 14px 16px 10px;
+        border-bottom: 1px solid #f1f5f9;
+        background: #f8fafc;
+    }
+    .cliente-nombre {
+        font-weight: 700;
+        font-size: .92rem;
+        color: #0f172a;
+        margin: 0 0 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .cliente-empresa {
+        font-size: .72rem;
+        color: #64748b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .mod-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 9px;
+        border-radius: 7px;
+        font-size: .72rem;
+        font-weight: 600;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: filter 0.12s, transform 0.1s;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+    .mod-btn:hover {
+        filter: brightness(0.92);
+        transform: scale(1.03);
+        text-decoration: none;
+    }
+    .mod-btn i { font-size: .8rem; flex-shrink: 0; }
+
+    .cliente-footer {
+        padding: 10px 14px;
+        background: #f8fafc;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        gap: 6px;
+    }
+
+    .busqueda-wrap {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+    .busqueda-wrap input {
+        border: none;
+        outline: none;
+        flex: 1;
+        font-size: .85rem;
+        background: transparent;
+    }
+    .stat-pill {
+        background: rgba(255,255,255,0.12);
+        border-radius: 20px;
+        padding: 4px 14px;
+        font-size: .78rem;
+        font-weight: 600;
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .modulos-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        padding: 12px 14px;
+    }
+    .sin-clientes {
+        text-align: center;
+        padding: 60px 20px;
+        color: #94a3b8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ── Banner superior ──────────────────────────────────────────────────────── #}
+<div class="espacio-header mb-4">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <div style="font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:6px">
+                <i class="bi bi-shield-fill me-1"></i>Administrador · Espacio Privado
+            </div>
+            <h1 style="font-size:1.5rem;font-weight:800;margin:0 0 6px;color:#fff">
+                Mi Espacio de Trabajo
+            </h1>
+            <p style="font-size:.82rem;color:rgba(255,255,255,.6);margin:0">
+                Accede directamente a cualquier módulo en nombre de cada cliente. Todo lo que crees quedará en su cuenta.
+            </p>
+        </div>
+        <div class="d-flex flex-column gap-2 align-items-end">
+            <div class="d-flex gap-2">
+                <span class="stat-pill"><i class="bi bi-people-fill"></i>{{ clientes|length }} clientes</span>
+                <span class="stat-pill"><i class="bi bi-grid-fill"></i>{{ modulos_trabajo|length }} módulos</span>
+            </div>
+            <a href="{{ url_for('admin_reports.crear_usuario') }}"
+               class="btn btn-sm fw-bold"
+               style="background:#fff;color:#1e3a5f;border:none;border-radius:8px">
+                <i class="bi bi-person-plus me-1"></i>Nuevo Cliente
+            </a>
+        </div>
+    </div>
+</div>
+
+{# ── Buscador ─────────────────────────────────────────────────────────────── #}
+<div class="busqueda-wrap">
+    <i class="bi bi-search" style="color:#94a3b8;font-size:1rem"></i>
+    <input type="text" id="inputBusqueda" placeholder="Buscar cliente por nombre, empresa o RUC..."
+           oninput="filtrarClientes(this.value)" autocomplete="off">
+    <span id="contadorVisible" style="font-size:.72rem;color:#94a3b8;white-space:nowrap">
+        {{ clientes|length }} clientes
+    </span>
+</div>
+
+{# ── Grid de clientes ─────────────────────────────────────────────────────── #}
+{% if clientes %}
+<div class="row g-3" id="gridClientes">
+{% for u in clientes %}
+{% set mods_activos = u.modulos_suscritos|selectattr('estado','equalto','activo')|selectattr('verificado','equalto',True)|list %}
+{% set rol_info = ROLES_CLIENTE.get(u.rol or 'cliente', ('Cliente','#f1f5f9','#475569')) %}
+<div class="col-md-6 col-xl-4 tarjeta-wrap"
+     data-search="{{ (u.nombre ~ ' ' ~ (u.empresa or '') ~ ' ' ~ (u.ruc or '') ~ ' ' ~ u.email)|lower }}">
+    <div class="cliente-card h-100">
+
+        {# Cabecera del cliente #}
+        <div class="cliente-card-header">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+                <div style="min-width:0;flex:1">
+                    <div class="cliente-nombre">{{ u.nombre }}</div>
+                    <div class="cliente-empresa">
+                        {% if u.empresa %}{{ u.empresa }}{% endif %}
+                        {% if u.ruc %}<span class="text-muted"> · RUC: {{ u.ruc }}</span>{% endif %}
+                    </div>
+                </div>
+                <div class="d-flex flex-column align-items-end gap-1 flex-shrink-0">
+                    <span class="badge" style="background:{{ rol_info[1] }};color:{{ rol_info[2] }};font-size:.6rem">
+                        {{ rol_info[0] }}
+                    </span>
+                    {% if mods_activos %}
+                    <span style="font-size:.62rem;color:#64748b">
+                        <i class="bi bi-grid me-1"></i>{{ mods_activos|length }} módulo(s)
+                    </span>
+                    {% else %}
+                    <span style="font-size:.62rem;color:#cbd5e1">sin módulos</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if u.notas_admin %}
+            <div class="mt-2" style="font-size:.68rem;color:#92400e;background:#fffbeb;padding:4px 8px;border-radius:5px;border-left:2px solid #f59e0b">
+                <i class="bi bi-sticky me-1"></i>{{ u.notas_admin[:80] }}{% if u.notas_admin|length > 80 %}…{% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        {# Botones de módulos #}
+        <div class="modulos-grid">
+            {% for endpoint, icono, bg, color, etiqueta in modulos_trabajo %}
+            {% set mod_url = safe_url_for(endpoint) %}
+            {% if mod_url != '#' %}
+            {# Verificar si el cliente tiene este módulo activo #}
+            {% set tiene_modulo = false %}
+            {% for ma in mods_activos %}
+                {% if ma.modulo_id in endpoint %}{% set tiene_modulo = true %}{% endif %}
+            {% endfor %}
+            <a href="{{ url_for('admin_reports.impersonar', uid=u.id, next=mod_url) }}"
+               class="mod-btn"
+               style="background:{{ bg }};color:{{ color }}{% if tiene_modulo %};outline:2px solid {{ color }};outline-offset:1px{% endif %}"
+               title="{% if tiene_modulo %}✓ Módulo activo — {% endif %}Trabajar en {{ etiqueta }} como {{ u.nombre }}">
+                <i class="{{ icono }}"></i>{{ etiqueta }}
+            </a>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        {# Pie de tarjeta #}
+        <div class="cliente-footer mt-auto">
+            <a href="{{ url_for('admin_reports.impersonar', uid=u.id) }}"
+               class="btn btn-sm flex-grow-1 fw-bold"
+               style="background:#0d1b2e;color:#fff;font-size:.72rem;border:none"
+               onclick="return confirm('¿Ingresar al sistema como {{ u.nombre }}?')">
+                <i class="bi bi-incognito me-1"></i>Ingresar libre
+            </a>
+            <a href="{{ url_for('admin_reports.ver_cliente', uid=u.id) }}"
+               class="btn btn-sm btn-outline-secondary"
+               style="font-size:.72rem" title="Ver ficha completa del cliente">
+                <i class="bi bi-person-lines-fill me-1"></i>Ficha
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endfor %}
+</div>
+
+{# Mensaje cuando filtro no da resultados #}
+<div id="sinResultados" class="sin-clientes" style="display:none">
+    <i class="bi bi-search" style="font-size:2rem;display:block;margin-bottom:10px"></i>
+    No se encontraron clientes que coincidan con la búsqueda.
+</div>
+
+{% else %}
+<div class="sin-clientes">
+    <i class="bi bi-people" style="font-size:3rem;display:block;margin-bottom:16px;color:#cbd5e1"></i>
+    <h5 style="color:#475569">No tienes clientes aún</h5>
+    <p class="text-muted">Crea el primer cliente para comenzar a trabajar</p>
+    <a href="{{ url_for('admin_reports.crear_usuario') }}" class="btn btn-primary fw-bold">
+        <i class="bi bi-person-plus me-1"></i>Crear Primer Cliente
+    </a>
+</div>
+{% endif %}
+
+{# ── Leyenda de módulos ───────────────────────────────────────────────────── #}
+{% if clientes %}
+<div class="card mt-4" style="border:1.5px dashed #e2e8f0">
+    <div class="card-body py-3">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <span style="font-size:.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em">
+                <i class="bi bi-info-circle me-1"></i>Módulos disponibles:
+            </span>
+            {% for endpoint, icono, bg, color, etiqueta in modulos_trabajo %}
+            {% set mod_url = safe_url_for(endpoint) %}
+            {% if mod_url != '#' %}
+            <span class="mod-btn" style="background:{{ bg }};color:{{ color }};cursor:default">
+                <i class="{{ icono }}"></i>{{ etiqueta }}
+            </span>
+            {% endif %}
+            {% endfor %}
+            <span style="font-size:.68rem;color:#94a3b8;margin-left:8px">
+                · Los módulos con borde destacado están activos en ese cliente
+            </span>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filtrarClientes(q) {
+    const tarjetas = document.querySelectorAll('.tarjeta-wrap');
+    const ql = q.toLowerCase().trim();
+    let visibles = 0;
+    tarjetas.forEach(t => {
+        const coincide = !ql || t.dataset.search.includes(ql);
+        t.style.display = coincide ? '' : 'none';
+        if (coincide) visibles++;
+    });
+    const contador = document.getElementById('contadorVisible');
+    if (contador) contador.textContent = visibles + ' cliente' + (visibles !== 1 ? 's' : '');
+    const sinRes = document.getElementById('sinResultados');
+    if (sinRes) sinRes.style.display = (visibles === 0 && ql) ? '' : 'none';
+}
+</script>
+{% endblock %}

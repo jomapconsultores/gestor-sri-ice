@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, g
 from config import Config
 from models import db, login_manager
 import json as _json
@@ -45,6 +45,23 @@ def _migrar_bd():
                     conn.execute(text(
                         f'ALTER TABLE factura ADD COLUMN {col} {tipo}'))
                 print(f'[MIGRACIÓN] factura.{col} añadida')
+
+    # ── Tabla usuario ──────────────────────────────────────────────────────────
+    cols_usuario = {c['name'] for c in inspector.get_columns('usuario')}
+    migraciones_usuario = [
+        ('rol',         "VARCHAR(20) DEFAULT 'cliente'"),
+        ('notas_admin', 'TEXT'),
+    ]
+    with engine.begin() as conn:
+        for col, tipo in migraciones_usuario:
+            if col not in cols_usuario:
+                if is_pg:
+                    conn.execute(text(
+                        f'ALTER TABLE usuario ADD COLUMN IF NOT EXISTS {col} {tipo}'))
+                else:
+                    conn.execute(text(
+                        f'ALTER TABLE usuario ADD COLUMN {col} {tipo}'))
+                print(f'[MIGRACIÓN] usuario.{col} añadida')
 
 
 def _crear_admin_inicial():
@@ -126,10 +143,33 @@ def create_app():
                 return '#'
         return dict(safe_url_for=safe_url_for)
 
+    @app.context_processor
+    def inject_impersonation():
+        from flask import g
+        return {
+            'es_impersonacion': getattr(g, 'es_impersonacion', False),
+            'admin_original': getattr(g, 'admin_original', None),
+        }
+
     with app.app_context():
         db.create_all()
         _migrar_bd()
         _crear_admin_inicial()
+
+    # ── Contexto de impersonación ────────────────────────────────────────────
+    @app.before_request
+    def setup_impersonation():
+        from flask import g, session
+        g.es_impersonacion = False
+        g.admin_original = None
+        if current_user.is_authenticated:
+            admin_id = session.get('admin_original_id')
+            if admin_id:
+                from models.user import Usuario
+                admin = db.session.get(Usuario, int(admin_id))
+                if admin and admin.is_admin:
+                    g.es_impersonacion = True
+                    g.admin_original = admin
 
     # ── Middleware de validación de IP ────────────────────────────────────────
     @app.before_request
@@ -142,8 +182,8 @@ def create_app():
         path = request.path
         if any(path.startswith(r) for r in RUTAS_LIBRES):
             return
-        # Admin nunca bloqueado
-        if current_user.is_admin:
+        # Admin o admin impersonando nunca bloqueado
+        if current_user.is_admin or getattr(g, 'es_impersonacion', False):
             return
 
         ip_actual = obtener_ip()
