@@ -1,13 +1,16 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file
+from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file, jsonify
 from flask_login import login_required, current_user
 from models import db
 from models.user import Factura, ClasificacionGasto, MapaClasificacion, MapaClasificacionDetalle
 from services.validaciones_sri import ValidacionesSRI
+from services.gastos_processor import parse_xml_gasto_completo, serializar_datos_gasto, clasificar_gasto_automatico
 from datetime import datetime
 from sqlalchemy import func, extract
 import pandas as pd
 import io
 import os
+import tempfile
+import json
 
 gastos = Blueprint('gastos', __name__)
 
@@ -226,10 +229,10 @@ def auto_clasificar():
     if not mapa:
         flash('No tienes un mapa activo. Sube uno primero.', 'warning')
         return redirect(url_for('gastos.panel'))
-    
+
     facturas_sin = Factura.query.filter_by(usuario_id=current_user.id, tipo='gasto').all()
     clasificadas_ids = [c.factura_id for c in ClasificacionGasto.query.filter_by(usuario_id=current_user.id).all()]
-    
+
     count = 0
     for factura in facturas_sin:
         if factura.id in clasificadas_ids:
@@ -241,48 +244,338 @@ def auto_clasificar():
                                               categoria=detalle.categoria, monto=factura.importe_total, fecha=datetime.utcnow())
             db.session.add(clasificacion)
             count += 1
-    
+
     db.session.commit()
     flash(f'{count} facturas auto-clasificadas.', 'success')
     return redirect(url_for('gastos.panel'))
 
 
+@gastos.route('/procesar_gasto_xml', methods=['POST'])
+@login_required
+def procesar_gasto_xml():
+    """
+    Procesa un XML de gasto completo (como SRI-XML.py)
+    Extrae toda la composición de IVA y crea la factura en la BD
+
+    Returns JSON con:
+    - success: bool
+    - factura_id: ID de la factura creada
+    - datos: Diccionario con datos parseados
+    - error: Mensaje de error (si aplica)
+    """
+    if not _tiene_modulo('facturas_gasto'):
+        return jsonify({"error": "No tienes acceso al módulo de gastos"}), 403
+
+    if 'archivo' not in request.files:
+        return jsonify({"error": "No archivo proporcionado"}), 400
+
+    file = request.files['archivo']
+    if file.filename == '':
+        return jsonify({"error": "Archivo vacío"}), 400
+
+    if not file.filename.lower().endswith('.xml'):
+        return jsonify({"error": "Solo se aceptan archivos XML"}), 400
+
+    try:
+        # Guardar temporalmente el archivo
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.xml') as tmp:
+            file.save(tmp.name)
+            tmp_path = tmp.name
+
+        # Leer el contenido del XML antes de parsearlo
+        xml_content = None
+        try:
+            with open(tmp_path, 'r', encoding='utf-8') as f:
+                xml_content = f.read()
+        except:
+            try:
+                with open(tmp_path, 'r', encoding='latin-1') as f:
+                    xml_content = f.read()
+            except:
+                pass
+
+        # Parsear como SRI-XML.py
+        datos = parse_xml_gasto_completo(tmp_path)
+
+        # Limpiar archivo temporal
+        try:
+            os.remove(tmp_path)
+        except:
+            pass
+
+        if not datos:
+            return jsonify({"error": "No se pudo parsear el XML. Verifica que sea una factura válida"}), 400
+
+        # Verificar si la factura ya existe
+        existente = Factura.query.filter_by(
+            usuario_id=current_user.id,
+            clave_acceso=datos['clave_acceso']
+        ).first()
+
+        if existente:
+            return jsonify({
+                "error": "Esta factura ya está registrada",
+                "factura_id": existente.id
+            }), 409
+
+        # Crear factura en BD
+        try:
+            fecha_emision = datetime.strptime(datos['fecha'], '%d/%m/%Y').date() if datos['fecha'] else datetime.now().date()
+        except:
+            fecha_emision = datetime.now().date()
+
+        factura = Factura(
+            usuario_id=current_user.id,
+            tipo='gasto',
+            clave_acceso=datos['clave_acceso'],
+            ruc_emisor=datos['ruc_emisor'],
+            razon_social_emisor=datos['nombre_emisor'],
+            ruc_comprador=datos['ruc_comprador'],
+            razon_social_comprador=datos['nombre_comprador'],
+            fecha_emision=fecha_emision,
+            numero_factura=datos['numero_factura'],
+            base_iva=datos['base_15'],  # La base principal del IVA es 15%
+            valor_iva=datos['iva_15'],   # El valor del IVA
+            importe_total=datos['total'],
+            descuento_total=datos['total_descuento'],
+            tiene_descuento=datos['total_descuento'] > 0,
+            # Guardar toda la composición de IVA en notas_auditoria
+            notas_auditoria=serializar_datos_gasto(datos),
+            xml_original=xml_content,
+        )
+
+        db.session.add(factura)
+        db.session.flush()  # Para obtener el ID sin hacer commit
+
+        # Auto-clasificar si hay mapa activo
+        mapa_activo = MapaClasificacion.query.filter_by(
+            usuario_id=current_user.id,
+            activo=True
+        ).first()
+
+        clasificacion_cat = "SIN CLASIFICAR"
+
+        if mapa_activo:
+            detalles_mapa = MapaClasificacionDetalle.query.filter_by(
+                mapa_id=mapa_activo.id
+            ).all()
+
+            clasificacion_cat = clasificar_gasto_automatico(
+                datos['ruc_emisor'],
+                datos['nombre_emisor'],
+                detalles_mapa
+            )
+
+        # Crear clasificación automática
+        if clasificacion_cat != "SIN CLASIFICAR":
+            clasificacion = ClasificacionGasto(
+                usuario_id=current_user.id,
+                factura_id=factura.id,
+                categoria=clasificacion_cat,
+                monto=factura.importe_total,
+                fecha=datetime.utcnow()
+            )
+            db.session.add(clasificacion)
+
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "factura_id": factura.id,
+            "clasificacion": clasificacion_cat,
+            "datos": {
+                "numero_factura": datos['numero_factura'],
+                "fecha": datos['fecha'],
+                "nombre_emisor": datos['nombre_emisor'],
+                "nombre_comprador": datos['nombre_comprador'],
+                "total": datos['total'],
+                "concepto": datos['concepto'],
+                "base_15": datos['base_15'],
+                "iva_15": datos['iva_15'],
+            }
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "error": f"Error al procesar: {str(e)[:100]}"
+        }), 500
+
+
+@gastos.route('/detalle_factura/<int:factura_id>')
+@login_required
+def detalle_factura(factura_id):
+    """
+    Retorna los detalles completos de una factura de gasto,
+    incluyendo la composición de IVA almacenada en notas_auditoria
+    """
+    factura = Factura.query.filter_by(
+        id=factura_id,
+        usuario_id=current_user.id,
+        tipo='gasto'
+    ).first()
+
+    if not factura:
+        return jsonify({"error": "Factura no encontrada"}), 404
+
+    # Deserializar notas de auditoria
+    notas = {}
+    if factura.notas_auditoria:
+        try:
+            notas = json.loads(factura.notas_auditoria)
+        except:
+            notas = {}
+
+    # Obtener clasificación si existe
+    clasificacion = ClasificacionGasto.query.filter_by(
+        factura_id=factura_id,
+        usuario_id=current_user.id
+    ).first()
+
+    return jsonify({
+        "factura": {
+            "id": factura.id,
+            "fecha": factura.fecha_emision.strftime('%d/%m/%Y') if factura.fecha_emision else '',
+            "numero": factura.numero_factura,
+            "ruc_emisor": factura.ruc_emisor,
+            "nombre_emisor": factura.razon_social_emisor,
+            "ruc_comprador": factura.ruc_comprador,
+            "nombre_comprador": factura.razon_social_comprador,
+            "total": float(factura.importe_total or 0),
+        },
+        "composicion_iva": {
+            "base_0": float(notas.get('base_0', 0)),
+            "base_5": float(notas.get('base_5', 0)),
+            "iva_5": float(notas.get('iva_5', 0)),
+            "base_15": float(notas.get('base_15', 0)),
+            "iva_15": float(notas.get('iva_15', 0)),
+            "base_exento": float(notas.get('base_exento', 0)),
+            "base_no_objeto": float(notas.get('base_no_objeto', 0)),
+            "total_descuento": float(notas.get('total_descuento', 0)),
+        },
+        "detalles": notas.get('detalles', []),
+        "concepto": notas.get('concepto', ''),
+        "forma_pago": notas.get('forma_pago', ''),
+        "clasificacion": {
+            "categoria": clasificacion.categoria if clasificacion else "SIN CLASIFICAR",
+            "fecha": clasificacion.fecha.strftime('%d/%m/%Y %H:%M') if clasificacion and clasificacion.fecha else '',
+        } if clasificacion else None,
+    })
+
+
 @gastos.route('/exportar_excel')
 @login_required
 def exportar_excel():
+    """
+    Exporta gastos a Excel con múltiples hojas:
+    - DATOS: Detalle completo de cada gasto
+    - COMPOSICIÓN IVA: Desglose de bases y valores por porcentaje
+    - RESUMEN PERSONAL: Totales de gastos personales
+    - RESUMEN EJERCICIO: Totales de gastos deducibles del ejercicio
+    """
     try:
         clasificaciones = ClasificacionGasto.query.filter_by(usuario_id=current_user.id).all()
         if not clasificaciones:
             flash('No hay gastos clasificados.', 'warning')
             return redirect(url_for('gastos.panel'))
-        
-        data = []
+
+        # Preparar datos detallados
+        datos_detalle = []
+        composicion_iva_data = []
+
         for c in clasificaciones:
             factura = db.session.get(Factura, c.factura_id)
-            data.append({
-                'Fecha': factura.fecha_emision.strftime('%d/%m/%Y') if factura and factura.fecha_emision else '',
+            if not factura:
+                continue
+
+            # Desserializar notas de auditoria para obtener composición de IVA
+            notas = {}
+            if factura.notas_auditoria:
+                try:
+                    notas = json.loads(factura.notas_auditoria)
+                except:
+                    notas = {}
+
+            datos_detalle.append({
+                'Fecha': factura.fecha_emision.strftime('%d/%m/%Y') if factura.fecha_emision else '',
                 'N Factura': factura.numero_factura if factura else '',
                 'Proveedor': factura.razon_social_emisor if factura else '',
                 'RUC': factura.ruc_emisor if factura else '',
                 'Categoria': c.categoria,
-                'Monto': float(c.monto or 0),
+                'Total': float(c.monto or 0),
                 'Tipo': 'GASTO PERSONAL' if c.categoria in GASTOS_PERSONALES else 'GASTO EJERCICIO'
             })
-        
-        df = pd.DataFrame(data)
+
+            # Agregar datos de composición de IVA
+            composicion_iva_data.append({
+                'Fecha': factura.fecha_emision.strftime('%d/%m/%Y') if factura.fecha_emision else '',
+                'N Factura': factura.numero_factura if factura else '',
+                'Proveedor': factura.razon_social_emisor if factura else '',
+                'Base 0%': float(notas.get('base_0', 0)),
+                'Base 5%': float(notas.get('base_5', 0)),
+                'IVA 5%': float(notas.get('iva_5', 0)),
+                'Base 15%': float(notas.get('base_15', 0)),
+                'IVA 15%': float(notas.get('iva_15', 0)),
+                'Base Exento': float(notas.get('base_exento', 0)),
+                'Base No Objeto': float(notas.get('base_no_objeto', 0)),
+                'Descuento': float(notas.get('total_descuento', 0)),
+                'Total': float(c.monto or 0),
+            })
+
+        # Crear DataFrame
+        df_detalle = pd.DataFrame(datos_detalle)
+        df_composicion = pd.DataFrame(composicion_iva_data)
+
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name='DETALLE')
-            resumen_personal = df[df['Tipo'] == 'GASTO PERSONAL'].groupby('Categoria').agg({'Monto': 'sum', 'N Factura': 'count'}).reset_index()
+            # Hoja 1: DATOS - Detalle de cada factura
+            df_detalle.to_excel(writer, index=False, sheet_name='DATOS')
+
+            # Hoja 2: COMPOSICIÓN IVA - Desglose detallado
+            df_composicion.to_excel(writer, index=False, sheet_name='COMPOSICIÓN IVA')
+
+            # Hoja 3: RESUMEN PERSONAL
+            resumen_personal = df_detalle[df_detalle['Tipo'] == 'GASTO PERSONAL'].groupby('Categoria').agg(
+                {'Total': 'sum', 'N Factura': 'count'}
+            ).reset_index()
             resumen_personal.columns = ['Categoria', 'Total', 'Cantidad']
-            resumen_ejercicio = df[df['Tipo'] == 'GASTO EJERCICIO'].groupby('Categoria').agg({'Monto': 'sum', 'N Factura': 'count'}).reset_index()
-            resumen_ejercicio.columns = ['Categoria', 'Total', 'Cantidad']
             resumen_personal.to_excel(writer, index=False, sheet_name='GASTOS PERSONALES')
+
+            # Hoja 4: RESUMEN EJERCICIO
+            resumen_ejercicio = df_detalle[df_detalle['Tipo'] == 'GASTO EJERCICIO'].groupby('Categoria').agg(
+                {'Total': 'sum', 'N Factura': 'count'}
+            ).reset_index()
+            resumen_ejercicio.columns = ['Categoria', 'Total', 'Cantidad']
             resumen_ejercicio.to_excel(writer, index=False, sheet_name='GASTOS EJERCICIO')
-        
+
+            # Hoja 5: RESUMEN GENERAL (totales por tipo)
+            resumen_general = pd.DataFrame([
+                {
+                    'Tipo': 'GASTOS PERSONALES',
+                    'Cantidad': len(df_detalle[df_detalle['Tipo'] == 'GASTO PERSONAL']),
+                    'Total': float(df_detalle[df_detalle['Tipo'] == 'GASTO PERSONAL']['Total'].sum())
+                },
+                {
+                    'Tipo': 'GASTOS EJERCICIO',
+                    'Cantidad': len(df_detalle[df_detalle['Tipo'] == 'GASTO EJERCICIO']),
+                    'Total': float(df_detalle[df_detalle['Tipo'] == 'GASTO EJERCICIO']['Total'].sum())
+                },
+                {
+                    'Tipo': 'TOTAL GENERAL',
+                    'Cantidad': len(df_detalle),
+                    'Total': float(df_detalle['Total'].sum())
+                }
+            ])
+            resumen_general.to_excel(writer, index=False, sheet_name='RESUMEN GENERAL')
+
         output.seek(0)
-        return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                        as_attachment=True, download_name=f'Clasificacion_Gastos_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx')
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'Gastos_Completo_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        )
+
     except Exception as e:
         flash(f'Error: {str(e)}', 'danger')
         return redirect(url_for('gastos.panel'))
