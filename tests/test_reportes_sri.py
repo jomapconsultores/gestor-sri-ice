@@ -18,11 +18,14 @@ class TestGeneradorFormulario104(unittest.TestCase):
     """Tests para Formulario 104"""
 
     def setUp(self):
-        self.app = create_app()
+        self.app = create_app(init_db_now=False)
         self.app.config['TESTING'] = True
         self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+
         self.ctx = self.app.app_context()
         self.ctx.push()
+
+        db.drop_all()
         db.create_all()
 
         # Crear usuario de prueba
@@ -150,11 +153,14 @@ class TestGeneradorAnexoICE(unittest.TestCase):
     """Tests para Anexo ICE/PVP"""
 
     def setUp(self):
-        self.app = create_app()
+        self.app = create_app(init_db_now=False)
         self.app.config['TESTING'] = True
         self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+
         self.ctx = self.app.app_context()
         self.ctx.push()
+
+        db.drop_all()
         db.create_all()
 
         self.usuario = Usuario(
@@ -223,11 +229,14 @@ class TestGeneradorATS(unittest.TestCase):
     """Tests para ATS (Archivo Técnico Tributario)"""
 
     def setUp(self):
-        self.app = create_app()
+        self.app = create_app(init_db_now=False)
         self.app.config['TESTING'] = True
         self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+
         self.ctx = self.app.app_context()
         self.ctx.push()
+
+        db.drop_all()
         db.create_all()
 
         self.usuario = Usuario(
@@ -307,11 +316,14 @@ class TestGeneradorRetenciones(unittest.TestCase):
     """Tests para Certificado de Retenciones"""
 
     def setUp(self):
-        self.app = create_app()
+        self.app = create_app(init_db_now=False)
         self.app.config['TESTING'] = True
         self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+
         self.ctx = self.app.app_context()
         self.ctx.push()
+
+        db.drop_all()
         db.create_all()
 
         self.usuario = Usuario(
@@ -381,11 +393,14 @@ class TestIntegracionReportesSRI(unittest.TestCase):
     """Tests de integración para flujos completos"""
 
     def setUp(self):
-        self.app = create_app()
+        self.app = create_app(init_db_now=False)
         self.app.config['TESTING'] = True
         self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+
         self.ctx = self.app.app_context()
         self.ctx.push()
+
+        db.drop_all()
         db.create_all()
 
         self.usuario = Usuario(

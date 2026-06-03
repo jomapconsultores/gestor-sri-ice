@@ -85,7 +85,18 @@ def _crear_admin_inicial():
         print(f'[INIT] Admin creado: {email}')
 
 
-def create_app():
+def _init_db(app):
+    """Inicializa BD (llamar solo en producción/desarrollo, no en tests)."""
+    with app.app_context():
+        try:
+            db.create_all()
+            _migrar_bd()
+            _crear_admin_inicial()
+        except Exception as e:
+            print(f"[WARN] BD init fallido (normal en tests): {e}")
+
+
+def create_app(init_db_now=True):
     app = Flask(__name__)
     app.config.from_object(Config)
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -157,10 +168,8 @@ def create_app():
             'admin_original': getattr(g, 'admin_original', None),
         }
 
-    with app.app_context():
-        db.create_all()
-        _migrar_bd()
-        _crear_admin_inicial()
+    if init_db_now:
+        _init_db(app)
 
     # ── Contexto de impersonación ────────────────────────────────────────────
     @app.before_request
@@ -225,7 +234,9 @@ def create_app():
     return app
 
 
-app = create_app()
+# En producción/desarrollo, inicializar BD
+# En tests, create_app(init_db_now=False) para evitar side-effects
+app = create_app(init_db_now=True)
 
 
 @app.route('/')

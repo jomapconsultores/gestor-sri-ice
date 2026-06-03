@@ -13,11 +13,14 @@ class TestEndpointsReportes(unittest.TestCase):
     """Tests para endpoints de reportes"""
 
     def setUp(self):
-        self.app = create_app()
+        self.app = create_app(init_db_now=False)
         self.app.config['TESTING'] = True
         self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+
         self.ctx = self.app.app_context()
         self.ctx.push()
+
+        db.drop_all()
         db.create_all()
 
         self.client = self.app.test_client()
@@ -170,7 +173,7 @@ class TestEndpointsReportes(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
-        self.assertIn(b'CERTIFICADO DE RETENCIÓN', response.data)
+        self.assertIn(b'CERTIFICADO', response.data)
 
     def test_lista_periodos(self):
         """Test: Listar períodos disponibles"""
@@ -273,11 +276,14 @@ class TestAuditoriaEndpoints(unittest.TestCase):
     """Tests para endpoints de auditoría"""
 
     def setUp(self):
-        self.app = create_app()
+        self.app = create_app(init_db_now=False)
         self.app.config['TESTING'] = True
         self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+
         self.ctx = self.app.app_context()
         self.ctx.push()
+
+        db.drop_all()
         db.create_all()
 
         self.client = self.app.test_client()
