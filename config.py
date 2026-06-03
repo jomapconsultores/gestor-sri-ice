@@ -43,17 +43,9 @@ class Config:
     GASTO_ARTE_CULTURA_LIMITE_PCT = float(os.getenv('GASTO_ARTE_CULTURA_LIMITE_PCT', '0.10'))  # 10%
     PRESCRIPCION_ANOS = int(os.getenv('PRESCRIPCION_ANOS', '5'))
 
-    # APIs Externas (opcionales en desarrollo, requeridas en producción)
-    MISTRAL_API_KEY = os.getenv('MISTRAL_API_KEY', 'sk-dev-placeholder')
-    CODESTRAL_API_KEY = os.getenv('CODESTRAL_API_KEY', 'sk-dev-placeholder')
-
-    # Validación de APIs (solo en producción)
-    IS_PRODUCTION = os.getenv('RENDER') == 'true' or os.getenv('ENVIRONMENT') == 'production'
-    if IS_PRODUCTION:
-        if MISTRAL_API_KEY == 'sk-dev-placeholder':
-            raise ValueError("❌ ERROR: MISTRAL_API_KEY no configurada en production")
-        if CODESTRAL_API_KEY == 'sk-dev-placeholder':
-            raise ValueError("❌ ERROR: CODESTRAL_API_KEY no configurada en production")
+    # APIs Externas (opcionales - solo para conciliación IA)
+    MISTRAL_API_KEY = os.getenv('MISTRAL_API_KEY')
+    CODESTRAL_API_KEY = os.getenv('CODESTRAL_API_KEY')
 
     # Datos de pago por transferencia
     BANCO_NOMBRE = 'Produbanco - Cuenta Corriente'
