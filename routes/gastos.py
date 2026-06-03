@@ -284,15 +284,13 @@ def procesar_gasto_xml():
 
         # Leer el contenido del XML antes de parsearlo
         xml_content = None
-        try:
-            with open(tmp_path, 'r', encoding='utf-8') as f:
-                xml_content = f.read()
-        except:
+        for encoding in ('utf-8', 'latin-1', 'iso-8859-1', 'cp1252'):
             try:
-                with open(tmp_path, 'r', encoding='latin-1') as f:
+                with open(tmp_path, 'r', encoding=encoding) as f:
                     xml_content = f.read()
+                break
             except:
-                pass
+                continue
 
         # Parsear como SRI-XML.py
         datos = parse_xml_gasto_completo(tmp_path)
@@ -304,7 +302,12 @@ def procesar_gasto_xml():
             pass
 
         if not datos:
-            return jsonify({"error": "No se pudo parsear el XML. Verifica que sea una factura válida"}), 400
+            return jsonify({
+                "error": "No se pudo parsear el XML. Asegúrate de que: "
+                         "1) Sea una factura electrónica válida del SRI, "
+                         "2) Contenga infoTributaria e infoFactura, "
+                         "3) El archivo no esté corrupto"
+            }), 400
 
         # Verificar si la factura ya existe
         existente = Factura.query.filter_by(
