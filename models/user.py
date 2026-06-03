@@ -61,6 +61,7 @@ class Factura(db.Model):
     fecha_procesamiento = db.Column(db.DateTime, default=datetime.utcnow)
     descuento_total = db.Column(db.Numeric(12, 2), default=0)
     tiene_descuento = db.Column(db.Boolean, default=False)
+    notas_auditoria = db.Column(db.Text)
 
 @login_manager.user_loader
 def load_user(user_id):

@@ -37,6 +37,7 @@ def _migrar_bd():
     migraciones_factura = [
         ('descuento_total',  'NUMERIC(12,2) DEFAULT 0'),
         ('tiene_descuento',  'BOOLEAN DEFAULT FALSE'),
+        ('notas_auditoria',  'TEXT'),
     ]
     with engine.begin() as conn:
         for col, tipo in migraciones_factura:
