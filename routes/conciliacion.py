@@ -6,7 +6,9 @@ from routes.payments import usuario_tiene_modulo
 
 conciliacion = Blueprint('conciliacion', __name__)
 
-MISTRAL_API_KEY = "y3ShMpYFn7Spry3zB44epJu7FbIPgIfn"
+MISTRAL_API_KEY = os.environ.get('MISTRAL_API_KEY')
+if not MISTRAL_API_KEY:
+    raise ValueError("❌ CRÍTICO: Falta variable MISTRAL_API_KEY en .env")
 
 
 def _requiere_modulo():

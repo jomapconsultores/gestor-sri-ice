@@ -37,11 +37,24 @@ MODULOS_TRABAJO = [
 
 
 def requiere_admin():
+    """Valida que el usuario sea admin o esté impersonando."""
     if current_user.is_admin:
         return True
     if getattr(g, 'es_impersonacion', False):
         return True
-    flash('Acceso denegado.', 'danger')
+    flash('Acceso denegado: Se requieren permisos de administrador.', 'danger')
+    return False
+
+
+def _puede_ver_usuario(uid):
+    """Valida que pueda ver datos del usuario uid (admin o impersonación)."""
+    if not requiere_admin():
+        return False
+    admin_id = getattr(g, 'admin_original_id', None)
+    if admin_id and uid == admin_id:
+        return True
+    if current_user.is_admin:
+        return True
     return False
 
 
@@ -163,7 +176,7 @@ def generar_factura():
 @login_required
 def ver_usuario(usuario_id):
     """Admin puede ver los datos detallados de cualquier usuario."""
-    if not requiere_admin():
+    if not _puede_ver_usuario(usuario_id):
         return redirect(url_for('dashboard'))
     usuario = db.session.get(Usuario, usuario_id)
     if not usuario:
@@ -194,7 +207,7 @@ def clientes():
 @admin_reports.route('/cliente/<int:uid>')
 @login_required
 def ver_cliente(uid):
-    if not requiere_admin():
+    if not _puede_ver_usuario(uid):
         return redirect(url_for('dashboard'))
     from models.user import Factura, AnexoICEGuardado, ProductoSesionICE, Empresa
     usuario = db.session.get(Usuario, uid)
@@ -225,7 +238,7 @@ def ver_cliente(uid):
 @admin_reports.route('/cliente/<int:uid>/editar', methods=['POST'])
 @login_required
 def editar_cliente(uid):
-    if not requiere_admin():
+    if not _puede_ver_usuario(uid):
         return redirect(url_for('dashboard'))
     usuario = db.session.get(Usuario, uid)
     if not usuario:

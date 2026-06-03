@@ -19,3 +19,28 @@ startup_err.txt
 # OS
 .DS_Store
 Thumbs.db
+
+# Environment variables (NUNCA versionar)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# Secretos
+*.key
+*.pem
+credentials.json
+secrets.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema
+sri_downloads/*
+temp/*
+cache/*

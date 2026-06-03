@@ -6,10 +6,12 @@ from routes.payments import usuario_tiene_modulo
 from models import db
 from models.user import Factura
 from services.xml_parser import parse_xml_factura
+from services.validaciones_sri import ValidacionesSRI
 import tempfile
 import os
 import io
 from datetime import datetime
+import traceback
 
 try:
     from openpyxl import Workbook
@@ -71,9 +73,10 @@ def procesar():
 
         archivos = request.files.getlist('archivos')
         resultados = {'exitosas': 0, 'errores': 0, 'detalles': []}
+        facturas_a_guardar = []
 
         for archivo in archivos:
-            if not archivo.filename.endswith('.xml'):
+            if not archivo.filename.lower().endswith('.xml'):
                 resultados['errores'] += 1
                 resultados['detalles'].append({'archivo': archivo.filename, 'error': 'No es XML'})
                 continue
@@ -86,54 +89,115 @@ def procesar():
 
                 # Parsear
                 datos = parse_xml_factura(temp_path)
-                os.unlink(temp_path)
+                try:
+                    os.unlink(temp_path)
+                except:
+                    pass
 
                 if not datos:
                     resultados['errores'] += 1
                     resultados['detalles'].append({'archivo': archivo.filename, 'error': 'No se pudo parsear'})
                     continue
 
-                # Verificar si ya existe
+                # VALIDACIONES CRÍTICAS
+                clave_acceso = datos.get('clave_acceso', '').strip()
+                if not clave_acceso or len(clave_acceso) != 49:
+                    resultados['errores'] += 1
+                    resultados['detalles'].append({'archivo': archivo.filename, 'error': 'Clave inválida'})
+                    continue
+
+                # Validar RUC emisor (para facturas de VENTA)
+                try:
+                    ValidacionesSRI.validar_ruc(datos.get('ruc', ''))
+                except ValueError as e:
+                    resultados['errores'] += 1
+                    resultados['detalles'].append({'archivo': archivo.filename, 'error': str(e)})
+                    continue
+
+                # Verificar si ya existe (IMPORTANTE: con usuario_id filter)
                 factura_existente = Factura.query.filter_by(
-                    usuario_id=current_user.id,
-                    clave_acceso=datos.get('clave_acceso', '')
+                    usuario_id=current_user.id,  # ✅ CRÍTICO: Solo del usuario actual
+                    clave_acceso=clave_acceso
                 ).first()
 
                 if factura_existente:
-                    resultados['detalles'].append({'archivo': archivo.filename, 'estado': 'Ya existe'})
+                    resultados['detalles'].append({'archivo': archivo.filename, 'estado': 'Duplicada'})
                     continue
 
-                # Guardar en BD
+                # Validar período fiscal
+                try:
+                    ValidacionesSRI.validar_periodo_fiscal(datos.get('fecha_emision', ''))
+                except ValueError as e:
+                    resultados['errores'] += 1
+                    resultados['detalles'].append({'archivo': archivo.filename, 'error': str(e)})
+                    continue
+
+                importe_total = float(datos.get('importe_total', 0) or 0)
+
+                # Validar importe
+                try:
+                    ValidacionesSRI.validar_importe(importe_total, minimo=0.01)
+                except ValueError as e:
+                    resultados['errores'] += 1
+                    resultados['detalles'].append({'archivo': archivo.filename, 'error': str(e)})
+                    continue
+
+                # ✅ AGRUPAR IVA POR TARIFA (CRÍTICO para SRI)
+                productos = datos.get('productos', [])
+                iva_por_tarifa = ValidacionesSRI.agrupar_iva_por_tarifa(productos)
+
+                # Preparar para guardar (sin commit aún)
                 factura = Factura(
                     usuario_id=current_user.id,
-                    clave_acceso=datos.get('clave_acceso', ''),
-                    ruc_emisor=datos.get('ruc_emisor', ''),
-                    razon_social_emisor=datos.get('razon_social_emisor', ''),
-                    ruc_comprador=datos.get('ruc_comprador', ''),
-                    razon_social_comprador=datos.get('razon_social_comprador', ''),
-                    fecha_emision=datos.get('fecha_emision'),
-                    numero_factura=datos.get('numero_factura', ''),
-                    importe_total=datos.get('total', 0),
-                    base_ice=datos.get('base_ice', 0),
-                    valor_ice=datos.get('ice', 0),
-                    base_iva=datos.get('base_iva', 0),
-                    valor_iva=datos.get('iva', 0),
-                    xml_original=datos.get('xml_raw', ''),
+                    clave_acceso=clave_acceso,
+                    ruc_emisor=datos.get('ruc', '').strip(),
+                    razon_social_emisor=datos.get('razon_social_emisor', '').strip(),
+                    ruc_comprador=current_user.ruc or datos.get('id_cliente', '').strip(),
+                    razon_social_comprador=current_user.nombre or datos.get('razon_social_cliente', '').strip(),
+                    fecha_emision=datetime.strptime(datos.get('fecha_emision', ''), '%d/%m/%Y').date()
+                        if datos.get('fecha_emision') else None,
+                    numero_factura=datos.get('numero_factura', '').strip(),
+                    importe_total=importe_total,
+                    base_ice=sum(float(p.get('base_ice', 0) or 0) for p in productos),
+                    valor_ice=sum(float(p.get('ice', 0) or 0) for p in productos),
+                    # ✅ IVA AGRUPADO POR TARIFA (no suma simple)
+                    base_iva=sum(iva_por_tarifa[t]['base'] for t in iva_por_tarifa),
+                    valor_iva=sum(iva_por_tarifa[t]['iva'] for t in iva_por_tarifa),
+                    xml_original='',
                     tipo='ingreso',
                 )
-                db.session.add(factura)
-                db.session.commit()
+                # Guardar detalles de tarifa para auditoría
+                factura.notas_auditoria = f"IVA: 0%={iva_por_tarifa['0']['iva']}, 5%={iva_por_tarifa['5']['iva']}, 12%={iva_por_tarifa['12']['iva']}, 15%={iva_por_tarifa['15']['iva']}"
 
-                resultados['exitosas'] += 1
+                facturas_a_guardar.append((factura, importe_total))
                 resultados['detalles'].append({
                     'archivo': archivo.filename,
-                    'estado': 'Procesada',
-                    'total': float(datos.get('total', 0))
+                    'estado': 'Pendiente de guardar',
+                    'total': importe_total
                 })
 
             except Exception as e:
                 resultados['errores'] += 1
-                resultados['detalles'].append({'archivo': archivo.filename, 'error': str(e)})
+                resultados['detalles'].append({'archivo': archivo.filename, 'error': str(e)[:100]})
+
+        # Guardar TODAS las facturas de una vez
+        if facturas_a_guardar:
+            try:
+                for factura, _ in facturas_a_guardar:
+                    db.session.add(factura)
+                db.session.commit()
+                resultados['exitosas'] = len(facturas_a_guardar)
+                for i, detalle in enumerate(resultados['detalles']):
+                    if detalle.get('estado') == 'Pendiente de guardar':
+                        detalle['estado'] = 'Procesada'
+            except Exception as e:
+                db.session.rollback()
+                resultados['errores'] += len(facturas_a_guardar)
+                resultados['exitosas'] = 0
+                for detalle in resultados['detalles']:
+                    if detalle.get('estado') == 'Pendiente de guardar':
+                        detalle['error'] = f'Error BD: {str(e)[:50]}'
+                        del detalle['estado']
 
         return jsonify(resultados)
 

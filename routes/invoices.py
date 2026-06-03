@@ -3,8 +3,10 @@ from flask_login import login_required, current_user
 from models import db
 from models.user import Factura
 from services.xml_parser import parse_xml_factura
+from services.validaciones_sri import ValidacionesSRI
 from datetime import datetime
 import os
+import traceback
 
 invoices = Blueprint('invoices', __name__)
 
@@ -35,6 +37,19 @@ def pagina_carga():
     return render_template('invoices/cargar.html', facturas=facturas, tipo='gasto')
 
 
+def _parsear_fecha(fecha_str):
+    """Intenta parsear fecha en múltiples formatos comunes del SRI."""
+    if not fecha_str:
+        return None
+    formatos = ['%d/%m/%Y', '%Y-%m-%d', '%d-%m-%Y']
+    for fmt in formatos:
+        try:
+            return datetime.strptime(fecha_str.strip(), fmt).date()
+        except (ValueError, AttributeError):
+            continue
+    return None
+
+
 @invoices.route('/subir', methods=['POST'])
 @login_required
 def subir_facturas():
@@ -50,52 +65,136 @@ def subir_facturas():
         return redirect(url_for('invoices.pagina_carga' if tipo == 'gasto' else 'invoices.cargar_ingresos'))
 
     procesadas = errores = duplicadas = 0
+    mensajes_error = []
+
     for archivo in archivos:
         if not archivo.filename.lower().endswith('.xml'):
             continue
         ruta_temp = os.path.join(UPLOAD_FOLDER, archivo.filename)
-        archivo.save(ruta_temp)
+        contenido_xml = None
+
         try:
+            archivo.save(ruta_temp)
+
+            with open(ruta_temp, 'r', encoding='utf-8') as f:
+                contenido_xml = f.read()
+
             datos = parse_xml_factura(ruta_temp)
             if datos is None:
                 errores += 1
+                mensajes_error.append(f"❌ {archivo.filename}: No se pudo parsear XML (estructura inválida)")
                 continue
-            existente = Factura.query.filter_by(clave_acceso=datos['clave_acceso']).first()
+
+            # VALIDACIONES CRÍTICAS
+            clave_acceso = datos.get('clave_acceso', '').strip()
+            if not clave_acceso or len(clave_acceso) != 49:
+                errores += 1
+                mensajes_error.append(f"❌ {archivo.filename}: Clave de acceso inválida")
+                continue
+
+            # Validar RUC emisor
+            try:
+                ValidacionesSRI.validar_ruc(datos.get('ruc', ''))
+            except ValueError as e:
+                errores += 1
+                mensajes_error.append(f"❌ {archivo.filename}: {str(e)}")
+                continue
+
+            existente = Factura.query.filter_by(
+                usuario_id=current_user.id,
+                clave_acceso=clave_acceso
+            ).first()
             if existente:
                 duplicadas += 1
+                mensajes_error.append(f"⚠️ {archivo.filename}: Factura duplicada (ya existe)")
                 continue
-            descuento_total = datos.get('descuento_total', 0)
+
+            fecha_emision = _parsear_fecha(datos.get('fecha_emision', ''))
+            if not fecha_emision:
+                errores += 1
+                mensajes_error.append(f"❌ {archivo.filename}: Fecha inválida ({datos.get('fecha_emision')})")
+                continue
+
+            # Validar período fiscal
+            try:
+                ValidacionesSRI.validar_periodo_fiscal(fecha_emision)
+            except ValueError as e:
+                errores += 1
+                mensajes_error.append(f"❌ {archivo.filename}: {str(e)}")
+                continue
+
+            descuento_total = float(datos.get('descuento_total', 0) or 0)
+            importe_total = float(datos.get('importe_total', 0) or 0)
+
+            # Validar importe
+            try:
+                ValidacionesSRI.validar_importe(importe_total, minimo=0.01)
+            except ValueError as e:
+                errores += 1
+                mensajes_error.append(f"❌ {archivo.filename}: {str(e)}")
+                continue
+
+            # AGRUPAR IVA POR TARIFA (CRÍTICO para SRI)
+            productos = datos.get('productos', [])
+            iva_por_tarifa = ValidacionesSRI.agrupar_iva_por_tarifa(productos)
+
+            # Almacenar información de tarifa en JSON para auditoría
+            detalles_iva = {
+                '0%': {'base': iva_por_tarifa['0']['base'], 'iva': iva_por_tarifa['0']['iva']},
+                '5%': {'base': iva_por_tarifa['5']['base'], 'iva': iva_por_tarifa['5']['iva']},
+                '12%': {'base': iva_por_tarifa['12']['base'], 'iva': iva_por_tarifa['12']['iva']},
+                '15%': {'base': iva_por_tarifa['15']['base'], 'iva': iva_por_tarifa['15']['iva']},
+            }
+
             factura = Factura(
                 usuario_id=current_user.id,
-                clave_acceso=datos['clave_acceso'],
-                ruc_emisor=datos.get('ruc', ''),
-                razon_social_emisor=datos.get('razon_social_emisor', ''),
-                ruc_comprador=datos.get('id_cliente', ''),
-                razon_social_comprador=datos.get('razon_social_cliente', ''),
-                fecha_emision=datetime.strptime(datos['fecha_emision'], '%d/%m/%Y').date()
-                    if datos.get('fecha_emision') else None,
-                numero_factura=datos.get('numero_factura', ''),
-                importe_total=datos.get('importe_total', 0),
-                base_ice=sum(p.get('base_ice', 0) for p in datos.get('productos', [])),
-                valor_ice=sum(p.get('ice', 0) for p in datos.get('productos', [])),
-                base_iva=sum(p.get('base_iva', 0) for p in datos.get('productos', [])),
-                valor_iva=sum(p.get('iva', 0) for p in datos.get('productos', [])),
-                xml_original='',
+                clave_acceso=clave_acceso,
+                ruc_emisor=datos.get('ruc', '').strip(),
+                razon_social_emisor=datos.get('razon_social_emisor', '').strip(),
+                ruc_comprador=current_user.ruc or datos.get('id_cliente', '').strip(),
+                razon_social_comprador=current_user.nombre or datos.get('razon_social_cliente', '').strip(),
+                fecha_emision=fecha_emision,
+                numero_factura=datos.get('numero_factura', '').strip(),
+                importe_total=importe_total,
+                base_ice=sum(float(p.get('base_ice', 0) or 0) for p in productos),
+                valor_ice=sum(float(p.get('ice', 0) or 0) for p in productos),
+                # ✅ IVA AGRUPADO POR TARIFA (no suma simple)
+                base_iva=sum(iva_por_tarifa[t]['base'] for t in iva_por_tarifa),
+                valor_iva=sum(iva_por_tarifa[t]['iva'] for t in iva_por_tarifa),
+                xml_original=contenido_xml[:65535] if contenido_xml else '',
                 tipo=tipo,
                 descuento_total=descuento_total,
                 tiene_descuento=descuento_total > 0,
             )
+            # Guardar detalles de tarifa como comentario (para auditoría)
+            factura.notas_auditoria = f"Detalles IVA: {detalles_iva}"
             db.session.add(factura)
             procesadas += 1
         except Exception as e:
-            print(f"Error procesando {archivo.filename}: {e}")
             errores += 1
+            mensajes_error.append(f"❌ {archivo.filename}: {str(e)[:80]}")
+            import traceback
+            print(f"Error procesando {archivo.filename}: {traceback.format_exc()}")
         finally:
             if os.path.exists(ruta_temp):
                 os.remove(ruta_temp)
 
-    db.session.commit()
-    flash(f'{procesadas} factura(s) procesada(s). Duplicadas: {duplicadas}. Errores: {errores}.', 'success')
+    try:
+        db.session.commit()
+        msg = f'✅ {procesadas} factura(s) procesada(s)'
+        if duplicadas:
+            msg += f' | ⚠️ {duplicadas} duplicada(s)'
+        if errores:
+            msg += f' | ❌ {errores} error(es)'
+        flash(msg, 'success' if procesadas > 0 else 'warning')
+
+        if mensajes_error and procesadas == 0:
+            for err in mensajes_error[:5]:
+                flash(err, 'danger')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al guardar en base de datos: {str(e)}', 'danger')
+        print(f"DB Error: {e}")
 
     if tipo == 'ingreso':
         return redirect(url_for('invoices.cargar_ingresos'))

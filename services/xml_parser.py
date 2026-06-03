@@ -90,11 +90,12 @@ def parse_xml_factura(ruta_archivo):
         pto_emi = find_text(info_tributaria, 'ptoEmi')
         secuencial = find_text(info_tributaria, 'secuencial')
         numero_factura = f"{estab}-{pto_emi}-{secuencial}"
-        
+        razon_social_emisor = find_text(info_tributaria, 'razonSocial')
+
         # Datos de la factura
         fecha = find_text(info_factura, 'fechaEmision')
         importe_total = float(find_text(info_factura, 'importeTotal') or 0)
-        
+
         # Comprador
         tipo_id = find_text(info_factura, 'tipoIdentificacionComprador')
         id_cliente = find_text(info_factura, 'identificacionComprador')
@@ -138,6 +139,7 @@ def parse_xml_factura(ruta_archivo):
         return {
             'clave_acceso': clave_acceso,
             'ruc': ruc,
+            'razon_social_emisor': razon_social_emisor,
             'numero_factura': numero_factura,
             'fecha_emision': fecha,
             'importe_total': importe_total,

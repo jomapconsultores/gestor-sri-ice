@@ -3,7 +3,11 @@ import io, os, re
 from flask import Blueprint, render_template, request, Response, redirect, url_for, flash
 from flask_login import login_required, current_user
 from routes.payments import usuario_tiene_modulo
-import xml.etree.ElementTree as ET
+from werkzeug.utils import secure_filename
+try:
+    from defusedxml import ElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
 
 retenciones = Blueprint('retenciones', __name__)
 
@@ -163,17 +167,29 @@ def procesar():
     for arch in archivos:
         if not arch.filename.lower().endswith('.xml'):
             continue
-        ruta = os.path.join(carpeta, arch.filename)
-        arch.save(ruta)
-        row = parsear_retencion(ruta)
-        if row:
-            if row['ID'] and row['ID'] in ids_vistos:
-                row['Estado'] = 'DUPLICADO'
-                duplicados += 1
-            else:
-                if row['ID']:
-                    ids_vistos.add(row['ID'])
-            filas.append(row)
+        nombre_seguro = secure_filename(arch.filename)
+        if not nombre_seguro:
+            continue
+        ruta = os.path.join(carpeta, nombre_seguro)
+        try:
+            arch.save(ruta)
+            row = parsear_retencion(ruta)
+            if row:
+                if row['ID'] and row['ID'] in ids_vistos:
+                    row['Estado'] = 'DUPLICADO'
+                    duplicados += 1
+                else:
+                    if row['ID']:
+                        ids_vistos.add(row['ID'])
+                filas.append(row)
+        except Exception as e:
+            print(f"Error procesando {nombre_seguro}: {e}")
+            filas.append({
+                'ID': '',
+                'Estado': f'ERROR: {str(e)[:50]}',
+                'Fecha': '', 'RUC Emisor': '', 'Agente Retención': '',
+                'Nro. Comprobante': '', 'Periodo Fiscal': ''
+            })
 
     return {
         'filas': filas,

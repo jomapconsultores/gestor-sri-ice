@@ -247,6 +247,49 @@ class AnexoICEGuardado(db.Model):
     usuario = db.relationship("Usuario", backref="anexos_guardados", lazy=True)
 
 
+class SaldoIVAMes(db.Model):
+    """Crédito tributario IVA mensual - Formulario 104 SRI"""
+    __tablename__ = "saldo_iva_mes"
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=False)
+    anio = db.Column(db.Integer, nullable=False)
+    mes = db.Column(db.Integer, nullable=False)
+    iva_cobrado = db.Column(db.Numeric(12, 2), default=0)
+    iva_pagado = db.Column(db.Numeric(12, 2), default=0)
+    saldo_anterior = db.Column(db.Numeric(12, 2), default=0)
+    saldo_final = db.Column(db.Numeric(12, 2), default=0)
+    nota = db.Column(db.Text)
+    fecha_calculo = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    usuario = db.relationship("Usuario", backref="saldos_iva_mes", lazy=True)
+
+    __table_args__ = (
+        db.UniqueConstraint('usuario_id', 'anio', 'mes', name='uq_usuario_anio_mes'),
+    )
+
+
+class AuditoríaCambios(db.Model):
+    """Registro de auditoría - Rastreo de todos los cambios (GDPR + SRI)"""
+    __tablename__ = "auditoria_cambios"
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=False)
+    modulo = db.Column(db.String(50), nullable=False)
+    accion = db.Column(db.String(20), nullable=False)  # CREATE, UPDATE, DELETE, READ
+    tabla = db.Column(db.String(50), nullable=False)
+    registro_id = db.Column(db.Integer)
+    datos_anterior = db.Column(db.JSON)  # Estado anterior (UPDATE/DELETE)
+    datos_nuevo = db.Column(db.JSON)     # Estado nuevo (CREATE/UPDATE)
+    ip_address = db.Column(db.String(45))
+    user_agent = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    usuario = db.relationship("Usuario", backref="cambios_auditados", lazy=True)
+
+    def __repr__(self):
+        return f"<AuditoríaCambios {self.accion} {self.tabla}:{self.registro_id}>"
+
+
 class FacturaICEProcesada(db.Model):
     """Registro de cada factura XML procesada en el módulo Facturas ICE."""
     __tablename__ = "factura_ice_procesada"

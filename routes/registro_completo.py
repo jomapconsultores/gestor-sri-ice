@@ -5,8 +5,9 @@ from models import db
 from models.user import Factura, ClasificacionGasto
 from services.xml_parser import parse_xml_factura
 from services.ice_calculator import IceCalculator
+from services.validaciones_sri import ValidacionesSRI
 from datetime import datetime
-import io, os
+import io, os, tempfile, traceback
 
 registro_completo_bp = Blueprint('registro_completo', __name__)
 
@@ -42,38 +43,72 @@ def procesar_ingresos():
             continue
         try:
             contenido = archivo.read()
-            import tempfile
             with tempfile.NamedTemporaryFile(suffix='.xml', delete=False) as tmp:
                 tmp.write(contenido)
                 tmp_path = tmp.name
             datos = parse_xml_factura(tmp_path)
             os.unlink(tmp_path)
-            if datos:
-                facturas_data.append({
-                    'numero': datos.get('numero_factura', ''),
-                    'fecha': datos.get('fecha_emision', ''),
-                    'ruc_emisor': datos.get('ruc', ''),
-                    'emisor': datos.get('razon_social_emisor', '')[:40],
-                    'cliente': datos.get('razon_social_cliente', '')[:40],
-                    'subtotal': round(
-                        float(datos.get('importe_total', 0))
-                        - float(datos.get('valor_iva_total', datos.get('valor_iva', 0)))
-                        - float(datos.get('valor_ice_total', datos.get('valor_ice', 0))),
-                        2),
-                    'base_ice': float(datos.get('base_ice', 0)),
-                    'ice': float(datos.get('valor_ice', 0)),
-                    'base_iva': float(datos.get('base_iva', 0)),
-                    'iva': float(datos.get('valor_iva', 0)),
-                    'total': float(datos.get('importe_total', 0)),
-                })
-        except Exception:
+            if not datos:
+                continue
+
+            # VALIDACIONES CRÍTICAS
+            ruc_emisor = datos.get('ruc', '')
+            try:
+                ValidacionesSRI.validar_ruc(ruc_emisor)
+            except ValueError:
+                continue
+
+            fecha_str = datos.get('fecha_emision', '')
+            try:
+                ValidacionesSRI.validar_periodo_fiscal(fecha_str)
+            except ValueError:
+                continue
+
+            importe_total = float(datos.get('importe_total', 0))
+            try:
+                ValidacionesSRI.validar_importe(importe_total, minimo=0.01)
+            except ValueError:
+                continue
+
+            # ✅ AGRUPAR IVA POR TARIFA
+            productos = datos.get('productos', [])
+            iva_por_tarifa = ValidacionesSRI.agrupar_iva_por_tarifa(productos)
+
+            facturas_data.append({
+                'numero': datos.get('numero_factura', ''),
+                'fecha': fecha_str,
+                'ruc_emisor': ruc_emisor,
+                'emisor': datos.get('razon_social_emisor', '')[:40],
+                'cliente': datos.get('razon_social_cliente', '')[:40],
+                'subtotal': round(
+                    importe_total
+                    - sum(iva_por_tarifa[t]['iva'] for t in iva_por_tarifa)
+                    - float(datos.get('valor_ice_total', datos.get('valor_ice', 0))),
+                    2),
+                'base_ice': float(datos.get('base_ice', 0)),
+                'ice': float(datos.get('valor_ice', 0)),
+                'base_iva': sum(iva_por_tarifa[t]['base'] for t in iva_por_tarifa),
+                'iva': sum(iva_por_tarifa[t]['iva'] for t in iva_por_tarifa),
+                'iva_tarifa_0': iva_por_tarifa['0']['iva'],
+                'iva_tarifa_5': iva_por_tarifa['5']['iva'],
+                'iva_tarifa_12': iva_por_tarifa['12']['iva'],
+                'iva_tarifa_15': iva_por_tarifa['15']['iva'],
+                'total': importe_total,
+            })
+        except Exception as e:
+            print(f"Error procesando {archivo.filename}: {traceback.format_exc()}")
             continue
+
     totales = {
         'subtotal':  round(sum(f['subtotal']  for f in facturas_data), 2),
         'base_ice':  round(sum(f['base_ice']  for f in facturas_data), 2),
         'ice':       round(sum(f['ice']       for f in facturas_data), 2),
         'base_iva':  round(sum(f['base_iva']  for f in facturas_data), 2),
         'iva':       round(sum(f['iva']       for f in facturas_data), 2),
+        'iva_tarifa_0': round(sum(f.get('iva_tarifa_0', 0) for f in facturas_data), 2),
+        'iva_tarifa_5': round(sum(f.get('iva_tarifa_5', 0) for f in facturas_data), 2),
+        'iva_tarifa_12': round(sum(f.get('iva_tarifa_12', 0) for f in facturas_data), 2),
+        'iva_tarifa_15': round(sum(f.get('iva_tarifa_15', 0) for f in facturas_data), 2),
         'total':     round(sum(f['total']     for f in facturas_data), 2),
     }
     return jsonify({'facturas': facturas_data, 'totales': totales, 'cantidad': len(facturas_data)})

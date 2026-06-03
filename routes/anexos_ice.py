@@ -11,6 +11,13 @@ import io
 import zipfile
 from datetime import datetime
 
+try:
+    from defusedxml.ElementTree import fromstring as ET_fromstring, parse as ET_parse
+    DEFUSEDXML_AVAILABLE = True
+except ImportError:
+    from xml.etree.ElementTree import fromstring as ET_fromstring, parse as ET_parse
+    DEFUSEDXML_AVAILABLE = False
+
 anexos_ice = Blueprint('anexos_ice', __name__)
 
 
@@ -55,9 +62,16 @@ def parsear_xml():
         archivo = request.files['archivo']
         contenido = archivo.read()
 
-        # Parseo básico: extraer estructura
-        import xml.etree.ElementTree as ET
-        root = ET.fromstring(contenido)
+        if not contenido:
+            return jsonify({'error': 'Archivo vacío'}), 400
+
+        if not DEFUSEDXML_AVAILABLE:
+            flash('⚠️ Advertencia: defusedxml no instalado, usando XML estándar', 'warning')
+
+        try:
+            root = ET_fromstring(contenido)
+        except Exception as e:
+            return jsonify({'error': f'XML inválido: {str(e)[:100]}'}), 400
 
         resultado = {
             'ruc': root.findtext('.//ruc', ''),

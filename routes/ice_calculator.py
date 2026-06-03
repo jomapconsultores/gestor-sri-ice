@@ -29,25 +29,47 @@ class IceCalculator:
 
     @staticmethod
     def calcular_ice_especifico(tarifa_esp, grado, volumen_cc):
+        if volumen_cc <= 0:
+            raise ValueError("El volumen en cc debe ser mayor a 0")
+        if grado < 0 or grado > 100:
+            raise ValueError("El grado alcohólico debe estar entre 0 y 100")
         return tarifa_esp * (grado / 100.0) * (volumen_cc / 1000.0)
 
     @staticmethod
     def calcular_ice_advalorem(precio, volumen_cc, umbral):
-        precio_litro = (precio * 1000.0) / volumen_cc if volumen_cc > 0 else 0
+        if volumen_cc <= 0:
+            raise ValueError("El volumen en cc debe ser mayor a 0")
+        if precio < 0:
+            raise ValueError("El precio no puede ser negativo")
+        precio_litro = (precio * 1000.0) / volumen_cc
         if precio_litro > umbral:
             return (precio_litro - umbral) * 0.75 * (volumen_cc / 1000.0)
         return 0.0
 
     @staticmethod
     def calcular_liquidacion_completa(datos, anio, iva_tasa=None):
+        # Validar datos de entrada
+        try:
+            precio = float(datos.get('precio_fabrica', 0))
+            vol = float(datos.get('volumen_cc', 0))
+            grado = float(datos.get('grado_alcoholico', 0))
+            cantidad = int(datos.get('cantidad', 1))
+
+            if precio < 0:
+                raise ValueError("El precio no puede ser negativo")
+            if vol <= 0:
+                raise ValueError("El volumen debe ser mayor a 0 (en cc)")
+            if grado < 0 or grado > 100:
+                raise ValueError("El grado alcohólico debe estar entre 0 y 100")
+            if cantidad <= 0:
+                raise ValueError("La cantidad debe ser mayor a 0")
+        except (ValueError, TypeError) as e:
+            raise ValueError(f"Datos de entrada inválidos: {str(e)}")
+
         info = IceCalculator.get_tax_info(anio)
         tarifa_esp = IceCalculator.get_tarifa_especifica(datos.get('tipo_producto', 'Licor'), anio, datos.get('escala'))
         if iva_tasa is None:
             iva_tasa = 0.15 if isinstance(info['iva'], str) else info['iva']
-        cantidad = datos.get('cantidad', 1)
-        precio = datos['precio_fabrica']
-        vol = datos['volumen_cc']
-        grado = datos['grado_alcoholico']
         umb = info['umb']
         ice_esp_u = IceCalculator.calcular_ice_especifico(tarifa_esp, grado, vol)
         ice_adv_u = IceCalculator.calcular_ice_advalorem(precio, vol, umb)

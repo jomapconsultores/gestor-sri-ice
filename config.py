@@ -17,8 +17,41 @@ class Config:
 
     BASE_URL = os.getenv('BASE_URL', 'http://localhost:5000')
 
-    # IVA Ecuador
-    IVA_RATE = 0.12
+    # ═══ CONFIGURACIÓN TRIBUTARIA SRI ECUADOR ═══════════════════════════════════
+
+    # IVA - Tasas actualizadas 2024-2026
+    IVA_RATE = float(os.getenv('IVA_RATE', '0.15'))  # 2024+
+    IVA_TASA_CERO = float(os.getenv('IVA_TASA_CERO', '0.00'))
+    IVA_TASA_CINCO = float(os.getenv('IVA_TASA_CINCO', '0.05'))
+    IVA_TASA_DOCE = float(os.getenv('IVA_TASA_DOCE', '0.12'))
+    IVA_TASA_QUINCE = float(os.getenv('IVA_TASA_QUINCE', '0.15'))
+
+    # Límites de gastos según SRI 2026
+    CANASTA_BASICA_ENERO_2026 = float(os.getenv('CANASTA_BASICA_ENERO_2026', '821.8'))
+
+    # Rebaja Máxima de Impuestos según número de cargas
+    GASTO_REBAJA_POR_CARGAS = {
+        0: float(os.getenv('GASTO_REBAJA_0_CARGAS', '1035.47')),
+        1: float(os.getenv('GASTO_REBAJA_1_CARGA', '1331.32')),
+        2: float(os.getenv('GASTO_REBAJA_2_CARGAS', '1627.16')),
+        3: float(os.getenv('GASTO_REBAJA_3_CARGAS', '2070.94')),
+        4: float(os.getenv('GASTO_REBAJA_4_CARGAS', '2514.71')),
+        6: float(os.getenv('GASTO_REBAJA_6_MAS_CARGAS', '14792.40')),
+    }
+
+    GASTO_TURISMO_LIMITE_PCT = float(os.getenv('GASTO_TURISMO_LIMITE_PCT', '0.20'))  # 20%
+    GASTO_ARTE_CULTURA_LIMITE_PCT = float(os.getenv('GASTO_ARTE_CULTURA_LIMITE_PCT', '0.10'))  # 10%
+    PRESCRIPCION_ANOS = int(os.getenv('PRESCRIPCION_ANOS', '5'))
+
+    # APIs Externas
+    MISTRAL_API_KEY = os.getenv('MISTRAL_API_KEY')
+    CODESTRAL_API_KEY = os.getenv('CODESTRAL_API_KEY')
+
+    # Validación de APIs
+    if not MISTRAL_API_KEY:
+        raise ValueError("❌ ERROR: MISTRAL_API_KEY no configurada en .env")
+    if not CODESTRAL_API_KEY:
+        raise ValueError("❌ ERROR: CODESTRAL_API_KEY no configurada en .env")
 
     # Datos de pago por transferencia
     BANCO_NOMBRE = 'Produbanco - Cuenta Corriente'

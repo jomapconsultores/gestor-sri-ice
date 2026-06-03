@@ -2,7 +2,10 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, Response
 from flask_login import login_required, current_user
 from routes.payments import usuario_tiene_modulo
-import xml.etree.ElementTree as ET
+try:
+    from defusedxml import ElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
 import json
 
 ats = Blueprint('ats', __name__)

@@ -15,6 +15,8 @@ from routes.ordenes import ordenes
 from routes.gastos import gastos
 from routes.empresas import empresas
 from routes.security import security, obtener_ip
+from routes.auditoria_routes import auditoria
+from routes.reportes_sri import reportes
 from flask_login import login_required, current_user
 
 RUTAS_LIBRES = {
@@ -104,6 +106,8 @@ def create_app():
     app.register_blueprint(gastos, url_prefix='/gastos')
     app.register_blueprint(empresas, url_prefix='/empresas')
     app.register_blueprint(security, url_prefix='/security')
+    app.register_blueprint(auditoria, url_prefix='/auditoria')
+    app.register_blueprint(reportes, url_prefix='/reportes')
 
     from routes.facturas_ingreso import facturas_ingreso
     app.register_blueprint(facturas_ingreso, url_prefix='/facturas_ingreso')

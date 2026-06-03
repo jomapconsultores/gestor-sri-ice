@@ -182,41 +182,67 @@ def admin_aprobar(solicitud_id):
     modulos_lista = json.loads(solicitud.modulos or '[]')
     duracion = solicitud.duracion_meses or 1
 
+    if not modulos_lista:
+        flash('La solicitud no tiene módulos válidos.', 'danger')
+        return redirect(url_for('payments.admin_solicitudes'))
+
+    # VALIDAR TODOS los módulos ANTES de crear nada
+    modulos_validos = []
     for mid in modulos_lista:
         if mid not in MODULOS:
-            continue
-        m_info = MODULOS[mid]
-        es_unico = m_info['precio_unico']
-        precio = m_info['precio']
-        iva = round(precio * IVA, 2)
+            flash(f'⚠️ Módulo "{mid}" no existe en configuración. Solicitud cancelada.', 'danger')
+            return redirect(url_for('payments.admin_solicitudes'))
+        modulos_validos.append(mid)
 
-        # Cancelar módulo anterior si existe y no es pago único
-        if not es_unico:
-            anterior = ModuloSuscrito.query.filter_by(
-                usuario_id=solicitud.usuario_id, modulo_id=mid, estado='activo').first()
-            if anterior:
-                anterior.estado = 'cancelado'
+    if len(modulos_validos) != len(modulos_lista):
+        flash('Algunos módulos no son válidos.', 'danger')
+        return redirect(url_for('payments.admin_solicitudes'))
 
-        vencimiento = None if es_unico else datetime.utcnow() + timedelta(days=30 * duracion)
-        nuevo = ModuloSuscrito(
-            usuario_id=solicitud.usuario_id,
-            modulo_id=mid,
-            estado='activo',
-            es_pago_unico=es_unico,
-            precio_pagado=precio,
-            iva_pagado=iva,
-            duracion_meses=duracion,
-            fecha_inicio=datetime.utcnow(),
-            fecha_vencimiento=vencimiento,
-            comprobante_path=solicitud.comprobante_path,
-            verificado=True,
-        )
-        db.session.add(nuevo)
+    # Ahora sí, crear todos los módulos
+    try:
+        modulos_creados = 0
+        for mid in modulos_validos:
+            m_info = MODULOS[mid]
+            es_unico = m_info.get('precio_unico', False)
+            precio = float(m_info.get('precio', 0))
+            iva = round(precio * IVA, 2)
 
-    solicitud.estado = 'aprobado'
-    solicitud.fecha_respuesta = datetime.utcnow()
-    db.session.commit()
-    flash(f'Solicitud aprobada. Se activaron {len(modulos_lista)} módulos.', 'success')
+            # Cancelar módulo anterior si existe y no es pago único
+            if not es_unico:
+                anterior = ModuloSuscrito.query.filter_by(
+                    usuario_id=solicitud.usuario_id,
+                    modulo_id=mid,
+                    estado='activo'
+                ).first()
+                if anterior:
+                    anterior.estado = 'cancelado'
+
+            vencimiento = None if es_unico else datetime.utcnow() + timedelta(days=30 * duracion)
+            nuevo = ModuloSuscrito(
+                usuario_id=solicitud.usuario_id,
+                modulo_id=mid,
+                estado='activo',
+                es_pago_unico=es_unico,
+                precio_pagado=precio,
+                iva_pagado=iva,
+                duracion_meses=duracion,
+                fecha_inicio=datetime.utcnow(),
+                fecha_vencimiento=vencimiento,
+                comprobante_path=solicitud.comprobante_path,
+                verificado=True,
+            )
+            db.session.add(nuevo)
+            modulos_creados += 1
+
+        solicitud.estado = 'aprobado'
+        solicitud.fecha_respuesta = datetime.utcnow()
+        db.session.commit()
+        flash(f'✅ Solicitud aprobada. Se activaron {modulos_creados} módulos.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'❌ Error al aprobar solicitud: {str(e)[:100]}', 'danger')
+        print(f"Error aprobar solicitud {solicitud_id}: {e}")
+
     return redirect(url_for('payments.admin_solicitudes'))
 
 

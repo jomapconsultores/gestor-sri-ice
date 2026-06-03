@@ -2,8 +2,9 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from models import db
 from models.user import Factura, ClasificacionGasto, MapaClasificacion, MapaClasificacionDetalle
+from services.validaciones_sri import ValidacionesSRI
 from datetime import datetime
-from sqlalchemy import func
+from sqlalchemy import func, extract
 import pandas as pd
 import io
 import os
@@ -126,18 +127,83 @@ def clasificar_gasto(factura_id):
     if not factura:
         flash('Factura no encontrada.', 'danger')
         return redirect(url_for('gastos.panel'))
-    
-    categoria = request.form.get('categoria', 'VARIOS')
-    existente = ClasificacionGasto.query.filter_by(factura_id=factura_id).first()
-    if existente:
-        existente.categoria = categoria
-    else:
-        clasificacion = ClasificacionGasto(usuario_id=current_user.id, factura_id=factura_id,
-                                          categoria=categoria, monto=factura.importe_total, fecha=datetime.utcnow())
-        db.session.add(clasificacion)
-    
-    db.session.commit()
-    flash(f'Clasificado como {categoria}.', 'success')
+
+    if factura.tipo != 'gasto':
+        flash('Solo se pueden clasificar facturas de gasto.', 'danger')
+        return redirect(url_for('gastos.panel'))
+
+    categoria = request.form.get('categoria', 'VARIOS').strip().upper()
+    if not categoria:
+        flash('Categoría vacía.', 'danger')
+        return redirect(url_for('gastos.panel'))
+
+    existente = ClasificacionGasto.query.filter_by(
+        usuario_id=current_user.id,
+        factura_id=factura_id
+    ).first()
+
+    try:
+        # ✅ VALIDACIÓN SRI: Si es gasto personal, validar límites
+        es_personal = categoria in GASTOS_PERSONALES
+
+        if es_personal:
+            # Obtener año actual
+            anio = datetime.now().year
+
+            # Obtener todos los gastos personales de este año
+            gastos_personales = db.session.query(
+                ClasificacionGasto.categoria,
+                func.sum(ClasificacionGasto.monto).label('total')
+            ).filter(
+                ClasificacionGasto.usuario_id == current_user.id,
+                ClasificacionGasto.categoria.in_(GASTOS_PERSONALES),
+                extract('year', ClasificacionGasto.fecha) == anio
+            ).group_by(ClasificacionGasto.categoria).all()
+
+            # Preparar lista para validación
+            gastos_list = [{'categoria': g[0], 'monto': float(g[1] or 0)} for g in gastos_personales]
+
+            # Agregar el gasto actual si es nueva clasificación
+            if not existente:
+                gastos_list.append({'categoria': categoria, 'monto': factura.importe_total})
+            else:
+                # Si actualiza, restar el monto anterior y agregar el nuevo
+                for g in gastos_list:
+                    if g['categoria'] == existente.categoria:
+                        g['monto'] -= existente.monto
+                gastos_list.append({'categoria': categoria, 'monto': factura.importe_total})
+
+            # Calcular deducibilidad según SRI (solo informativo, no restrictivo)
+            validacion = ValidacionesSRI.validar_gasto_personal(gastos_list, anio)
+
+            # Mostrar información de deducibilidad
+            for adv in validacion['advertencias']:
+                flash(adv, 'info')
+
+            # Si hay errores, mostrarlos (aunque rara vez ocurran)
+            for error in validacion['errores']:
+                flash(f'❌ {error}', 'warning')
+
+        # Guardar clasificación
+        if existente:
+            existente.categoria = categoria
+            existente.fecha = datetime.utcnow()
+        else:
+            clasificacion = ClasificacionGasto(
+                usuario_id=current_user.id,
+                factura_id=factura_id,
+                categoria=categoria,
+                monto=factura.importe_total,
+                fecha=datetime.utcnow()
+            )
+            db.session.add(clasificacion)
+
+        db.session.commit()
+        flash(f'✅ Clasificado como {categoria}.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'❌ Error al clasificar: {str(e)[:80]}', 'danger')
+
     return redirect(url_for('gastos.panel'))
 
 
