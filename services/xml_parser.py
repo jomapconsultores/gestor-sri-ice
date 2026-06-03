@@ -1,14 +1,14 @@
 """
 Servicio de parseo de XMLs de facturas electrónicas del SRI
-Basado en tus códigos ICEcompleto.py e ICEingresos.py
+Basado en SRI-XML.py - código probado y funcional
 """
 import xml.etree.ElementTree as ET
 import os
 from datetime import datetime
 
 
-def find_text(parent, tag_name):
-    """Busca texto en un elemento XML ignorando namespaces"""
+def find_text_ignore_ns(parent, tag_name):
+    """Busca texto en un elemento XML ignorando namespaces - IDÉNTICO A SRI-XML.py"""
     if parent is None:
         return ""
     node = parent.find(tag_name)
@@ -21,8 +21,8 @@ def find_text(parent, tag_name):
     return ""
 
 
-def find_node(parent, tag_name):
-    """Busca un nodo XML ignorando namespaces"""
+def find_node_ignore_ns(parent, tag_name):
+    """Busca un nodo XML ignorando namespaces - IDÉNTICO A SRI-XML.py"""
     if parent is None:
         return None
     for element in parent.iter():
@@ -31,185 +31,184 @@ def find_node(parent, tag_name):
     return None
 
 
-def extraer_impuestos(impuestos_node):
-    """Extrae ICE e IVA del nodo de impuestos"""
-    resultado = {
-        'ice': 0.0,
-        'base_ice': 0.0,
-        'iva': 0.0,
-        'base_iva': 0.0
-    }
-    
-    if impuestos_node is None:
-        return resultado
-    
-    for impuesto in impuestos_node.findall('impuesto'):
-        codigo = find_text(impuesto, 'codigo')
-        if codigo == '3':  # ICE
-            try:
-                resultado['ice'] = float(find_text(impuesto, 'valor'))
-                resultado['base_ice'] = float(find_text(impuesto, 'baseImponible'))
-            except:
-                pass
-        elif codigo == '2':  # IVA
-            try:
-                resultado['iva'] = float(find_text(impuesto, 'valor'))
-                resultado['base_iva'] = float(find_text(impuesto, 'baseImponible'))
-            except:
-                pass
-    
-    return resultado
+def parse_xml_factura(filepath, classification_map=None):
+    """
+    Parsea un archivo XML de factura electrónica del SRI
+    IDÉNTICO AL CÓDIGO PROBADO EN SRI-XML.py
 
+    Retorna un diccionario con todos los datos de la factura o None si hay error.
+    """
+    if classification_map is None:
+        classification_map = {}
 
-def parse_xml_factura(ruta_archivo):
-    """Parsea XML de factura - extrae TODOS los datos incluyendo composición IVA completa"""
     try:
-        tree = ET.parse(ruta_archivo)
-        root = tree.getroot()
-
-        # Procesar si viene envuelto en nodo <comprobante>
-        comp_node = find_node(root, 'comprobante')
-        if comp_node is not None and comp_node.text:
-            txt = comp_node.text.replace('<![CDATA[', '').replace(']]>', '').strip()
-            try:
-                root = ET.fromstring(txt)
-            except:
-                pass
-
-        info_trib = find_node(root, 'infoTributaria')
-        info_fact = find_node(root, 'infoFactura')
-        if info_trib is None or info_fact is None:
+        try:
+            tree = ET.parse(filepath)
+            root = tree.getroot()
+        except:
             return None
 
-        # ──────────────────────────────────────────────────────────────
-        # DATOS BÁSICOS
-        # ──────────────────────────────────────────────────────────────
-        clave_acceso = find_text(info_trib, 'claveAcceso')
-        ruc = find_text(info_trib, 'ruc')
-        estab = find_text(info_trib, 'estab')
-        pto_emi = find_text(info_trib, 'ptoEmi')
-        secuencial = find_text(info_trib, 'secuencial')
-        numero_factura = f'{estab}-{pto_emi}-{secuencial}'
-        razon_social_emisor = find_text(info_trib, 'razonSocial')
+        comprobante_node = find_node_ignore_ns(root, 'comprobante')
+        if comprobante_node is not None and comprobante_node.text:
+            inner_xml = comprobante_node.text.strip()
+            inner_xml = inner_xml.replace("<![CDATA[", "").replace("]]>", "").strip()
+            try:
+                root = ET.fromstring(inner_xml)
+            except:
+                pass
 
-        fecha_emision = find_text(info_fact, 'fechaEmision')
+        info_tributaria = find_node_ignore_ns(root, 'infoTributaria')
+        info_factura = find_node_ignore_ns(root, 'infoFactura')
+        if info_tributaria is None and info_factura is None:
+            return None
 
-        # Comprador
-        tipo_id_cliente = find_text(info_fact, 'tipoIdentificacionComprador')
-        id_cliente = find_text(info_fact, 'identificacionComprador')
-        razon_social_cliente = find_text(info_fact, 'razonSocialComprador') or 'CONSUMIDOR FINAL'
+        clave_acceso = find_text_ignore_ns(info_tributaria, 'claveAcceso')
+        ruc = find_text_ignore_ns(info_tributaria, 'ruc')
+        ruc_comprador = find_text_ignore_ns(info_factura, 'identificacionComprador')
 
-        # ──────────────────────────────────────────────────────────────
-        # COMPOSICIÓN IVA (CLAVE) - Separada por porcentajes
-        # ──────────────────────────────────────────────────────────────
-        base_0 = base_15 = valor_iva = base_5 = iva_5 = base_exento = base_no_objeto = 0.0
-        total_con_imp = find_node(info_fact, 'totalConImpuestos')
-        if total_con_imp is not None:
-            for imp in total_con_imp:
-                codigo = find_text(imp, 'codigo')
+        estab = find_text_ignore_ns(info_tributaria, 'estab')
+        pto_emi = find_text_ignore_ns(info_tributaria, 'ptoEmi')
+        secuencial = find_text_ignore_ns(info_tributaria, 'secuencial')
+        factura_numero = f"{estab}-{pto_emi}-{secuencial}"
+        unique_id = clave_acceso if clave_acceso else f"{ruc}-{factura_numero}"
+
+        fecha = find_text_ignore_ns(info_factura, 'fechaEmision')
+        nombre = find_text_ignore_ns(info_tributaria, 'razonSocial')
+        destinatario = find_text_ignore_ns(info_factura, 'razonSocialComprador')
+
+        clasificacion = classification_map.get(ruc, "SIN CLASIFICAR")
+
+        pagos = find_node_ignore_ns(info_factura, 'pagos')
+        forma_pago = "Otros"
+        if pagos is not None:
+            pago = find_node_ignore_ns(pagos, 'pago')
+            if pago is not None:
+                cod_pago = find_text_ignore_ns(pago, 'formaPago')
+                if cod_pago == '01':
+                    forma_pago = "Sin Utilización del Sistema Financiero"
+                elif cod_pago == '19':
+                    forma_pago = "Tarjeta de Crédito"
+                elif cod_pago == '20':
+                    forma_pago = "Otros con Utilización del Sistema Financiero"
+                else:
+                    forma_pago = f"Código {cod_pago}"
+
+        detalles = find_node_ignore_ns(root, 'detalles')
+        concepto_str = "VARIOS"
+        if detalles is not None:
+            lista_detalles = list(detalles)
+            for child in lista_detalles:
+                if child.tag.endswith('detalle'):
+                    desc = find_text_ignore_ns(child, 'descripcion')
+                    if desc:
+                        concepto_str = desc
+                        if len(lista_detalles) > 1:
+                            concepto_str += "..."
+                        break
+
+        try:
+            total_descuento_xml = float(find_text_ignore_ns(info_factura, 'totalDescuento') or 0)
+        except:
+            total_descuento_xml = 0.0
+
+        base_0, base_15, iva_15, base_5, iva_5, base_exento, base_no_objeto = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+        total_con_impuestos = find_node_ignore_ns(info_factura, 'totalConImpuestos')
+
+        if total_con_impuestos is not None:
+            for impuesto in total_con_impuestos:
+                codigo = find_text_ignore_ns(impuesto, 'codigo')
                 if codigo == '2':  # IVA
-                    cod_porc = find_text(imp, 'codigoPorcentaje')
+                    cod_porc = find_text_ignore_ns(impuesto, 'codigoPorcentaje')
                     try:
-                        base_imp = float(find_text(imp, 'baseImponible') or 0)
-                    except (ValueError, TypeError):
-                        base_imp = 0.0
+                        base_imponible = float(find_text_ignore_ns(impuesto, 'baseImponible') or 0)
+                    except:
+                        base_imponible = 0.0
                     try:
-                        val_imp = float(find_text(imp, 'valor') or 0)
-                    except (ValueError, TypeError):
-                        val_imp = 0.0
+                        valor_impuesto = float(find_text_ignore_ns(impuesto, 'valor') or 0)
+                    except:
+                        valor_impuesto = 0.0
 
                     if cod_porc == '0':
-                        base_0 += base_imp
-                    elif cod_porc in ('2', '3', '4', '10'):
-                        base_15 += base_imp
-                        valor_iva += val_imp
+                        base_0 += base_imponible
+                    elif cod_porc in ['2', '3', '4', '10']:
+                        base_15 += base_imponible
+                        iva_15 += valor_impuesto
                     elif cod_porc == '5':
-                        base_5 += base_imp
-                        iva_5 += val_imp
+                        base_5 += base_imponible
+                        iva_5 += valor_impuesto
                     elif cod_porc == '6':
-                        base_no_objeto += base_imp
+                        base_no_objeto += base_imponible
                     elif cod_porc == '7':
-                        base_exento += base_imp
-
-        # ──────────────────────────────────────────────────────────────
-        # TOTALES Y DESCUENTOS
-        # ──────────────────────────────────────────────────────────────
-        try:
-            importe_total = float(find_text(info_fact, 'importeTotal') or 0)
-        except (ValueError, TypeError):
-            importe_total = 0.0
+                        base_exento += base_imponible
 
         try:
-            descuento_total = float(find_text(info_fact, 'totalDescuento') or 0)
-        except (ValueError, TypeError):
-            descuento_total = 0.0
+            total = float(find_text_ignore_ns(info_factura, 'importeTotal') or 0)
+        except:
+            total = 0.0
 
-        # ──────────────────────────────────────────────────────────────
-        # FORMA DE PAGO
-        # ──────────────────────────────────────────────────────────────
-        pagos_n = find_node(info_fact, 'pagos')
-        forma_pago = 'Otros'
-        if pagos_n is not None:
-            pago = find_node(pagos_n, 'pago')
-            if pago is not None:
-                cod_p = find_text(pago, 'formaPago')
-                formas_map = {
-                    '01': 'Sin Uso Sistema Financiero',
-                    '15': 'Compensación deudas',
-                    '16': 'Tarjeta débito',
-                    '17': 'Dinero electrónico',
-                    '18': 'Tarjeta prepago',
-                    '19': 'Tarjeta crédito',
-                    '20': 'Otros con Sistema Financiero',
-                    '21': 'Transferencia bancaria',
-                }
-                forma_pago = formas_map.get(cod_p, 'Otros')
+        return {
+            "ID": unique_id,
+            "Estado": "OK",
+            "Fecha": fecha,
+            "RUC": ruc,
+            "Factura": factura_numero,
+            "Nombre": nombre,
+            "Clasificación": clasificacion,
+            "Concepto": concepto_str,
+            "Forma Pago": forma_pago,
+            "No Objeto IVA": round(base_no_objeto, 2),
+            "Exento IVA": round(base_exento, 2),
+            "Base 0%": round(base_0, 2),
+            "Base 15%": round(base_15, 2),
+            "IVA 15%": round(iva_15, 2),
+            "Base 5%": round(base_5, 2),
+            "IVA 5%": round(iva_5, 2),
+            "Desc. Info": round(total_descuento_xml, 2),
+            "Total": round(total, 2),
+            "Destinatario": destinatario,
+            "RUC_Comprador": ruc_comprador,
+            # Para compatibilidad con registro_completo
+            'base_iva': round(base_15, 2),
+            'valor_iva': round(iva_15, 2),
+            'descuento_total': round(total_descuento_xml, 2),
+            'importe_total': round(total, 2),
+            'numero_factura': factura_numero,
+            'fecha_emision': fecha,
+            'razon_social_emisor': nombre,
+            'tipo_id_cliente': find_text_ignore_ns(info_factura, 'tipoIdentificacionComprador'),
+            'id_cliente': ruc_comprador,
+            'razon_social_cliente': destinatario or 'CONSUMIDOR FINAL'
+        }
+    except Exception as e:
+        print(f"Error parseando {filepath}: {e}")
+        return None
 
-        # ──────────────────────────────────────────────────────────────
-        # DETALLES
-        # ──────────────────────────────────────────────────────────────
-        detalles_n = find_node(root, 'detalles')
-        productos = []
-        if detalles_n is not None:
-            for det in detalles_n:
-                try:
-                    desc = find_text(det, 'descripcion')
-                    productos.append({
-                        'codigo': find_text(det, 'codigoPrincipal'),
-                        'descripcion': desc[:200] if desc else '',
-                        'cantidad': float(find_text(det, 'cantidad') or 0),
-                        'precio_unitario': float(find_text(det, 'precioUnitario') or 0),
-                        'precio_total': float(find_text(det, 'precioTotalSinImpuesto') or 0),
-                    })
-                except:
-                    pass
+
+def parse_xml_desde_texto(contenido_xml):
+    """Parsea un XML desde un string (para cuando el XML viene dentro de otro XML del SRI)"""
+    try:
+        root = ET.fromstring(contenido_xml)
+
+        info_tributaria = find_node_ignore_ns(root, 'infoTributaria')
+        info_factura = find_node_ignore_ns(root, 'infoFactura')
+
+        if info_tributaria is None:
+            return None
+
+        clave_acceso = find_text_ignore_ns(info_tributaria, 'claveAcceso')
+        ruc = find_text_ignore_ns(info_tributaria, 'ruc')
+        fecha = find_text_ignore_ns(info_factura, 'fechaEmision')
+        importe_total = float(find_text_ignore_ns(info_factura, 'importeTotal') or 0)
 
         return {
             'clave_acceso': clave_acceso,
             'ruc': ruc,
-            'razon_social_emisor': razon_social_emisor,
-            'numero_factura': numero_factura,
-            'fecha_emision': fecha_emision,
-            'importe_total': round(importe_total, 2),
-            'descuento_total': round(descuento_total, 2),
-            'tipo_id_cliente': tipo_id_cliente,
-            'id_cliente': id_cliente,
-            'razon_social_cliente': razon_social_cliente,
-            # Composición IVA (la parte crítica)
-            'base_iva': round(base_15, 2),
-            'valor_iva': round(valor_iva, 2),
-            'base_0': round(base_0, 2),
-            'base_5': round(base_5, 2),
-            'iva_5': round(iva_5, 2),
-            'base_exento': round(base_exento, 2),
-            'base_no_objeto': round(base_no_objeto, 2),
-            'forma_pago': forma_pago,
-            'productos': productos,
-            'archivo': os.path.basename(ruta_archivo)
+            'fecha_emision': fecha,
+            'importe_total': importe_total,
+            'xml_completo': contenido_xml
         }
 
-    except Exception as e:
-        print(f'Error parseando {ruta_archivo}: {e}')
+    except:
         return None
 
 
