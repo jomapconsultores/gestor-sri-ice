@@ -1,0 +1,16 @@
+CRITICAL: XML Parsing Fix for Gastos Module
+============================================
+Endpoint: /gastos/procesar_gasto_xml
+Status: READY FOR PRODUCTION
+Last Updated: 2026-06-03 15:15 UTC
+
+Changes:
+- parse_xml_factura() rewritten with SRI-XML.py logic
+- parse_xml_gasto_completo() optimized for all XML formats
+- All fields extracted: composición IVA, detalles, forma de pago
+- Code tested and verified working
+
+Deployment Instructions:
+1. Clear Render cache
+2. Force rebuild from master
+3. Test /gastos/procesar_gasto_xml endpoint
