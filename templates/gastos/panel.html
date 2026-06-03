@@ -3,6 +3,34 @@
 {% block content %}
 <h2 class="page-title mb-3"><i class="bi bi-tags me-2"></i>Clasificación de Gastos SRI</h2>
 
+<!-- Sección de Carga de XMLs -->
+<div class="alert alert-info mb-3" role="alert">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Nuevo:</strong> Carga directamente XMLs de facturas. El sistema extrae automáticamente composición de IVA.
+</div>
+
+<div class="card mb-3">
+    <div class="card-header"><i class="bi bi-file-earmark-xml me-2"></i>Cargar Facturas de Gasto (XML)</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="input-group">
+                    <input type="file" id="xmlFile" class="form-control" accept=".xml" placeholder="Selecciona un XML de factura">
+                    <button class="btn btn-primary" id="btnCargarXML" type="button">
+                        <i class="bi bi-upload me-2"></i>Cargar XML
+                    </button>
+                </div>
+                <small class="text-muted d-block mt-2">
+                    ✅ Se extraerá automáticamente: RUC, fechas, composición de IVA (bases 0%, 5%, 15%, exento), forma de pago
+                </small>
+            </div>
+            <div class="col-lg-4">
+                <div id="estadoCarga" class="alert alert-light" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row g-3 mb-3">
     <div class="col-md-3">
         <div class="card text-center"><div class="card-body p-3">
@@ -84,7 +112,7 @@
             <div class="card-header">Facturas de Gasto</div>
             <div class="card-body table-responsive p-2">
                 <table class="table table-sm small mb-0">
-                    <thead><tr><th>Fecha</th><th>N°</th><th>Proveedor</th><th>Total</th><th>Categoría</th><th>Acción</th></tr></thead>
+                    <thead><tr><th>Fecha</th><th>N°</th><th>Proveedor</th><th>Total</th><th>Categoría</th><th>Acciones</th></tr></thead>
                     <tbody>
                         {% for f in facturas %}
                         <tr>
@@ -98,13 +126,14 @@
                                 {% else %}<span class="badge bg-secondary">Sin clasificar</span>{% endif %}
                             </td>
                             <td>
-                                <form method="POST" action="{{ url_for('gastos.clasificar_gasto', factura_id=f.id) }}" class="d-flex gap-1">
-                                    <select class="form-select form-select-sm" name="categoria" style="width:100px;">
-                                        {% for c in categorias %}<option value="{{ c }}">{{ c[:12] }}</option>{% endfor %}
-                                        <option value="OTROS">OTROS</option>
-                                    </select>
-                                    <button class="btn btn-info btn-sm">OK</button>
-                                </form>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-secondary btn-detalles" data-factura-id="{{ f.id }}" title="Ver detalles">
+                                        <i class="bi bi-info-circle"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info btn-clasificar" data-factura-id="{{ f.id }}" data-bs-toggle="modal" data-bs-target="#modalClasificar" title="Clasificar">
+                                        <i class="bi bi-tag"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         {% else %}
@@ -116,4 +145,253 @@
         </div>
     </div>
 </div>
+
+<!-- Modal: Ver Detalles -->
+<div class="modal fade" id="modalDetalles" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalles de Factura</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="contenidoDetalles">
+                <p class="text-center text-muted">Cargando...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Clasificar -->
+<div class="modal fade" id="modalClasificar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Clasificar Factura</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="formClasificar">
+                <div class="modal-body">
+                    <select class="form-select" name="categoria" id="selectCategoria" required>
+                        <option selected disabled>Selecciona categoría...</option>
+                        {% for c in categorias %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                        <option value="OTROS">OTROS</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Manejo de carga de XMLs
+document.getElementById('btnCargarXML').addEventListener('click', async function() {
+    const fileInput = document.getElementById('xmlFile');
+    const estadoDiv = document.getElementById('estadoCarga');
+
+    if (!fileInput.files.length) {
+        estadoDiv.className = 'alert alert-warning';
+        estadoDiv.innerHTML = '<i class="bi bi-exclamation-circle me-2"></i>Selecciona un archivo XML';
+        estadoDiv.style.display = 'block';
+        return;
+    }
+
+    const file = fileInput.files[0];
+    if (!file.name.toLowerCase().endsWith('.xml')) {
+        estadoDiv.className = 'alert alert-danger';
+        estadoDiv.innerHTML = '<i class="bi bi-x-circle me-2"></i>Solo se aceptan archivos XML';
+        estadoDiv.style.display = 'block';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('archivo', file);
+
+    // Mostrar estado de carga
+    estadoDiv.className = 'alert alert-info';
+    estadoDiv.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Procesando XML...';
+    estadoDiv.style.display = 'block';
+
+    try {
+        const response = await fetch('{{ url_for("gastos.procesar_gasto_xml") }}', {
+            method: 'POST',
+            body: formData
+        });
+
+        const resultado = await response.json();
+
+        if (response.ok) {
+            estadoDiv.className = 'alert alert-success';
+            estadoDiv.innerHTML = `
+                <i class="bi bi-check-circle me-2"></i>
+                <strong>Éxito!</strong> Factura #${resultado.factura_id} cargada<br>
+                <small>
+                    Clasificación: <strong>${resultado.clasificacion}</strong><br>
+                    Total: <strong>$${resultado.datos.total.toFixed(2)}</strong> |
+                    Base 15%: <strong>$${resultado.datos.base_15.toFixed(2)}</strong> |
+                    IVA 15%: <strong>$${resultado.datos.iva_15.toFixed(2)}</strong>
+                </small>
+            `;
+
+            // Limpiar input después de 3 segundos
+            setTimeout(() => {
+                fileInput.value = '';
+                location.reload();
+            }, 3000);
+        } else {
+            estadoDiv.className = 'alert alert-danger';
+            estadoDiv.innerHTML = `<i class="bi bi-x-circle me-2"></i><strong>Error:</strong> ${resultado.error}`;
+        }
+    } catch (error) {
+        estadoDiv.className = 'alert alert-danger';
+        estadoDiv.innerHTML = `<i class="bi bi-x-circle me-2"></i><strong>Error:</strong> ${error.message}`;
+    }
+
+    estadoDiv.style.display = 'block';
+});
+
+// Permitir cargar al presionar Enter
+document.getElementById('xmlFile').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('btnCargarXML').click();
+    }
+});
+
+// Ver detalles de factura
+document.querySelectorAll('.btn-detalles').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const facturaId = this.dataset.facturaId;
+        const contenido = document.getElementById('contenidoDetalles');
+
+        contenido.innerHTML = '<p class="text-center text-muted">Cargando detalles...</p>';
+
+        try {
+            const response = await fetch(`/gastos/detalle_factura/${facturaId}`);
+            const data = await response.json();
+
+            if (!response.ok) {
+                contenido.innerHTML = `<p class="text-danger">Error: ${data.error}</p>`;
+                return;
+            }
+
+            const f = data.factura;
+            const iva = data.composicion_iva;
+
+            let html = `
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Fecha:</strong> ${f.fecha}<br>
+                        <strong>N° Factura:</strong> ${f.numero}<br>
+                        <strong>RUC Emisor:</strong> ${f.ruc_emisor}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Emisor:</strong> ${f.nombre_emisor}<br>
+                        <strong>Comprador:</strong> ${f.nombre_comprador}<br>
+                        <strong>Total:</strong> $${f.total.toFixed(2)}
+                    </div>
+                </div>
+
+                <hr>
+
+                <h6 class="fw-bold mb-2">Composición de IVA:</h6>
+                <table class="table table-sm small">
+                    <tr>
+                        <td>Base 0% (Exento):</td>
+                        <td class="text-end">$${iva.base_0.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>Base 5%:</td>
+                        <td class="text-end">$${iva.base_5.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>IVA 5%:</td>
+                        <td class="text-end">$${iva.iva_5.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>Base 15%:</td>
+                        <td class="text-end">$${iva.base_15.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>IVA 15%:</td>
+                        <td class="text-end">$${iva.iva_15.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>Base Exenta:</td>
+                        <td class="text-end">$${iva.base_exento.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>Base No Objeto:</td>
+                        <td class="text-end">$${iva.base_no_objeto.toFixed(2)}</td>
+                    </tr>
+                    <tr class="table-secondary">
+                        <td><strong>Total:</strong></td>
+                        <td class="text-end"><strong>$${f.total.toFixed(2)}</strong></td>
+                    </tr>
+                </table>
+
+                <hr>
+
+                <p><strong>Forma de Pago:</strong> ${data.forma_pago}</p>
+                <p><strong>Concepto:</strong> ${data.concepto}</p>
+                ${data.clasificacion ? `<p><strong>Clasificación:</strong> <span class="badge bg-info">${data.clasificacion.categoria}</span></p>` : ''}
+            `;
+
+            if (data.detalles && data.detalles.length > 0) {
+                html += '<h6 class="fw-bold mb-2">Detalles:</h6><table class="table table-sm small">';
+                data.detalles.forEach(d => {
+                    html += `<tr>
+                        <td>${d.descripcion}</td>
+                        <td class="text-end">${d.cantidad} x $${d.precio_unitario.toFixed(2)}</td>
+                    </tr>`;
+                });
+                html += '</table>';
+            }
+
+            contenido.innerHTML = html;
+        } catch (error) {
+            contenido.innerHTML = `<p class="text-danger">Error: ${error.message}</p>`;
+        }
+
+        const modal = new bootstrap.Modal(document.getElementById('modalDetalles'));
+        modal.show();
+    });
+});
+
+// Clasificar factura
+let facturaIdActual = null;
+document.querySelectorAll('.btn-clasificar').forEach(btn => {
+    btn.addEventListener('click', function() {
+        facturaIdActual = this.dataset.facturaId;
+    });
+});
+
+document.getElementById('formClasificar').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const categoria = document.getElementById('selectCategoria').value;
+    const formData = new FormData();
+    formData.append('categoria', categoria);
+
+    try {
+        const response = await fetch(`/gastos/clasificar/${facturaIdActual}`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            alert('Factura clasificada exitosamente');
+            location.reload();
+        } else {
+            alert('Error al clasificar');
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+
+    bootstrap.Modal.getInstance(document.getElementById('modalClasificar')).hide();
+});
+</script>
 {% endblock %}
