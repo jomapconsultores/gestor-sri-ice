@@ -268,4 +268,4 @@ def bienvenido():
 
 if __name__ == '__main__':
     # Deploy trigger
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000)# Redeploy trigger - Wed Jun  3 11:02:50 HPS 2026
