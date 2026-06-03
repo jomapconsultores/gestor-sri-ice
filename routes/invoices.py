@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from models import db
-from models.user import Factura
+from models.user import Factura, SaldoIVAMes
 from services.xml_parser import parse_xml_factura
 from services.validaciones_sri import ValidacionesSRI
 from datetime import datetime
@@ -48,6 +48,58 @@ def _parsear_fecha(fecha_str):
         except (ValueError, AttributeError):
             continue
     return None
+
+
+def _actualizar_saldo_iva_mes(usuario_id, anio, mes):
+    """Actualiza el saldo IVA mensual del usuario basado en sus facturas."""
+    try:
+        # Obtener todas las facturas del mes
+        from sqlalchemy import and_, extract
+        facturas_mes = Factura.query.filter(
+            and_(
+                Factura.usuario_id == usuario_id,
+                extract('year', Factura.fecha_emision) == anio,
+                extract('month', Factura.fecha_emision) == mes,
+            )
+        ).all()
+
+        # Separar por tipo
+        iva_cobrado = 0  # IVA de ingresos
+        iva_pagado = 0   # IVA de gastos
+
+        for factura in facturas_mes:
+            iva = float(factura.valor_iva or 0)
+            if factura.tipo == 'ingreso':
+                iva_cobrado += iva
+            else:  # gasto
+                iva_pagado += iva
+
+        # Obtener o crear registro de saldo
+        saldo = SaldoIVAMes.query.filter_by(
+            usuario_id=usuario_id, anio=anio, mes=mes
+        ).first()
+
+        if saldo:
+            saldo.iva_cobrado = iva_cobrado
+            saldo.iva_pagado = iva_pagado
+            saldo.saldo_final = iva_cobrado - iva_pagado
+            saldo.fecha_actualizacion = datetime.utcnow()
+        else:
+            saldo = SaldoIVAMes(
+                usuario_id=usuario_id,
+                anio=anio,
+                mes=mes,
+                iva_cobrado=iva_cobrado,
+                iva_pagado=iva_pagado,
+                saldo_anterior=0,
+                saldo_final=iva_cobrado - iva_pagado,
+            )
+            db.session.add(saldo)
+
+        db.session.commit()
+    except Exception as e:
+        print(f"Error actualizando saldo IVA: {e}")
+        db.session.rollback()
 
 
 @invoices.route('/subir', methods=['POST'])
@@ -191,6 +243,19 @@ def subir_facturas():
         if mensajes_error and procesadas == 0:
             for err in mensajes_error[:5]:
                 flash(err, 'danger')
+
+        # ACTUALIZAR SALDO IVA POR MES después de procesar
+        if procesadas > 0:
+            facturas_nuevas = Factura.query.filter_by(usuario_id=current_user.id).order_by(
+                Factura.fecha_procesamiento.desc()).limit(procesadas).all()
+            meses_actualizados = set()
+            for factura in facturas_nuevas:
+                if factura.fecha_emision:
+                    mes_key = (factura.fecha_emision.year, factura.fecha_emision.month)
+                    if mes_key not in meses_actualizados:
+                        # Recalcular saldo IVA para este mes
+                        _actualizar_saldo_iva_mes(current_user.id, factura.fecha_emision.year, factura.fecha_emision.month)
+                        meses_actualizados.add(mes_key)
     except Exception as e:
         db.session.rollback()
         flash(f'Error al guardar en base de datos: {str(e)}', 'danger')

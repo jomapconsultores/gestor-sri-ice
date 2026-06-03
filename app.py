@@ -125,7 +125,6 @@ def create_app(init_db_now=True):
 
     # Módulos Pro – importados aquí para capturar cualquier error de importación
     _pro_modules = [
-        ('routes.ats',               'ats',                '/ats'),
         ('routes.anexos_ice',        'anexos_ice',         '/anexos_ice'),
         ('routes.conciliacion',      'conciliacion',        '/conciliacion'),
         ('routes.sri_processor',     'sri_processor',       '/sri_processor'),

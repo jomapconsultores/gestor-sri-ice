@@ -76,7 +76,10 @@ def procesar_txt():
         try:
             datos = parse_xml_factura(ruta)
             if datos:
-                existente = Factura.query.filter_by(clave_acceso=datos['clave_acceso']).first()
+                existente = Factura.query.filter_by(
+                    usuario_id=current_user.id,
+                    clave_acceso=datos['clave_acceso']
+                ).first()
                 if not existente:
                     fecha = None
                     if datos.get('fecha_emision'):

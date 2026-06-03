@@ -3,6 +3,8 @@ from flask_login import login_required, current_user
 from services.ice_calculator import IceCalculator, TAX_DB
 from services.ice_session import guardar_sesion_multiple, cargar_sesion_multiple
 from routes.payments import usuario_tiene_modulo
+from models import db
+from models.user import FacturaICEProcesada
 import io
 import json as _json
 try:
@@ -412,3 +414,16 @@ def comparativa():
 @login_required
 def ver_tarifas():
     return render_template('ice/tarifas.html', tax_db=TAX_DB)
+
+
+# ── Auditoría de Facturas ICE ─────────────────────────────────────────────────
+
+@ice.route('/auditoria')
+@login_required
+def ice_auditoria_index():
+    """Muestra auditoría de facturas ICE procesadas por el usuario."""
+    facturas_ice = FacturaICEProcesada.query.filter_by(
+        usuario_id=current_user.id
+    ).order_by(FacturaICEProcesada.fecha_proceso.desc()).all()
+
+    return render_template('ice/auditoria.html', facturas=facturas_ice)

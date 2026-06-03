@@ -40,6 +40,17 @@ def panel():
         flash('Necesitas el módulo "Facturas de Gasto" para acceder a este panel.', 'warning')
         return redirect(url_for('payments.ver_planes'))
 
+    # OBTENER GASTOS SIN CLASIFICAR
+    factura_ids_clasificadas = db.session.query(ClasificacionGasto.factura_id).filter_by(
+        usuario_id=current_user.id
+    ).all()
+    ids_clasificadas = {f[0] for f in factura_ids_clasificadas}
+
+    gastos_sin_clasificar = Factura.query.filter_by(usuario_id=current_user.id, tipo='gasto')\
+                                        .order_by(Factura.fecha_emision.desc()).all()
+    gastos_sin_clasificar = [f for f in gastos_sin_clasificar if f.id not in ids_clasificadas]
+
+    # TODAS LAS FACTURAS (para historial)
     facturas = Factura.query.filter_by(usuario_id=current_user.id, tipo='gasto')\
                            .order_by(Factura.fecha_emision.desc()).limit(50).all()
 
@@ -60,6 +71,7 @@ def panel():
 
     return render_template('gastos/panel.html',
                          facturas=facturas, clasificaciones=clasificaciones,
+                         gastos_sin_clasificar=gastos_sin_clasificar,
                          resumen=resumen,
                          gastos_personales_total=gastos_personales_total or 0,
                          gastos_ejercicio_total=gastos_ejercicio_total or 0,

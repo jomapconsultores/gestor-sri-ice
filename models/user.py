@@ -385,3 +385,22 @@ class SolicitudAcceso(db.Model):
     fecha_solicitud = db.Column(db.DateTime, default=datetime.utcnow)
     fecha_respuesta = db.Column(db.DateTime)
     usuario = db.relationship("Usuario", backref="solicitudes_acceso", lazy=True)
+
+
+class Retencion(db.Model):
+    """Comprobante de retención procesado y almacenado del SRI."""
+    __tablename__ = 'retencion'
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    clave_acceso = db.Column(db.String(49), unique=True)
+    numero_comprobante = db.Column(db.String(50))
+    ruc_sujeto = db.Column(db.String(13))
+    tipo_retencion = db.Column(db.String(20))  # renta, iva, isd
+    porcentaje = db.Column(db.Float)
+    base_imponible = db.Column(db.Numeric(12, 2))
+    valor_retenido = db.Column(db.Numeric(12, 2))
+    fecha_emision = db.Column(db.DateTime)
+    xml_original = db.Column(db.Text)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+
+    usuario = db.relationship("Usuario", backref="retenciones", lazy=True)

@@ -12,13 +12,27 @@ import zipfile
 from datetime import datetime
 
 try:
-    from defusedxml.ElementTree import fromstring as ET_fromstring, parse as ET_parse
+    from defusedxml.ElementTree import fromstring as ET_fromstring, parse as ET_parse, Element as ET_Element, SubElement as ET_SubElement, tostring as ET_tostring
+    from defusedxml import ElementTree as ET
     DEFUSEDXML_AVAILABLE = True
 except ImportError:
-    from xml.etree.ElementTree import fromstring as ET_fromstring, parse as ET_parse
+    from xml.etree.ElementTree import fromstring as ET_fromstring, parse as ET_parse, Element as ET_Element, SubElement as ET_SubElement, tostring as ET_tostring
+    import xml.etree.ElementTree as ET
     DEFUSEDXML_AVAILABLE = False
 
 anexos_ice = Blueprint('anexos_ice', __name__)
+
+# Constantes para el editor ATS/Anexos (originalmente de ats.py)
+CAMPOS_ICE = ['codProdICE', 'gramoAzucar', 'tipoIdCliente', 'idCliente',
+              'tipoVentaICE', 'ventaICE', 'devICE', 'cantProdBajaICE']
+CAMPOS_PVP = ['codProdPVP', 'gramoAzucar', 'precioExPVP', 'precioPVP',
+              'fechaInPVP', 'fechaFinPVP']
+CAMPOS_CAB_BASE = ['TipoIDInformante', 'IdInformante', 'razonSocial',
+                   'Anio', 'Mes', 'codigoOperativo']
+DEFAULTS_NUMERICOS = {
+    'devICE': '0', 'cantProdBajaICE': '0', 'ventaICE': '0.00',
+    'precioExPVP': '0.00', 'precioPVP': '0.00', 'gramoAzucar': '0.00',
+}
 
 
 def _requiere():
@@ -209,6 +223,94 @@ def descargar_xml():
 
     except Exception as e:
         return {'error': str(e)}, 400
+
+
+# ── Editor ATS (Anexos - originalmente de ats.py) ─────────────────────────────
+
+@anexos_ice.route('/editor')
+@login_required
+def editor():
+    """Editor web para Anexos ICE/PVP (compatible con ats.py)."""
+    r = _requiere()
+    if r:
+        return r
+    return render_template('ats/editor.html',
+                           campos_ice=CAMPOS_ICE, campos_pvp=CAMPOS_PVP,
+                           campos_cab=CAMPOS_CAB_BASE)
+
+
+@anexos_ice.route('/cargar_xml_ats', methods=['POST'])
+@login_required
+def cargar_xml_ats():
+    """Carga un XML en formato ATS (compatible con ats.py)."""
+    r = _requiere()
+    if r:
+        return jsonify({'error': 'Sin acceso'}), 403
+    archivo = request.files.get('archivo_xml')
+    if not archivo or not archivo.filename.lower().endswith('.xml'):
+        return jsonify({'error': 'Sube un archivo .xml válido'}), 400
+    try:
+        tree = ET.parse(archivo)
+        root = tree.getroot()
+        tipo = root.tag.upper()
+
+        campo_extra = 'actImport' if tipo == 'ICE' else 'tipoCarga'
+        campos_cab = CAMPOS_CAB_BASE + [campo_extra]
+        cabecera = {}
+        for c in campos_cab:
+            n = root.find(c)
+            cabecera[c] = (n.text or '') if n is not None else ''
+
+        campos_det = CAMPOS_ICE if tipo == 'ICE' else CAMPOS_PVP
+        ventas = []
+        ventas_node = root.find('ventas')
+        if ventas_node is not None:
+            for vta in ventas_node.findall('vta'):
+                row = {}
+                for c in campos_det:
+                    n = vta.find(c)
+                    val = (n.text or '') if n is not None else ''
+                    if not val:
+                        val = DEFAULTS_NUMERICOS.get(c, '')
+                    row[c] = val
+                ventas.append(row)
+
+        return jsonify({'tipo': tipo, 'cabecera': cabecera, 'ventas': ventas,
+                'campos': campos_det, 'campo_extra': campo_extra})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+
+@anexos_ice.route('/generar_xml_ats', methods=['POST'])
+@login_required
+def generar_xml_ats():
+    """Genera un XML en formato ATS (compatible con ats.py)."""
+    r = _requiere()
+    if r:
+        return jsonify({'error': 'Sin acceso'}), 403
+    data = request.get_json(force=True)
+    tipo = (data.get('tipo') or 'ICE').lower()
+    cabecera = data.get('cabecera', {})
+    ventas = data.get('ventas', [])
+
+    root = ET_Element(tipo)
+    for campo, valor in cabecera.items():
+        ET_SubElement(root, campo).text = str(valor).strip()
+
+    ventas_node = ET_SubElement(root, 'ventas')
+    for fila in ventas:
+        vta = ET_SubElement(ventas_node, 'vta')
+        for campo, valor in fila.items():
+            ET_SubElement(vta, campo).text = str(valor).strip()
+
+    xml_body = ET_tostring(root, encoding='unicode')
+    xml_content = f'<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n{xml_body}'
+
+    return Response(
+        xml_content.encode('utf-8'),
+        mimetype='application/xml',
+        headers={'Content-Disposition': f'attachment; filename=Anexo_{tipo.upper()}.xml'}
+    )
 
 
 @anexos_ice.route('/descargar_zip', methods=['POST'])

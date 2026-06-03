@@ -3,7 +3,10 @@ import io, os, re
 from flask import Blueprint, render_template, request, Response, redirect, url_for, flash
 from flask_login import login_required, current_user
 from routes.payments import usuario_tiene_modulo
+from models import db
+from models.user import Retencion
 from werkzeug.utils import secure_filename
+from datetime import datetime
 try:
     from defusedxml import ElementTree as ET
 except ImportError:
@@ -181,7 +184,34 @@ def procesar():
                 else:
                     if row['ID']:
                         ids_vistos.add(row['ID'])
-                filas.append(row)
+                        # GUARDAR EN BD
+                        try:
+                            with open(ruta, 'r', encoding='utf-8') as f:
+                                xml_contenido = f.read()
+                        except:
+                            xml_contenido = ''
+
+                        fecha_emision = None
+                        if row.get('Fecha'):
+                            try:
+                                fecha_emision = datetime.strptime(row['Fecha'], '%d/%m/%Y')
+                            except:
+                                pass
+
+                        retencion = Retencion(
+                            usuario_id=current_user.id,
+                            clave_acceso=row['ID'],
+                            numero_comprobante=row.get('Nro. Comprobante', ''),
+                            ruc_sujeto=row.get('RUC_Sujeto', ''),
+                            tipo_retencion='multiple',  # Puede ser renta, iva, isd o multiple
+                            porcentaje=None,
+                            base_imponible=float(row.get('Base Renta', 0) or 0) + float(row.get('Base IVA', 0) or 0),
+                            valor_retenido=float(row.get('Total Retenido', 0) or 0),
+                            fecha_emision=fecha_emision,
+                            xml_original=xml_contenido
+                        )
+                        db.session.add(retencion)
+                    filas.append(row)
         except Exception as e:
             print(f"Error procesando {nombre_seguro}: {e}")
             filas.append({
@@ -190,6 +220,12 @@ def procesar():
                 'Fecha': '', 'RUC Emisor': '', 'Agente Retención': '',
                 'Nro. Comprobante': '', 'Periodo Fiscal': ''
             })
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al guardar retenciones en BD: {e}")
 
     return {
         'filas': filas,
