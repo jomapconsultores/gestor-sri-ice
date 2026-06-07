@@ -109,19 +109,51 @@
     
     <div class="col-lg-8">
         <div class="card">
-            <div class="card-header">Facturas de Gasto</div>
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span>Facturas de Gasto</span>
+                <div class="d-flex align-items-center gap-2">
+                    <label for="filtroCategoria" class="form-label small mb-0 text-muted">Filtrar por categoría:</label>
+                    <select id="filtroCategoria" class="form-select form-select-sm" style="width:auto;">
+                        <option value="">Todas</option>
+                        <option value="__SIN__">Sin clasificar</option>
+                        {% for c in categorias %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                        <option value="OTROS">OTROS</option>
+                    </select>
+                    <button type="button" id="btnLimpiarFiltro" class="btn btn-sm btn-outline-secondary" title="Quitar filtro">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                </div>
+            </div>
             <div class="card-body table-responsive p-2">
-                <table class="table table-sm small mb-0">
-                    <thead><tr><th>Fecha</th><th>N°</th><th>Proveedor</th><th>Total</th><th>Categoría</th><th>Acciones</th></tr></thead>
+                <table class="table table-sm small mb-0" id="tablaFacturasGasto">
+                    <thead><tr><th>Fecha</th><th>N°</th><th>RUC</th><th>Proveedor</th><th>Total</th><th>Categoría</th><th>Acciones</th></tr></thead>
                     <tbody>
                         {% for f in facturas %}
-                        <tr>
+                        {% set clasif = clasificaciones|selectattr('factura_id','equalto',f.id)|list|first %}
+                        {% set cat_actual = clasif.categoria if clasif else '__SIN__' %}
+                        {% set proveedor_full = f.razon_social_emisor if f.razon_social_emisor else (f.razon_social_comprador if f.razon_social_comprador else '') %}
+                        <tr data-categoria="{{ cat_actual }}">
                             <td>{{ f.fecha_emision.strftime('%d/%m/%Y') if f.fecha_emision else '-' }}</td>
-                            <td>{{ f.numero_factura }}</td>
-                            <td>{{ f.razon_social_emisor[:25] if f.razon_social_emisor else (f.razon_social_comprador[:25] if f.razon_social_comprador else '-') }}</td>
+                            <td>
+                                <span class="copy-text" data-copy="{{ f.numero_factura or '' }}" title="Click para copiar N°">
+                                    {{ f.numero_factura }}
+                                    <i class="bi bi-clipboard text-muted ms-1" style="font-size:0.75rem;"></i>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="copy-text" data-copy="{{ f.ruc_emisor or '' }}" title="Click para copiar RUC">
+                                    {{ f.ruc_emisor or '-' }}
+                                    <i class="bi bi-clipboard text-muted ms-1" style="font-size:0.75rem;"></i>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="copy-text" data-copy="{{ proveedor_full }}" title="Click para copiar Proveedor">
+                                    {{ proveedor_full[:25] if proveedor_full else '-' }}
+                                    <i class="bi bi-clipboard text-muted ms-1" style="font-size:0.75rem;"></i>
+                                </span>
+                            </td>
                             <td>${{ '%.2f'|format(f.importe_total) }}</td>
                             <td>
-                                {% set clasif = clasificaciones|selectattr('factura_id','equalto',f.id)|list|first %}
                                 {% if clasif %}<span class="badge bg-info">{{ clasif.categoria }}</span>
                                 {% else %}<span class="badge bg-secondary">Sin clasificar</span>{% endif %}
                             </td>
@@ -137,10 +169,13 @@
                             </td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="6" class="text-center py-3 text-muted">Sin facturas de gasto. Sube XMLs en GASTOS.</td></tr>
+                        <tr><td colspan="7" class="text-center py-3 text-muted">Sin facturas de gasto. Sube XMLs en GASTOS.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
+                <div id="filtroVacio" class="text-center py-3 text-muted small" style="display:none;">
+                    No hay facturas con el filtro aplicado.
+                </div>
             </div>
         </div>
     </div>
@@ -365,6 +400,87 @@ let facturaIdActual = null;
 document.querySelectorAll('.btn-clasificar').forEach(btn => {
     btn.addEventListener('click', function() {
         facturaIdActual = this.dataset.facturaId;
+    });
+});
+
+// ===== Filtro persistente por categoría (localStorage) =====
+const FILTRO_KEY = 'gastos_filtro_categoria';
+const selectFiltro = document.getElementById('filtroCategoria');
+const btnLimpiar = document.getElementById('btnLimpiarFiltro');
+const filtroVacio = document.getElementById('filtroVacio');
+
+function aplicarFiltroCategoria(valor) {
+    const filas = document.querySelectorAll('#tablaFacturasGasto tbody tr[data-categoria]');
+    let visibles = 0;
+    filas.forEach(tr => {
+        const cat = tr.getAttribute('data-categoria');
+        const mostrar = !valor || cat === valor;
+        tr.style.display = mostrar ? '' : 'none';
+        if (mostrar) visibles++;
+    });
+    if (filtroVacio) {
+        filtroVacio.style.display = (valor && visibles === 0 && filas.length > 0) ? 'block' : 'none';
+    }
+}
+
+const filtroGuardado = localStorage.getItem(FILTRO_KEY) || '';
+if (filtroGuardado) {
+    selectFiltro.value = filtroGuardado;
+    aplicarFiltroCategoria(filtroGuardado);
+}
+
+selectFiltro.addEventListener('change', function() {
+    const v = this.value;
+    if (v) {
+        localStorage.setItem(FILTRO_KEY, v);
+    } else {
+        localStorage.removeItem(FILTRO_KEY);
+    }
+    aplicarFiltroCategoria(v);
+});
+
+btnLimpiar.addEventListener('click', function() {
+    selectFiltro.value = '';
+    localStorage.removeItem(FILTRO_KEY);
+    aplicarFiltroCategoria('');
+});
+
+// ===== Copia rápida al portapapeles =====
+function copiarTexto(texto, elemento) {
+    if (!texto) return;
+    const fallback = () => {
+        const ta = document.createElement('textarea');
+        ta.value = texto;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (_) {}
+        document.body.removeChild(ta);
+    };
+    const ok = () => {
+        if (!elemento) return;
+        const icono = elemento.querySelector('i.bi');
+        if (icono) {
+            const cls = icono.className;
+            icono.className = 'bi bi-check2 text-success ms-1';
+            icono.style.fontSize = '0.75rem';
+            setTimeout(() => { icono.className = cls; }, 1200);
+        }
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(texto).then(ok).catch(() => { fallback(); ok(); });
+    } else {
+        fallback();
+        ok();
+    }
+}
+
+document.querySelectorAll('.copy-text').forEach(el => {
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        copiarTexto(this.dataset.copy || '', this);
     });
 });
 
