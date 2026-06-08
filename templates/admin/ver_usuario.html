@@ -19,7 +19,14 @@
                     <tr><td class="text-muted small">Nombre:</td><td class="fw-bold">{{ usuario.nombre }}</td></tr>
                     <tr><td class="text-muted small">Email:</td><td>{{ usuario.email }}</td></tr>
                     <tr><td class="text-muted small">Empresa:</td><td>{{ usuario.empresa or '—' }}</td></tr>
-                    <tr><td class="text-muted small">RUC:</td><td>{{ usuario.ruc or '—' }}</td></tr>
+                    <tr><td class="text-muted small">RUC:</td><td>
+                        {{ usuario.ruc or '—' }}
+                        {% if usuario.ruc %}{% set decl = info_declaracion(usuario.ruc) %}{% if decl.valido %}
+                        <span class="badge ms-1" style="background:#0d1b2e;color:#fff;font-size:.65rem" title="9no dígito {{ decl.digito }} · próxima {{ decl.proxima_fecha_texto }}">
+                            <i class="bi bi-calendar-check me-1"></i>declara día {{ decl.dia }}
+                        </span>
+                        {% endif %}{% endif %}
+                    </td></tr>
                     <tr><td class="text-muted small">Registro:</td><td>{{ usuario.fecha_registro.strftime('%d/%m/%Y') if usuario.fecha_registro else '—' }}</td></tr>
                     <tr><td class="text-muted small">Admin:</td><td>{% if usuario.is_admin %}<span class="badge bg-warning text-dark">Sí</span>{% else %}No{% endif %}</td></tr>
                 </table>

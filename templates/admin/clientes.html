@@ -130,7 +130,14 @@
                     <td class="small fw-600">{{ u.nombre }}</td>
                     <td class="small text-muted">{{ u.email }}</td>
                     <td class="small">{{ u.empresa or '—' }}</td>
-                    <td class="small">{{ u.ruc or '—' }}</td>
+                    <td class="small">
+                        {{ u.ruc or '—' }}
+                        {% if u.ruc %}{% set decl = info_declaracion(u.ruc) %}{% if decl.valido %}
+                        <span class="badge ms-1" style="background:#0d1b2e;color:#fff;font-size:.6rem" title="Fecha máxima de declaración mensual (9no dígito {{ decl.digito }})">
+                            <i class="bi bi-calendar-check me-1"></i>día {{ decl.dia }}
+                        </span>
+                        {% endif %}{% endif %}
+                    </td>
                     <td class="small text-center">
                         {% set rol_key = u.rol or 'cliente' %}
                         {% if rol_key == 'gerente' %}
