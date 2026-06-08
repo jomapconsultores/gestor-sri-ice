@@ -28,6 +28,15 @@
                         {% if e.razon_social %}
                         <p class="text-muted small mb-0">{{ e.razon_social }}</p>
                         {% endif %}
+                        {% set decl = info_declaracion(e.ruc) %}
+                        {% if decl.valido %}
+                        <p class="mb-0 mt-2 small">
+                            <span class="badge bg-dark">
+                                <i class="bi bi-calendar-check me-1"></i>Declaración: día {{ decl.dia }}
+                            </span>
+                            <span class="text-muted ms-1">próxima: {{ decl.proxima_fecha_texto }}</span>
+                        </p>
+                        {% endif %}
                     </div>
                     {% if current_user.suscripcion.empresa_actual_id == e.id %}
                     <span class="badge bg-success">Actual</span>

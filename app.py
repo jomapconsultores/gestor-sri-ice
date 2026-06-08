@@ -161,6 +161,12 @@ def create_app(init_db_now=True):
         return dict(safe_url_for=safe_url_for)
 
     @app.context_processor
+    def inject_calendario_tributario():
+        from services.calendario_tributario import info_declaracion, dia_declaracion
+        return dict(info_declaracion=info_declaracion,
+                    dia_declaracion=dia_declaracion)
+
+    @app.context_processor
     def inject_impersonation():
         from flask import g
         return {

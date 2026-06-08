@@ -12,6 +12,14 @@
             {% if usuario.empresa %} · {{ usuario.empresa }}{% endif %}
             {% if usuario.ruc %} · RUC: {{ usuario.ruc }}{% endif %}
         </p>
+        {% if usuario.ruc %}
+        {% set decl = info_declaracion(usuario.ruc) %}
+        {% if decl.valido %}
+        <span class="badge mt-1" style="background:#0d1b2e;color:#fff;font-size:.72rem">
+            <i class="bi bi-calendar-check me-1"></i>Declaración mensual: día {{ decl.dia }} (9no díg. {{ decl.digito }}) · próxima {{ decl.proxima_fecha_texto }}
+        </span>
+        {% endif %}
+        {% endif %}
         {% set rol_info = ROLES_CLIENTE.get(usuario.rol or 'cliente', ('Cliente','#f1f5f9','#475569')) %}
         <span class="badge mt-1" style="background:{{ rol_info[1] }};color:{{ rol_info[2] }};font-size:.72rem">
             {{ rol_info[0] }}
@@ -283,14 +291,16 @@
         <div class="table-responsive">
             <table class="table table-sm table-hover mb-0">
                 <thead>
-                    <tr><th>RUC</th><th>Nombre</th><th>Razón Social</th><th>Registro</th><th>Estado</th></tr>
+                    <tr><th>RUC</th><th>Nombre</th><th>Razón Social</th><th>Declaración</th><th>Registro</th><th>Estado</th></tr>
                 </thead>
                 <tbody>
                 {% for e in empresas %}
+                {% set decl = info_declaracion(e.ruc) %}
                 <tr>
                     <td class="small">{{ e.ruc or '—' }}</td>
                     <td class="small fw-600">{{ e.nombre or '—' }}</td>
                     <td class="small text-muted">{{ (e.razon_social or '—')[:50] }}</td>
+                    <td class="small">{% if decl.valido %}día {{ decl.dia }}{% else %}—{% endif %}</td>
                     <td class="small text-muted">{{ e.fecha_registro.strftime('%d/%m/%Y') if e.fecha_registro else '—' }}</td>
                     <td>
                         {% if e.activa %}
@@ -301,7 +311,7 @@
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="5" class="text-center text-muted py-3">Sin empresas registradas</td></tr>
+                <tr><td colspan="6" class="text-center text-muted py-3">Sin empresas registradas</td></tr>
                 {% endfor %}
                 </tbody>
             </table>
