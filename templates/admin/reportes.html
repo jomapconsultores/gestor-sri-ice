@@ -206,19 +206,15 @@
         <div class="table-responsive">
             <table class="table table-sm table-hover mb-0">
                 <thead class="table-danger">
-                    <tr><th>N° Factura</th><th>Usuario</th><th>Fecha</th><th class="text-end">Base Imponible</th><th class="text-end">IVA 15%</th><th class="text-end">Total c/IVA</th><th class="text-center">Acción</th></tr>
+                    <tr><th>N° Factura</th><th>Usuario</th><th>Fecha</th><th class="text-end">Total (c/IVA)</th><th class="text-center">Acción</th></tr>
                 </thead>
                 <tbody>
                 {% for f in facturas_pendientes %}
-                {% set base = f.monto or 0 %}
-                {% set iva = base * 0.15 %}
                 <tr>
                     <td class="fw-bold small">{{ f.numero_factura }}</td>
                     <td class="small">{{ f.usuario.nombre if f.usuario else '—' }}</td>
                     <td class="small">{{ f.fecha_emision.strftime('%d/%m/%Y') if f.fecha_emision else '—' }}</td>
-                    <td class="text-end small">${{ "%.2f"|format(base) }}</td>
-                    <td class="text-end small text-muted">${{ "%.2f"|format(iva) }}</td>
-                    <td class="text-end small fw-bold text-danger">${{ "%.2f"|format(base + iva) }}</td>
+                    <td class="text-end small fw-bold text-danger">${{ "%.2f"|format(f.monto or 0) }}</td>
                     <td class="text-center">
                         <form method="POST" action="{{ url_for('admin_reports.marcar_factura', factura_id=f.id) }}" class="d-inline">
                             <button type="submit" class="btn btn-success btn-sm">
@@ -228,7 +224,7 @@
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="7" class="text-center text-muted py-3">Sin facturas pendientes</td></tr>
+                <tr><td colspan="5" class="text-center text-muted py-3">Sin facturas pendientes</td></tr>
                 {% endfor %}
                 </tbody>
             </table>
@@ -241,7 +237,7 @@
     <div class="card-header bg-light fw-bold"><i class="bi bi-file-earmark-plus me-1"></i>Generar Factura Manual</div>
     <div class="card-body">
         <form method="POST" action="{{ url_for('admin_reports.generar_factura') }}" class="row g-3 align-items-end">
-            <div class="col-md-5">
+            <div class="col-md-4">
                 <label class="form-label small fw-bold">Usuario</label>
                 <select name="usuario_id" class="form-select form-select-sm" required>
                     <option value="">Selecciona un usuario...</option>
@@ -251,8 +247,19 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label small fw-bold">Base Imponible ($) <span class="text-muted fw-normal">+IVA 15%</span></label>
-                <input type="number" name="monto" step="0.01" min="0.01" class="form-control form-control-sm" required placeholder="Sin IVA">
+                <label class="form-label small fw-bold">Valor ($)</label>
+                <input type="number" name="monto" id="inpMonto" step="0.01" min="0.01"
+                       class="form-control form-control-sm" required placeholder="0.00"
+                       oninput="actualizarPreviewIVA()">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold d-block">&nbsp;</label>
+                <div class="form-check form-check-inline mt-1">
+                    <input class="form-check-input" type="checkbox" name="valores_incluyen_iva"
+                           id="chkIVA" value="1" onchange="actualizarPreviewIVA()">
+                    <label class="form-check-label small" for="chkIVA">Valores incluyen IVA (15%)</label>
+                </div>
+                <div id="previewIVA" class="text-muted" style="font-size:.72rem;margin-top:2px"></div>
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary btn-sm w-100">
@@ -262,6 +269,19 @@
         </form>
     </div>
 </div>
+<script>
+function actualizarPreviewIVA() {
+    const val = parseFloat(document.getElementById('inpMonto').value) || 0;
+    const incluye = document.getElementById('chkIVA').checked;
+    const div = document.getElementById('previewIVA');
+    if (!val) { div.textContent = ''; return; }
+    if (incluye) {
+        div.textContent = 'Se guardará: $' + val.toFixed(2) + ' (ya incluye IVA)';
+    } else {
+        div.textContent = 'Total c/IVA: $' + (val * 1.15).toFixed(2) + ' (+15%)';
+    }
+}
+</script>
 
 <!-- Lista de todos los usuarios -->
 <div class="card">

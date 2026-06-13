@@ -163,6 +163,9 @@ def generar_factura():
         if monto <= 0:
             flash('El monto debe ser mayor a 0.', 'warning')
             return redirect(url_for('admin_reports.reportes'))
+        valores_incluyen_iva = request.form.get('valores_incluyen_iva') == '1'
+        if not valores_incluyen_iva:
+            monto = round(monto * 1.15, 2)
         numero = f"F-{datetime.utcnow().strftime('%Y%m%d')}-{usuario_id}"
         factura = FacturaEmitida(
             usuario_id=usuario_id,
@@ -173,7 +176,7 @@ def generar_factura():
         )
         db.session.add(factura)
         db.session.commit()
-        flash(f'Factura {numero} generada para emisión.', 'success')
+        flash(f'Factura {numero} generada — Total c/IVA: ${monto:.2f}', 'success')
     except (ValueError, TypeError):
         flash('Datos inválidos.', 'danger')
     return redirect(url_for('admin_reports.reportes'))
