@@ -169,7 +169,7 @@
     <div class="card-body">
         <form method="post" action="{{ url_for('admin_reports.agregar_modulo_cliente', uid=usuario.id) }}">
             <div class="row g-3 align-items-end">
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <label class="form-label">Módulo</label>
                     <select name="modulo_id" class="form-select form-select-sm" required>
                         <option value="">— Seleccionar —</option>
@@ -178,7 +178,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label">Duración</label>
                     <select name="duracion" class="form-select form-select-sm">
                         <option value="1">1 mes</option>
@@ -187,13 +187,41 @@
                         <option value="12">1 año</option>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
+                    <label class="form-label">Precio ($) <span class="text-muted fw-normal" style="font-size:.75rem;">opcional</span></label>
+                    <input type="number" name="precio_personalizado" id="inpPrecioMod"
+                           step="0.01" min="0.01" class="form-control form-control-sm"
+                           placeholder="Por defecto" oninput="actualizarPreviewMod()">
+                </div>
+                <div class="col-md-2">
+                    <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" name="valores_incluyen_iva"
+                               id="chkIVAMod" value="1" onchange="actualizarPreviewMod()">
+                        <label class="form-check-label small" for="chkIVAMod">Incluye IVA (15%)</label>
+                    </div>
+                    <div id="previewIVAMod" class="text-muted" style="font-size:.72rem;margin-top:2px"></div>
+                </div>
+                <div class="col-md-2">
                     <button class="btn btn-primary btn-sm w-100 fw-bold">
-                        <i class="bi bi-check-circle me-1"></i>Activar Módulo
+                        <i class="bi bi-check-circle me-1"></i>Activar
                     </button>
                 </div>
             </div>
         </form>
+<script>
+function actualizarPreviewMod() {
+    const val = parseFloat(document.getElementById('inpPrecioMod').value) || 0;
+    const incluye = document.getElementById('chkIVAMod').checked;
+    const div = document.getElementById('previewIVAMod');
+    if (!val) { div.textContent = ''; return; }
+    if (incluye) {
+        const base = val / 1.15;
+        div.textContent = 'Base: $' + base.toFixed(2) + ' | IVA: $' + (val - base).toFixed(2);
+    } else {
+        div.textContent = 'Total c/IVA: $' + (val * 1.15).toFixed(2);
+    }
+}
+</script>
     </div>
 </div>
 

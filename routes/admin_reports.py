@@ -286,16 +286,35 @@ def agregar_modulo_cliente(uid):
     m = Config.MODULOS[modulo_id]
     es_unico = m['precio_unico']
     vencimiento = None if es_unico else datetime.utcnow() + timedelta(days=30 * duracion)
+
+    # Precio personalizado o precio del módulo por defecto
+    precio_raw = request.form.get('precio_personalizado', '').strip()
+    try:
+        precio_base = float(precio_raw) if precio_raw else float(m['precio'])
+    except (ValueError, TypeError):
+        precio_base = float(m['precio'])
+
+    valores_incluyen_iva = request.form.get('valores_incluyen_iva') == '1'
+    if valores_incluyen_iva:
+        # El precio ingresado ya incluye IVA → descomponer
+        precio_pagado = round(precio_base / 1.15, 2)
+        iva_pagado = round(precio_base - precio_pagado, 2)
+    else:
+        # El precio ingresado es base → calcular IVA encima
+        precio_pagado = round(precio_base, 2)
+        iva_pagado = round(precio_base * 0.15, 2)
+
     nuevo = ModuloSuscrito(
         usuario_id=uid, modulo_id=modulo_id, estado='activo',
-        es_pago_unico=es_unico, precio_pagado=m['precio'],
-        iva_pagado=round(m['precio'] * 0.15, 2),
+        es_pago_unico=es_unico, precio_pagado=precio_pagado,
+        iva_pagado=iva_pagado,
         duracion_meses=duracion, fecha_inicio=datetime.utcnow(),
         fecha_vencimiento=vencimiento, verificado=True
     )
     db.session.add(nuevo)
     db.session.commit()
-    flash(f'Módulo {m["nombre"]} activado para el cliente.', 'success')
+    total = precio_pagado + iva_pagado
+    flash(f'Módulo {m["nombre"]} activado — Base: ${precio_pagado:.2f} | IVA: ${iva_pagado:.2f} | Total: ${total:.2f}', 'success')
     return redirect(url_for('admin_reports.ver_cliente', uid=uid))
 
 
