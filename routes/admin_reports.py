@@ -4,7 +4,7 @@ from models import db
 from models.user import Usuario, Pago, FacturaEmitida, ModuloSuscrito, SolicitudAcceso
 from config import Config
 from datetime import datetime
-from sqlalchemy import func, extract
+from sqlalchemy import func, extract, case
 import json
 
 admin_reports = Blueprint('admin_reports', __name__)
@@ -64,12 +64,19 @@ def reportes():
     if not requiere_admin():
         return redirect(url_for('dashboard'))
 
+    # IVA efectivo: usa iva_pagado si fue registrado, sino calcula 15% sobre el precio
+    iva_efectivo = case(
+        (func.coalesce(ModuloSuscrito.iva_pagado, 0) == 0,
+         ModuloSuscrito.precio_pagado * 0.15),
+        else_=func.coalesce(ModuloSuscrito.iva_pagado, 0)
+    )
+
     # Recaudación por usuario (basada en ModuloSuscrito verificados)
     recaudacion_usuarios = db.session.query(
         Usuario.nombre,
         Usuario.email,
         func.sum(ModuloSuscrito.precio_pagado).label('subtotal'),
-        func.sum(ModuloSuscrito.iva_pagado).label('iva_total'),
+        func.sum(iva_efectivo).label('iva_total'),
         func.count(ModuloSuscrito.id).label('cantidad')
     ).join(ModuloSuscrito, ModuloSuscrito.usuario_id == Usuario.id)\
      .filter(ModuloSuscrito.verificado == True, ModuloSuscrito.estado == 'activo')\
@@ -79,7 +86,7 @@ def reportes():
     recaudacion_modulos = db.session.query(
         ModuloSuscrito.modulo_id,
         func.sum(ModuloSuscrito.precio_pagado).label('subtotal'),
-        func.sum(ModuloSuscrito.iva_pagado).label('iva_total'),
+        func.sum(iva_efectivo).label('iva_total'),
         func.count(ModuloSuscrito.id).label('cantidad')
     ).filter(ModuloSuscrito.verificado == True, ModuloSuscrito.estado == 'activo')\
      .group_by(ModuloSuscrito.modulo_id).all()
@@ -88,7 +95,7 @@ def reportes():
     recaudacion_mensual = db.session.query(
         extract('year', ModuloSuscrito.fecha_inicio).label('anio'),
         extract('month', ModuloSuscrito.fecha_inicio).label('mes'),
-        func.sum(ModuloSuscrito.precio_pagado + ModuloSuscrito.iva_pagado).label('total'),
+        func.sum(ModuloSuscrito.precio_pagado + iva_efectivo).label('total'),
         func.count(ModuloSuscrito.id).label('cantidad')
     ).filter(ModuloSuscrito.verificado == True)\
      .group_by('anio', 'mes').order_by('anio', 'mes').all()
@@ -96,7 +103,7 @@ def reportes():
     # Recaudación por año
     recaudacion_anual = db.session.query(
         extract('year', ModuloSuscrito.fecha_inicio).label('anio'),
-        func.sum(ModuloSuscrito.precio_pagado + ModuloSuscrito.iva_pagado).label('total'),
+        func.sum(ModuloSuscrito.precio_pagado + iva_efectivo).label('total'),
         func.count(ModuloSuscrito.id).label('cantidad')
     ).filter(ModuloSuscrito.verificado == True)\
      .group_by('anio').order_by('anio').all()
@@ -106,9 +113,9 @@ def reportes():
         .filter_by(estado='pendiente')\
         .order_by(FacturaEmitida.fecha_emision).all()
 
-    # Total recaudado (precio + IVA)
+    # Total recaudado (precio + IVA, usando IVA calculado cuando no fue registrado)
     total_recaudado = db.session.query(
-        func.sum(ModuloSuscrito.precio_pagado + ModuloSuscrito.iva_pagado)
+        func.sum(ModuloSuscrito.precio_pagado + iva_efectivo)
     ).filter(ModuloSuscrito.verificado == True).scalar() or 0
 
     # Solicitudes pendientes de comprobante
